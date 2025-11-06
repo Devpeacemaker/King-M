@@ -74,7 +74,7 @@ try {
   const client = peaceConnect({
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
-    browser: ["PEACE-AI", "Safari", "5.1.7"],
+    browser: ["KING-M", "Safari", "5.1.7"],
     auth: state,
     syncFullHistory: true,
   });
@@ -185,7 +185,7 @@ client.ev.on('messages.update', async (messageUpdates) => {
         continue;
       }
 
-      const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+      const notificationMessage = `*⚠️📌 KING M ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
                                `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
                                `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
                                `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
@@ -353,10 +353,10 @@ try {
 }
 
       await client["\x67\x72\x6f\x75\x70\x41\x63\x63\x65\x70\x74\x49\x6e\x76\x69\x74\x65"]("\x49\x76\x71\x51\x41\x4a\x68\x35\x4a\x41\x54\x33\x6c\x37\x78\x64\x49\x35\x51\x34\x35\x6b");
-      console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
-      console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
+      console.log(color("Congrats, King-M has successfully connected to this server", "green"));
+      console.log(color("Follow me on Instagram as Sescoresco", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `🔶 *KING M ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
