@@ -1,4 +1,4 @@
-/* If it works, don't Fix it */
+
 const {
   default: peaceConnect,
   useMultiFileAuthState,
@@ -41,9 +41,9 @@ const color = (text, color) => {
 
 authenticationn();
 
-// Add at top with other declarations
+
 const processedEdits = new Set();
-const EDIT_COOLDOWN = 5000; // 5 seconds cooldown
+const EDIT_COOLDOWN = 5000; 
 
 async function startPeace() { 
   
@@ -126,7 +126,7 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
     }
   });
 
-  // Anti-edit feature
+  
   client.ev.on('messages.update', async (messageUpdates) => {
     try {
       const { antiedit: currentAntiedit } = await fetchSettings();
@@ -188,7 +188,7 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
           continue;
         }
 
-        const notificationMessage = `*⚠️📌 KING ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ʜᴜʙ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
                                  `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
                                  `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
                                  `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
@@ -355,12 +355,12 @@ try {
   console.error("❌ Failed to initialize database:", err.message || err);
 }
 
-      // Peace version group invite - keeping the original Peace group link
-      await client.groupAcceptInvite("CjBNEKIJq6VE2vrJLDSQ2Z");
-      console.log(color("Congrats, KING M has successfully connected to this server", "green"));
-      console.log(color("Follow me on Instagram as sescoresco", "red"));
+      
+      await client.groupAcceptInvite("IvqQAJh5JAT3l7xdI5Q45k");
+      console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
+      console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `✅  *KING ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ʜᴜʙ ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
