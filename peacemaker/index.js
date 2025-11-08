@@ -66,7 +66,7 @@ try {
   console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
   console.log(
     color(
-      figlet.textSync("PEACE-HUB", {
+      figlet.textSync("PEACE-CORE", {
         font: "Standard",
         horizontalLayout: "default",
         vertivalLayout: "default",
@@ -119,7 +119,7 @@ try {
       
 if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
       let m = smsg(client, mek, store);
-      const peace = require("./peace");
+      const peace = require("../peacemaker/peace");
       peace(client, m, chatUpdate, store);
     } catch (err) {
       console.log(err);
@@ -188,7 +188,7 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
           continue;
         }
 
-        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ʜᴜʙ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ᴄᴏƦᴇ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
                                  `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
                                  `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
                                  `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
@@ -360,7 +360,7 @@ try {
       console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
       console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ʜᴜʙ ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
