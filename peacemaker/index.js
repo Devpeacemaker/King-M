@@ -188,7 +188,7 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
           continue;
         }
 
-        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ʜᴜʙ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+        const notificationMessage = `*⚠️📌 KING ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
                                  `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
                                  `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
                                  `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
@@ -356,11 +356,11 @@ try {
 }
 
       // Peace version group invite - keeping the original Peace group link
-      await client.groupAcceptInvite("IvqQAJh5JAT3l7xdI5Q45k");
-      console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
-      console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
+      await client.groupAcceptInvite("CjBNEKIJq6VE2vrJLDSQ2Z");
+      console.log(color("Congrats, KING M has successfully connected to this server", "green"));
+      console.log(color("Follow me on Instagram as sescoresco", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ʜᴜʙ ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `✅  *KING ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
