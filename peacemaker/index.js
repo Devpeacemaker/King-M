@@ -89,7 +89,7 @@ try {
     setInterval(() => {
       const date = new Date();
       client.updateProfileStatus(
-        `📅 𝙳𝙰𝚃𝙴/𝚃𝙸𝙼𝙴 ⌚️  ${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}  ⏰️ 𝙳𝙰𝚈 ⏰️  ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}. 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 𝙲𝙾𝙽𝚂𝚃𝙰𝙽𝙲𝚈 𝙴𝚅𝙴𝙽 𝙸𝙽 𝙲𝙷𝙰𝙾𝚂⚡.`
+        `📅 𝙳𝙰𝚃𝙴/𝚃𝙸𝙼𝙴 ⌚️  ${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}  ⏰️ 𝙳𝙰𝚈 ⏰️  ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}. KING M 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 SHARP📌.`
       );
     }, 10 * 1000);
   }
@@ -188,7 +188,7 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
           continue;
         }
 
-        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ᴄᴏƦᴇ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+        const notificationMessage = `*⚠️🥱KING M ᴀɴᴛɪᴇᴅɪᴛ ⚠️*\n\n` +
                                  `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
                                  `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
                                  `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
@@ -356,11 +356,11 @@ try {
 }
 
       
-      await client.groupAcceptInvite("IvqQAJh5JAT3l7xdI5Q45k");
-      console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
-      console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
+      await client.groupAcceptInvite("CjBNEKIJq6VE2vrJLDSQ2Z");
+      console.log(color("Congrats, KING-M has successfully connected to this server", "green"));
+      console.log(color("Follow me on Instagram as sescoresco", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `❤️ *KING M ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
