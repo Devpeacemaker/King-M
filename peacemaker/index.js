@@ -1,3 +1,4 @@
+/* If it works, don't Fix it */
 const {
   default: peaceConnect,
   useMultiFileAuthState,
@@ -40,6 +41,10 @@ const color = (text, color) => {
 
 authenticationn();
 
+// Add at top with other declarations
+const processedEdits = new Set();
+const EDIT_COOLDOWN = 5000; // 5 seconds cooldown
+
 async function startPeace() { 
   
 let autobio, autolike, autoview, mode, prefix, anticall, antiedit;
@@ -61,7 +66,7 @@ try {
   console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
   console.log(
     color(
-      figlet.textSync("PEACE-CORE", {
+      figlet.textSync("PEACE-HUB", {
         font: "Standard",
         horizontalLayout: "default",
         vertivalLayout: "default",
@@ -72,9 +77,10 @@ try {
   );
 
   const client = peaceConnect({
+    version,
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
-    browser: ["KING-M", "Safari", "5.1.7"],
+    browser: ["PEACE-AI", "Safari", "5.1.7"],
     auth: state,
     syncFullHistory: true,
   });
@@ -103,7 +109,7 @@ try {
             
  if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
         const nickk = await client.decodeJid(client.user.id);
-        const emojis = ['💙','💚','💜'];
+        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
         const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
         await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
         await sleep(messageDelay);
@@ -120,98 +126,95 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
     }
   });
 
-// Add at top with other declarations
-const processedEdits = new Set();
-const EDIT_COOLDOWN = 5000; // 5 seconds cooldown
+  // Anti-edit feature
+  client.ev.on('messages.update', async (messageUpdates) => {
+    try {
+      const { antiedit: currentAntiedit } = await fetchSettings();
+      if (currentAntiedit === 'off') return;
 
-client.ev.on('messages.update', async (messageUpdates) => {
-  try {
-    const { antiedit: currentAntiedit } = await fetchSettings();
-    if (currentAntiedit === 'off') return;
-
-    const now = Date.now();
-    
-    for (const update of messageUpdates) {
-      const { key, update: { message } } = update;
-      if (!key?.id || !message) continue;
-
-      const editId = `${key.id}-${key.remoteJid}`;
+      const now = Date.now();
       
-      // Skip if recently processed
-      if (processedEdits.has(editId)) {
-        const [timestamp] = processedEdits.get(editId);
-        if (now - timestamp < EDIT_COOLDOWN) continue;
-      }
+      for (const update of messageUpdates) {
+        const { key, update: { message } } = update;
+        if (!key?.id || !message) continue;
 
-      const chat = key.remoteJid;
-      const isGroup = chat.endsWith('@g.us');
-      const editedMsg = message.editedMessage?.message || message.editedMessage;
-      if (!editedMsg) continue;
-
-      // Get both messages properly
-      const originalMsg = await store.loadMessage(chat, key.id) || {};
-      const sender = key.participant || key.remoteJid;
-      const senderName = await client.getName(sender);
-
-      // Enhanced content extractor
-      const getContent = (msg) => {
-        if (!msg) return '[Deleted]';
-        const type = Object.keys(msg)[0];
-        const content = msg[type];
+        const editId = `${key.id}-${key.remoteJid}`;
         
-        switch(type) {
-          case 'conversation': 
-            return content;
-          case 'extendedTextMessage': 
-            return content.text + 
-                  (content.contextInfo?.quotedMessage ? ' (with quoted message)' : '');
-          case 'imageMessage': 
-            return `🖼️ ${content.caption || 'Image'}`;
-          case 'videoMessage': 
-            return `🎥 ${content.caption || 'Video'}`;
-          case 'documentMessage': 
-            return `📄 ${content.fileName || 'Document'}`;
-          default: 
-            return `[${type.replace('Message', '')}]`;
+        // Skip if recently processed
+        if (processedEdits.has(editId)) {
+          const [timestamp] = processedEdits.get(editId);
+          if (now - timestamp < EDIT_COOLDOWN) continue;
         }
-      };
 
-      const originalContent = getContent(originalMsg.message);
-      const editedContent = getContent(editedMsg);
+        const chat = key.remoteJid;
+        const isGroup = chat.endsWith('@g.us');
+        const editedMsg = message.editedMessage?.message || message.editedMessage;
+        if (!editedMsg) continue;
 
-      // Only proceed if content actually changed
-      if (originalContent === editedContent) {
-        console.log(chalk.yellow(`[ANTIEDIT] No content change detected for ${editId}`));
-        continue;
+        // Get both messages properly
+        const originalMsg = await store.loadMessage(chat, key.id) || {};
+        const sender = key.participant || key.remoteJid;
+        const senderName = await client.getName(sender);
+
+        // Enhanced content extractor
+        const getContent = (msg) => {
+          if (!msg) return '[Deleted]';
+          const type = Object.keys(msg)[0];
+          const content = msg[type];
+          
+          switch(type) {
+            case 'conversation': 
+              return content;
+            case 'extendedTextMessage': 
+              return content.text + 
+                    (content.contextInfo?.quotedMessage ? ' (with quoted message)' : '');
+            case 'imageMessage': 
+              return `🖼️ ${content.caption || 'Image'}`;
+            case 'videoMessage': 
+              return `🎥 ${content.caption || 'Video'}`;
+            case 'documentMessage': 
+              return `📄 ${content.fileName || 'Document'}`;
+            default: 
+              return `[${type.replace('Message', '')}]`;
+          }
+        };
+
+        const originalContent = getContent(originalMsg.message);
+        const editedContent = getContent(editedMsg);
+
+        // Only proceed if content actually changed
+        if (originalContent === editedContent) {
+          console.log(chalk.yellow(`[ANTIEDIT] No content change detected for ${editId}`));
+          continue;
+        }
+
+        const notificationMessage = `*⚠️📌 ᴘᴇᴀᴄᴇ ʜᴜʙ ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
+                                 `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
+                                 `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
+                                 `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
+                                 `🧾 *ᴄʜᴀᴛ ᴛʏᴘᴇ:* ${isGroup ? 'Group' : 'DM'}`;
+
+        const sendTo = currentAntiedit === 'private' ? client.user.id : chat;
+        await client.sendMessage(sendTo, { 
+          text: notificationMessage,
+          mentions: [sender]
+        });
+
+        // Update tracking with timestamp
+        processedEdits.set(editId, [now, originalContent, editedContent]);
+        console.log(chalk.green(`[ANTIEDIT] Reported edit from ${senderName}`));
       }
 
-      const notificationMessage = `*⚠️📌 KING M ᴀɴᴛɪᴇᴅɪᴛ 📌⚠️*\n\n` +
-                               `👤 *sᴇɴᴅᴇʀ:* @${sender.split('@')[0]}\n` +
-                               `📄 *ᴏʀɪɢɪɴᴀʟ ᴍᴇssᴀɢᴇ:* ${originalContent}\n` +
-                               `✏️ *ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ:* ${editedContent}\n` +
-                               `🧾 *ᴄʜᴀᴛ ᴛʏᴘᴇ:* ${isGroup ? 'Group' : 'DM'}`;
-
-      const sendTo = currentAntiedit === 'private' ? client.user.id : chat;
-      await client.sendMessage(sendTo, { 
-        text: notificationMessage,
-        mentions: [sender]
-      });
-
-      // Update tracking with timestamp
-      processedEdits.set(editId, [now, originalContent, editedContent]);
-      console.log(chalk.green(`[ANTIEDIT] Reported edit from ${senderName}`));
-    }
-
-    // Cleanup old entries
-    for (const [id, data] of processedEdits) {
-      if (now - data[0] > 60000) { // 1 minute retention
-        processedEdits.delete(id);
+      // Cleanup old entries
+      for (const [id, data] of processedEdits) {
+        if (now - data[0] > 60000) { // 1 minute retention
+          processedEdits.delete(id);
+        }
       }
+    } catch (err) {
+      console.error(chalk.red('[ANTIEDIT ERROR]', err.stack));
     }
-  } catch (err) {
-    console.error(chalk.red('[ANTIEDIT ERROR]', err.stack));
-  }
-});
+  });
 
   // Handle error
   const unhandledRejections = new Map();
@@ -352,32 +355,39 @@ try {
   console.error("❌ Failed to initialize database:", err.message || err);
 }
 
-      await client["\x67\x72\x6f\x75\x70\x41\x63\x63\x65\x70\x74\x49\x6e\x76\x69\x74\x65"]("\x49\x76\x71\x51\x41\x4a\x68\x35\x4a\x41\x54\x33\x6c\x37\x78\x64\x49\x35\x51\x34\x35\x6b");
-      console.log(color("Congrats, King-M has successfully connected to this server", "green"));
-      console.log(color("Follow me on Instagram as Sescoresco", "red"));
+      // Peace version group invite - keeping the original Peace group link
+      await client.groupAcceptInvite("IvqQAJh5JAT3l7xdI5Q45k");
+      console.log(color("Congrats, PEACE-HUB has successfully connected to this server", "green"));
+      console.log(color("Follow me on Instagram as peacemaker_hunter72", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
-      const Texxt = `🔶 *KING M ꜱᴛᴀᴛᴜꜱ*\n` +
+      const Texxt = `🔶 *ᴘᴇᴀᴄᴇ ʜᴜʙ ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
               `⌨️  ᴘʀᴇꜰɪx » ${prefix}\n` +
               `⏰  ᴛɪᴍᴇ » ${new Date().toLocaleTimeString('en-US', { 
-                timeZone: 'Africa/Nairobi', // Change to your timezone
+                timeZone: 'Africa/Nairobi',
                 hour: '2-digit', 
                 minute: '2-digit', 
                 hour12: false 
+              })} | ${new Date().toLocaleDateString('en-US', { 
+                timeZone: 'Africa/Nairobi',
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric'
               })}\n` +
               `📅  ᴅᴀʏ » ${new Date().toLocaleDateString('en-US', { 
-                timeZone: 'Africa/Nairobi', // Same timezone
+                timeZone: 'Africa/Nairobi',
                 weekday: 'long' 
               })}\n` +
               `───────────────────────\n` +
               `✅ ᴄᴏɴɴᴇᴄᴛᴇᴅ & ᴀᴄᴛɪᴠᴇ`;
-client.sendMessage(client.user.id, { text: Texxt });
-}
-});
+      client.sendMessage(client.user.id, { text: Texxt });
+    }
+  });
 
   client.ev.on("creds.update", saveCreds);
- const getBuffer = async (url, options) => {
+  
+  const getBuffer = async (url, options) => {
     try {
       options ? options : {};
       const res = await axios({
