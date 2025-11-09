@@ -96,10 +96,10 @@ const {
 	  // ==================================
 const ownerNumber = botNumber.replace(/[^0-9]/g, "");   
 const senderNumber = sender.split("@")[0];              
-const isOwner = senderNumber === ownerNumber || senderNumber === "254752818245";
+const isOwner = senderNumber === ownerNumber || senderNumber === "254769995625";
 const isSudo = await isSudoOwner(senderNumber);
 const isPrivileged = isOwner || isSudo;
-const dev = "254752818245"; 
+const dev = "254769995625"; 
 //========================================================================================================================//	  
     const getGroupAdmins = (participants) => { 
        let admins = []; 
@@ -397,7 +397,7 @@ client.sendContact = async (chatId, numbers, text = '', options = {}) => {
 
     await client.sendMessage(chatId, {
       contacts: {
-        displayName: 'ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ',
+        displayName: 'MAKAMESCCO',
         contacts: contacts
       },
       ...options
@@ -625,225 +625,239 @@ let cap =`━━ *KING MD* ━━
  *Time* : ${getCurrentTimeInNairobi()}
  *Ram* : ${ram()}
  
- *SETTINGS MENU*
-• Antidelete
-• Antiedit
-• Anticall
-• Antibot
-• Badword
-• Antitag
-• Antilink
-• Antilinkall
-• Gptdm
-• Autoview
-• Autolike
-• Autoread
-• Autobio
-• Mode
-• Prefix
-• Welcomegoodbye
-• Wapresence
-*OWNER MENU*
-• Restart
-• Admin
-• Cast
-• Broadcast
-• Join
-• Getvar
-• Getcase
-• Redeploy
-• Update
-• Setvar
-• Botpp
-• Fullpp
-• Block
-• Unblock
-• Save
-• Blocklist
-• addsudo
-• remsudo 
-• listsudo
+🌐 『 SETTINGS PANEL 』
+⚙️ Control and personalize your bot functions
+. antidelete
+. antiedit
+. anticall
+. antibot
+. badword
+. antitag
+. antilink
+. antilinkall
+. gptdm
+. autoview
+. autolike
+. autoread
+. autobio
+. mode
+. prefix
+. welcomegoodbye
+. wapresence
 
-*DOWNLOAD MENU*
-•Video
-• Video2
-• Play
-• Play2
-• Song
-• Song2
-• Fbdl
-• Tiktok
-• Twitter
-• Instagram
-• Pinterest
-• Movie
-• Lyrics
-• Whatsong
-• Yts
-• Ytmp3
-• Ytmp4
+👑 『 OWNER COMMANDS 』
+🛠️ Admin-level tools & bot management
+. restart
+. admin
+. cast
+. broadcast
+. join
+. getvar
+. getcase
+. redeploy
+. update
+. setvar
+. botpp
+. fullpp
+. block
+. unblock
+. save
+. blocklist
+. addsudo
+. remsudo
+. listsudo
 
-*CONVERT MENU*
-• Sticker
-• Smeme
-• Photo
-• Mp4
-• Retrieve
-• Vv
-• Vv2
-• Screenshot
-• Mix
-• Take
-• Tweet
-• Quotely
+📥 『 DOWNLOAD CENTER 』
+🎬 Grab media from multiple platforms
+. video
+. video2
+. play
+. play2
+. song
+. song2
+. fbdl
+. tiktok
+. twitter
+. instagram
+. pinterest
+. movie
+. lyrics
+. whatsong
+. yts
+. ytmp3
+. ytmp4
 
-*FOOTBALL MENU*
-• Epl
-• Laliga
-• Serie-A
-• Bundesliga
-• Ligue-1
-• Fixtures
+🧩 『 CONVERTER HUB 』
+🎨 Transform, remix & create digital assets
+. sticker
+. smeme
+. photo
+. mp4
+. retrieve
+. vv
+. vv2
+. screenshot
+. mix
+. take
+. tweet
+. quotely
 
-*AI MENU*
-• Ai
-• Ai2
-• Vision
-• Define
-• Peace
-• Gemini
-• Google
-• Gpt
-• Gpt2
-• Gpt3
-• Gpt4
+⚽ 『 FOOTBALL ZONE 』
+🏆 Get updates and info on your favorite leagues
+. epl
+. laliga
+. serie-a
+. bundesliga
+. ligue-1
+. fixtures
 
-*GROUP MENU*
-• Approve
-• Reject
-• Promote
-• Demote
-• Delete
-• Remove
-• Faker
-• Foreigners
-• Close
-• Open
-• CloseTime
-• OpenTime
-• Disp-Off
-• Disp-1
-• Disp-7
-• Disp-90
-• Icon
-• Gcprofile
-• Subject
-• Desc
-• Leave
-• Add
-• Tagall
-• Hidetag
-• Revoke
-• Mute
-• Unmute
-• Kickall
-• Kickall2
-• addbadword 
-• delbadword 
-• listbadword 
+🤖 『 AI INTELLIGENCE 』
+💡 Talk, learn, and explore AI tools
+. ai
+. ai2
+. vision
+. define
+. peace
+. gemini
+. google
+. gpt
+. gpt2
+. gpt3
+. gpt4
 
-*CODING MENU*
-• Carbon
-• Compile-C
-• Compile-C++
-• Compile-JS
-• Compile-PY
-• Inspect
-• Encrypte
-• Eval
+👥 『 GROUP CONTROL 』
+🧠 Smart moderation & group utilities
+. approve
+. reject
+. promote
+. demote
+. delete
+. remove
+. faker
+. foreigners
+. close
+. open
+. closetime
+. opentime
+. disp-off
+. disp-1
+. disp-7
+. disp-90
+. icon
+. gcprofile
+. subject
+. desc
+. leave
+. add
+. tagall
+. hidetag
+. revoke
+. mute
+. unmute
+. kickall
+. kickall2
+. addbadword
+. delbadword
+. listbadword
 
-*GENERAL MENU*
-• Owner
-• Script
-• Menu
-• List
-• Ping
-• Poll
-• Alive
-• Speed
-• Repo
-• Runtime
-• Uptime
-• Dp
-• Dlt
-• Mail
-• Inbox
+💻 『 CODING TOOLS 』
+👨‍💻 Develop & test your code directly
+. carbon
+. compile-c
+. compile-c++
+. compile-js
+. compile-py
+. inspect
+. encrypte
+. eval
 
+🌍 『 GENERAL COMMANDS 』
+📜 Check bot info, status & utilities
+. owner
+. script
+. menu
+. list
+. ping
+. poll
+. alive
+. speed
+. repo
+. runtime
+. uptime
+. dp
+. dlt
+. mail
+. inbox
 
-*LOGO MENU*
-• Hacker
-• Hacker2
-• Graffiti
-• Cat
-• Sand
-• Gold
-• Arena
-• Dragonball
-• Naruto
-• Child
-• Leaves
-• 1917
-• Typography
+🎨 『 LOGO CREATOR 』
+🔥 Generate stylish logos in seconds
+. hacker
+. hacker2
+. graffiti
+. cat
+. sand
+. gold
+. arena
+. dragonball
+. naruto
+. child
+. leaves
+. 1917
+. typography
 
-*TEXTMAKER MENU*
-• Purple
-• Neon
-• Noel
-• Metallic
-• Devil
-• Impressive
-• Snow
-• Water
-• Thunder
-• Ice
-• Matrix
-• Silver
-• Light
+🧠 『 TEXT MAKER 』
+✨ Design unique styled texts
+. purple
+. neon
+. noel
+. metallic
+. devil
+. impressive
+. snow
+. water
+. thunder
+. ice
+. matrix
+. silver
+. light
 
- *UTILITIES MENU*
-• Weather
-• Github
-• Gitclone
-• Removebg
-• Remini
-• Tts
-• Trt
-• Calc
+🧰 『 UTILITIES 』
+🪄 Handy tools to simplify your tasks
+. weather
+. github
+. gitclone
+. removebg
+. remini
+. tts
+. trt
+. calc
 
-*RANDOM MENU*
-• Fact
-• Funfact
-• Catfact
-• Advice
-• Joke
-• News
-• Rship
-• Gpass
-• Anime
-• Animegirl
-• Quotes
-• Pickupline
+🎲 『 RANDOM FUN 』
+😂 Entertainment & random generators
+. fact
+. funfact
+. catfact
+. advice
+. joke
+. news
+. rship
+. gpass
+. anime
+. animegirl
+. quotes
+. pickupline
 
-*OTHER MENU*
-• Bible
-• Quran
-• Pair
-• Credits
-• Upload
-• Attp
-• Url
-• Image
-• System
+📦 『 OTHER FEATURES 』
+🕊️ Additional tools & commands
+. bible
+. quran
+. pair
+. credits
+. upload
+. attp
+. url
+. image
+. system
 ━━━━━━━━━━━━`;
 
             client.sendMessage(from, { text: cap }, { quoted: m });
@@ -1434,7 +1448,7 @@ await client.sendMessage(from, {
         {
           video: { url: videoData.downloadUrl },
           mimetype: "video/mp4",
-          caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
+          caption: "KING M",
         },
         { quoted: m }
       );
@@ -1463,7 +1477,7 @@ case "redeploy": {
         try {
             await axios.post(
                 `https://api.heroku.com/apps/${appname}/builds`,
-                { source_blob: { url: "https://github.com/Devpeacemaker/unknown-error/tarball/main" } },
+                { source_blob: { url: "https://github.com/mesuit/King-M/tarball/main" } },
                 { headers: { Authorization: `Bearer ${herokuapi}`, Accept: "application/vnd.heroku+json; version=3" } }
             );
             await m.reply("🌟 *Peace Core deployment triggered* 🌟");
@@ -1491,7 +1505,7 @@ case "redeploy": {
 ┌─────────────────────
 │ ✦ Founder: Makamesco (Kenya)
 │ ✦ GitHub: Https://github.com/sesco001/KING-MD
-│ ✦ Version: Peace-Hub v1.0
+│ ✦ Version: KING M v1.0
 └─────────────────────
 
 ⚙️ *Technical Specifications*
@@ -1992,7 +2006,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x29a96e.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱`
+      caption: `KING M`
     });
   } catch (_0x180d03) {
     m.reply(_0x180d03);
@@ -2720,12 +2734,12 @@ const axios = require("axios");
 try {
 if (!m.quoted) return m.reply("Send the image then tag it with the instruction.");
 
-if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵! 𝗧𝗵𝗶𝘀 𝗣𝗘𝗔𝗖𝗘 𝗔𝗶 𝗨𝘀𝗲 𝗚𝗲𝗺𝗶𝗻𝗶-𝗽𝗿𝗼-𝘃𝗶𝘀𝗶𝗼𝗻 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘀𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
+if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵! 𝗧𝗵𝗶𝘀 KING 𝗔𝗶 𝗨𝘀𝗲 𝗚𝗲𝗺𝗶𝗻𝗶-𝗽𝗿𝗼-𝘃𝗶𝘀𝗶𝗼𝗻 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘀𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
 if (!/image|pdf/.test(mime)) return m.reply("That is not an image, try again while quoting an actual image.");             
 
                     let fdr = await client.downloadAndSaveMediaMessage(m.quoted)
                     let fta = await uploadToCatbox(fdr)
-                    m.reply(`𝗔 𝗠𝗼𝗺𝗲𝗻𝘁, 𝗣𝗲𝗮𝗰𝗲[𝗣𝗘𝗔𝗖𝗘-𝗔𝗶] 𝗶𝘀 𝗮𝗻𝗮𝗹𝘆𝘇𝗶𝗻𝗴 𝘁𝗵𝗲 𝗰𝗼𝗻𝘁𝗲𝗻𝘁𝘀 𝗼𝗳 𝘁𝗵𝗲 ${mime.includes("pdf") ? "𝗣𝗗𝗙" : "𝗜𝗺𝗮𝗴𝗲"} . . .`);
+                    m.reply(`𝗔 𝗠𝗼𝗺𝗲𝗻𝘁, KING[KING-M] 𝗶𝘀 𝗮𝗻𝗮𝗹𝘆𝘇𝗶𝗻𝗴 𝘁𝗵𝗲 𝗰𝗼𝗻𝘁𝗲𝗻𝘁𝘀 𝗼𝗳 𝘁𝗵𝗲 ${mime.includes("pdf") ? "𝗣𝗗𝗙" : "𝗜𝗺𝗮𝗴𝗲"} . . .`);
 
 const data = await fetchJson(`https://api.dreaded.site/api/gemini-vision?url=${fta}&instruction=${text}`);
 let res = data.result
@@ -2742,7 +2756,7 @@ m.reply("I am unable to analyze images at the moment\n" + e)
 //========================================================================================================================//		      
 	      case "vision": {
 		      if (!msgR || !text) {
-    m.reply("𝗤𝘂𝗼𝘁𝗲 𝗮𝗻 𝗶𝗺𝗮𝗴𝗲 𝗮𝗻𝗱 𝗴𝗶𝘃𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵. 𝗜'𝗺 𝗣𝗘𝗔𝗖𝗘 𝗔𝗶, 𝗶 𝘂𝘀𝗲 𝗕𝗮𝗿𝗱 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘇𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
+    m.reply("𝗤𝘂𝗼𝘁𝗲 𝗮𝗻 𝗶𝗺𝗮𝗴𝗲 𝗮𝗻𝗱 𝗴𝗶𝘃𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵. 𝗜'𝗺 KING M, 𝗶 𝘂𝘀𝗲 𝗕𝗮𝗿𝗱 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘇𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
     return;
   }
   ;
@@ -2778,7 +2792,7 @@ m.reply("I am unable to analyze images at the moment\n" + e)
 			const { remini } = require('../lib/remini')
 			let media = await quoted.download()
 			let proses = await remini(media, "enhance")
-			client.sendMessage(m.chat, { image: proses, caption: '𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱'}, { quoted: m })
+			client.sendMessage(m.chat, { image: proses, caption: '𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M'}, { quoted: m })
 			}
 			break;
 
@@ -3198,9 +3212,9 @@ m.reply("An error occured.")
         contextInfo: {
           mentionedJid: [m.sender],
           externalAdReply: {
-          title: "👋 ʜᴇʟʟᴏ, ᴍᴏʀᴛᴀʟ! ⚡ ᴘᴇᴀᴄᴇ ʜᴜʙ ɪs ᴀʟɪᴠᴇ ʀᴇᴀᴅʏ ᴛᴏ ᴄᴏᴍғᴏʀᴛ ʏᴏᴜ",
-          body: "𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
-          thumbnailUrl: "https://files.catbox.moe/yusei5.jpg",
+          title: "👋 ʜᴇʟʟᴏ, ᴍᴏʀᴛᴀʟ! ⚡ KING M ɪs ᴀʟɪᴠᴇ ʀᴇᴀᴅʏ ᴛᴏ ᴄᴏᴍғᴏʀᴛ ʏᴏᴜ",
+          body: "KING M",
+          thumbnailUrl: "",
           sourceUrl: '',
           mediaType: 1,
           renderLargerThumbnail: true
@@ -3214,13 +3228,13 @@ m.reply("An error occured.")
 	case "removebg": {
 try {
 
-const cap = "ᴇᴅɪᴛᴇᴅ ʙʏ ᴘᴇᴀᴄᴇ ʜᴜʙ";
+const cap = "ᴇᴅɪᴛᴇᴅ ʙʏ KING M";
 if (!m.quoted) return m.reply("Send the image then tag it with the command.");
 if (!/image/.test(mime)) return m.reply("That is not an image, try again while quoting an actual image.");             
 
 let fdr = await client.downloadAndSaveMediaMessage(m.quoted)
 let fta = await uploadToCatbox(fdr)
-                    m.reply("𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, 𝗣𝗲𝗮𝗰𝗲 𝗶𝘀 𝗲𝗿𝗮𝘀𝗶𝗻𝗴 𝘁𝗵𝗲 𝗯𝗮𝗰𝗸𝗴𝗿𝗼𝘂𝗻𝗱. . .");
+                    m.reply("𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, KING 𝗶𝘀 𝗲𝗿𝗮𝘀𝗶𝗻𝗴 𝘁𝗵𝗲 𝗯𝗮𝗰𝗸𝗴𝗿𝗼𝘂𝗻𝗱. . .");
 
 const image = `https://api.dreaded.site/api/removebg?imageurl=${fta}`
 await client.sendMessage(m.chat, { image: { url: image }, caption: cap}, {quoted: m });
@@ -3597,7 +3611,7 @@ for (let a of gcdata.participants) {
 
 let cont = './contacts.vcf'
 
-await m.reply('𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, 𝗣𝗲𝗮𝗰𝗲 𝗶𝘀 𝗖𝗼𝗺𝗽𝗶𝗹𝗶𝗻𝗴 '+gcdata.participants.length+' 𝗖𝗼𝗻𝘁𝗮𝗰𝘁𝘀 𝗶𝗻𝘁𝗼 𝗮 𝗩𝗰𝗳...');
+await m.reply('𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, KING 𝗶𝘀 𝗖𝗼𝗺𝗽𝗶𝗹𝗶𝗻𝗴 '+gcdata.participants.length+' 𝗖𝗼𝗻𝘁𝗮𝗰𝘁𝘀 𝗶𝗻𝘁𝗼 𝗮 𝗩𝗰𝗳...');
 await fs.writeFileSync(cont, vcard.trim())
 await client.sendMessage(m.chat, {
     document: fs.readFileSync(cont), mimetype: 'text/vcard', fileName: 'Group contacts.vcf', caption: 'VCF for '+gcdata.subject+'\n'+gcdata.participants.length+' contacts'
@@ -3618,7 +3632,7 @@ case "faker": {
       if (_0x2f8982.length == 0) {
         return m.reply("𝙽𝚘 𝚏𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍.");
       }
-      let _0x2d7d67 = `𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 𝚑𝚊𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍 𝚝𝚑𝚎 𝚏𝚘𝚕𝚕𝚘𝚠𝚒𝚗𝚐 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝚊𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚒𝚗 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙:- \n`;
+      let _0x2d7d67 = `KING 𝚑𝚊𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍 𝚝𝚑𝚎 𝚏𝚘𝚕𝚕𝚘𝚠𝚒𝚗𝚐 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝚊𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚒𝚗 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙:- \n`;
       for (let _0x28761c of _0x2f8982) {
         _0x2d7d67 += `🚮 @${_0x28761c.split("@")[0]}\n`;
       }
@@ -3632,7 +3646,7 @@ case "faker": {
     } else if (args[0] == "-x") {
       setTimeout(() => {
         client.sendMessage(m.chat, {
-          text: `𝙽𝚘𝚠 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 𝚠𝚒𝚕𝚕 𝚛𝚎𝚖𝚘𝚟𝚎 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚏𝚛𝚘𝚖 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙.\n\n𝙶𝚘𝚘𝚍𝚋𝚢𝚎👋 𝙵𝚊𝚔𝚎 𝚙𝚎𝚘𝚙𝚕𝚎.`
+          text: `𝙽𝚘𝚠 KING M 𝚠𝚒𝚕𝚕 𝚛𝚎𝚖𝚘𝚟𝚎 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚏𝚛𝚘𝚖 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙.\n\n𝙶𝚘𝚘𝚍𝚋𝚢𝚎👋 𝙵𝚊𝚔𝚎 𝚙𝚎𝚘𝚙𝚕𝚎.`
         }, {
           quoted: m
         });
@@ -3823,7 +3837,7 @@ m.reply("𝗣𝗲𝗻𝗱𝗶𝗻𝗴 𝗣𝗮𝗿𝘁𝗶𝗰𝗶𝗽𝗮𝗻�
      });  
      let baseUR = "/apps/" + appname;  
      let h9 = await heroku.get(baseUR + '/config-vars');  
-     let stoy = '*𝗕𝗲𝗹𝗼𝘄 𝗔𝗿𝗲 𝗛𝗲𝗿𝗼𝗸𝘂 𝗩𝗮𝗿𝗶𝗮𝗯𝗹𝗲𝘀 𝗙𝗼𝗿 𝗣𝗘𝗔𝗖𝗘-𝗠𝗗:*\n\n';  
+     let stoy = '*𝗕𝗲𝗹𝗼𝘄 𝗔𝗿𝗲 𝗛𝗲𝗿𝗼𝗸𝘂 𝗩𝗮𝗿𝗶𝗮𝗯𝗹𝗲𝘀 𝗙𝗼𝗿 KING:*\n\n';  
      for ( vrt in h9) { // Added 'const' to declare 'vr' 
          stoy += vrt + '=' + h9[vrt] + '\n\n'; // Fixed variable name 'str' to 'sto' 
      }  
@@ -3897,7 +3911,7 @@ await client.sendMessage(m.chat, {
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
         mimetype: "video/mp4",
-        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱"
+        caption: "KING M"
       },{ quoted: m });
     }
   } catch (error) {
@@ -3931,7 +3945,7 @@ try {
 
 	await client.sendMessage(m.chat, {
               video: { url: video_hd },
-              caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱"
+              caption: "KING M"
             }, { quoted: m });
 
 	} catch (error) {
@@ -3972,7 +3986,7 @@ await client.sendMessage(m.chat, {
             m.chat,
             {
                 video: { url: fbvid },
-                caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
+                caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
                 gifPlayback: false,
             },
             { quoted: m }
@@ -4015,7 +4029,7 @@ await client.sendMessage(m.chat, {
 
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
-        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
+        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
         gifPlayback: false
       }, { quoted: m });
 
@@ -4050,7 +4064,7 @@ try {
         }
 
         const media = response.data.BK9;
-        const capp = `𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱`;
+        const capp = `𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M`;
 
 if (media.length > 0) {
             const videoUrl = media.find(item => item.url.includes('.mp4'))?.url;
@@ -4441,18 +4455,18 @@ case 'repo': {
   const currentTime = `${hours}:${minutes}`;
 
   const caption = `
-🔷 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ɢɪᴛʜᴜʙ ʀᴇᴘᴏ*  
+🔷 *KING M*  
 ${data.description || '_No description provided_'}
 
 🟣 *ᴅᴇᴘʟᴏʏ ʜᴇʀᴇ:*  
-*https://github.com/Devpeacemaker/PEACE-CORE*
+*https://github.com/sesco001/KING-MD*
 
 🔶  *Stars:* ${data.stargazers_count}  
 🔶  *Forks:* ${data.forks_count}
 
 🕒 *Time:* ${currentTime} 
 
-🚀 𝙲𝙾𝙳𝙴𝙳 𝙱𝚈 𝙿𝙴𝙰𝙲𝙴𝙼𝙰𝙺𝙴𝚁
+🚀 𝙲𝙾𝙳𝙴𝙳 𝙱𝚈 MAKAMESCO
   `.trim();
 
   await client.sendMessage(m.chat, { text: caption }, { quoted: m });
@@ -5342,7 +5356,7 @@ if (!text) return m.reply("No emojis provided ? ")
          let res = groups.map(v => v.id) 
          reply(` Broadcasting in ${res.length} Group Chat, in ${res.length * 1.5} seconds`) 
          for (let i of res) { 
-             let txt = `𝗣𝗘𝗔𝗖𝗘-𝗔𝗶 𝗕𝗥𝗢𝗔𝗗𝗖𝗔𝗦𝗧\n\n🀄 Message: ${text}\n\nAuthor: ${pushname}` 
+             let txt = `MAKA 𝗕𝗥𝗢𝗔𝗗𝗖𝗔𝗦𝗧\n\n🀄 Message: ${text}\n\nAuthor: ${pushname}` 
              await client.sendMessage(i, { 
                  image: { 
                      url: menulink
