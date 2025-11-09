@@ -717,7 +717,7 @@ let cap =`━━ *KING MD* ━━
 . ai2
 . vision
 . define
-. peace
+. king
 . gemini
 . google
 . gpt
@@ -4443,34 +4443,41 @@ break;
 case 'sc':
 case 'script':
 case 'repo': {
-  const res = await fetch('https://github.com/sesco001/KING-MD');
-  const data = await res.json();
+  try {
+    // Fetch GitHub repo data as JSON
+    const res = await fetch('https://api.github.com/repos/sesco001/KING-MD');
+    const data = await res.json();
 
-  // Adjust time to Kenya timezone (UTC+3)
-  const now = new Date();
-  const kenyaTime = new Date(now.getTime() + 3 * 60 * 60 * 1000); // UTC + 3
+    // Adjust to Kenya time (UTC+3)
+    const now = new Date();
+    const kenyaTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    const hours = kenyaTime.getHours().toString().padStart(2, '0');
+    const minutes = kenyaTime.getMinutes().toString().padStart(2, '0');
+    const currentTime = `${hours}:${minutes}`;
 
-  const hours = kenyaTime.getHours().toString().padStart(2, '0');
-  const minutes = kenyaTime.getMinutes().toString().padStart(2, '0');
-  const currentTime = `${hours}:${minutes}`;
+    const caption = `
+🔷 *KING-M*  
 
-  const caption = `
-🔷 *KING M*  
+🟣 *Deploy Here:*  
+https://github.com/sesco001/KING-MD
 
-🟣 *ᴅᴇᴘʟᴏʏ ʜᴇʀᴇ:*  
-*https://github.com/sesco001/KING-MD*
+🔶 *Stars:* ${data.stargazers_count}
+🔶 *Forks:* ${data.forks_count}
+🔶 *Watchers:* ${data.subscribers_count}
 
-🔶  *Stars:* ${data.stargazers_count}  
-🔶  *Forks:* ${data.forks_count}
+🕒 *Time:* ${currentTime}
 
-🕒 *Time:* ${currentTime} 
+🚀 *Coded by:* ᴍᴀᴋᴀᴍᴇꜱᴄᴏ
+    `.trim();
 
-🚀 𝙲𝙾𝙳𝙴𝙳 𝙱𝚈 MAKAMESCO
-  `.trim();
-
-  await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+    await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+  } catch (e) {
+    console.error(e);
+    await client.sendMessage(m.chat, { text: '⚠️ Error fetching repository info. Try again later.' }, { quoted: m });
+  }
   break;
 }
+
                                                   
 //========================================================================================================================//
 		      case 'closetime':
