@@ -66,7 +66,7 @@ try {
   console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
   console.log(
     color(
-      figlet.textSync("PEACE-CORE", {
+      figlet.textSync("KING-M", {
         font: "Standard",
         horizontalLayout: "default",
         vertivalLayout: "default",
