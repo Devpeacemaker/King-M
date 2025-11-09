@@ -423,7 +423,7 @@ if (
     try {
       const kid = m.sender;
       await client.sendMessage(m.chat, {
-        text: `𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 anti-spam!\n\n@${kid.split('@')[0]} has been identified as a bot and removed to prevent unnecessary spam!`,
+        text: `king m anti-spam!\n\n@${kid.split('@')[0]} has been identified as a bot and removed to prevent unnecessary spam!`,
         contextInfo: { mentionedJid: [kid] }
       }, { quoted: m });
 
@@ -1480,7 +1480,7 @@ case "redeploy": {
                 { source_blob: { url: "https://github.com/mesuit/King-M/tarball/main" } },
                 { headers: { Authorization: `Bearer ${herokuapi}`, Accept: "application/vnd.heroku+json; version=3" } }
             );
-            await m.reply("🌟 *Peace Core deployment triggered* 🌟");
+            await m.reply("🌟 *king m deployment triggered* 🌟");
         } catch (error) {
             await m.reply("💥 *KING -M DEPLOYMENT FAILED* 💥");
             console.error("Redeploy error:", error.response?.data || error.message);
@@ -2631,7 +2631,7 @@ if (!m.isGroup) throw group;
     } else if (args[0] == "-x") {
       setTimeout(() => {
         client.sendMessage(m.chat, {
-          text: `𝗣𝗲𝗮𝗰𝗲 𝘄𝗶𝗹𝗹 𝗻𝗼𝘄 𝗿𝗲𝗺𝗼𝘃𝗲 𝗮𝗹𝗹 ${_0x2f8982.length} 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀 𝗳𝗿𝗼𝗺 𝘁𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽 𝗰𝗵𝗮𝘁 𝗶𝗻 𝘁𝗵𝗲 𝗻𝗲𝘅𝘁 𝘀𝗲𝗰𝗼𝗻𝗱.\n\n𝗚𝗼𝗼𝗱 𝗯𝘆𝗲 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀. 𝗧𝗵𝗶𝘀 𝗽𝗿𝗼𝗰𝗲𝘀𝘀 𝗰𝗮𝗻𝗻𝗼𝘁 𝗯𝗲 𝘁𝗲𝗿𝗺𝗶𝗻𝗮𝘁𝗲𝗱⚠️`
+          text: `King 𝘄𝗶𝗹𝗹 𝗻𝗼𝘄 𝗿𝗲𝗺𝗼𝘃𝗲 𝗮𝗹𝗹 ${_0x2f8982.length} 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀 𝗳𝗿𝗼𝗺 𝘁𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽 𝗰𝗵𝗮𝘁 𝗶𝗻 𝘁𝗵𝗲 𝗻𝗲𝘅𝘁 𝘀𝗲𝗰𝗼𝗻𝗱.\n\n𝗚𝗼𝗼𝗱 𝗯𝘆𝗲 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀. 𝗧𝗵𝗶𝘀 𝗽𝗿𝗼𝗰𝗲𝘀𝘀 𝗰𝗮𝗻𝗻𝗼𝘁 𝗯𝗲 𝘁𝗲𝗿𝗺𝗶𝗻𝗮𝘁𝗲𝗱⚠️`
         }, {
           quoted: m
         });
@@ -3207,7 +3207,7 @@ m.reply("An error occured.")
         mimetype: 'audio/mp4',
         ptt: true,
         waveform:  [100, 0, 100, 0, 100, 0, 100],
-        fileName: "𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
+        fileName: "king m",
 
         contextInfo: {
           mentionedJid: [m.sender],
@@ -4443,7 +4443,7 @@ break;
 case 'sc':
 case 'script':
 case 'repo': {
-  const res = await fetch('https://api.github.com/repos/Devpeacemaker/PEACE-CORE');
+  const res = await fetch('https://github.com/sesco001/KING-MD');
   const data = await res.json();
 
   // Adjust time to Kenya timezone (UTC+3)
@@ -4456,7 +4456,6 @@ case 'repo': {
 
   const caption = `
 🔷 *KING M*  
-${data.description || '_No description provided_'}
 
 🟣 *ᴅᴇᴘʟᴏʏ ʜᴇʀᴇ:*  
 *https://github.com/sesco001/KING-MD*
@@ -4871,7 +4870,7 @@ case "vv": case "retrieve": {
 
     await client.sendMessage(m.chat, {
       image: { url: imagePath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${imageCaption}`
+      caption: `✨ *KING M is alive!* ✨\n\n${imageCaption}`
     }, { quoted: m });
   }
 
@@ -4881,7 +4880,7 @@ case "vv": case "retrieve": {
 
     await client.sendMessage(m.chat, {
       video: { url: videoPath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${videoCaption}`
+      caption: `✨ *KING M is alive!* ✨\n\n${videoCaption}`
     }, { quoted: m });
   }
 }
@@ -4900,7 +4899,7 @@ break;
 
     await client.sendMessage(client.user.id, {
       image: { url: imagePath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${imageCaption}`
+      caption: `✨ *KING Mis alive!* ✨\n\n${imageCaption}`
     }, { quoted: m });
   }
 
@@ -5029,7 +5028,7 @@ if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶�
                 {
                   document: { url: outputPath },
                   mimetype: "audio/mp3",
-		  caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
+		  caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
                   fileName: outputFileName,
                 },
                 { quoted: m }
@@ -5115,14 +5114,14 @@ case "speed": {
     const start = performance.now();
 
     // Send initial message
-    let { key } = await client.sendMessage(m.chat, { text: "🔶PeaceCore Speed" });
+    let { key } = await client.sendMessage(m.chat, { text: "King Speed" });
 
     const end = performance.now();
     const Rspeed = end - start;
     const formattedSpeed = formatSpeed(Rspeed);
 
     // Edit so speed is next to text
-    await client.sendMessage(m.chat, { text: `🔶PeaceCore Speed ${formattedSpeed}`, edit: key });
+    await client.sendMessage(m.chat, { text: `🔶Pong Speed ${formattedSpeed}`, edit: key });
 }
 break;
 
@@ -5140,10 +5139,10 @@ break;
                     contextInfo: {
                         externalAdReply: {
                             showAdAttribution: true,
-                            title: '𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱',
-                            body: 'https://github.com/Devpeacemaker/PEACE-HUB',
-                            thumbnailUrl: 'https://files.catbox.moe/yusei5.jpg',
-                            sourceUrl: 'https://github.com/Devpeacemaker/unknown-error',
+                            title: 'KING M',
+                            body: 'https://github.com/sesco001/KING-MD',
+                            thumbnailUrl: '',
+                            sourceUrl: 'https://github.com/sesco001/KING-MD',
                             mediaType: 1,
                             renderLargerThumbnail: true
                         }
@@ -5167,7 +5166,7 @@ break;
                 mimetype: "application/vnd.android.package-archive",
                 contextInfo: {
         externalAdReply: {
-          title: `𝙿𝙴𝙰𝙲𝙴-𝙷𝚄𝙱`,
+          title: `KING M`,
           body: `${tylor.BK9.name}`,
           thumbnailUrl: `${tylor.BK9.icon}`,
           sourceUrl: `${tylor.BK9.dllink}`,
