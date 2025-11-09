@@ -233,7 +233,7 @@ async function handleMessageRevocation(client, revocationMessage, antideleteMode
     const deletedDate = localNow.toLocaleDateString();
 
     // Base notification text
-    let notificationText = `🚨 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ᴀɴᴛɪᴅᴇʟᴇᴛᴇ* 🚨\n\n` +
+    let notificationText = `🚨 *KING-M ᴀɴᴛɪᴅᴇʟᴇᴛᴇ* 🚨\n\n` +
       `👤 ᴅᴇʟᴇᴛᴇᴅ ʙʏ: ${deletedByFormatted}\n` +
       `✉️ sᴇɴᴛ ʙʏ: ${sentByFormatted}\n` +
       `📅 ᴅᴀᴛᴇ: ${deletedDate}\n` +
@@ -392,7 +392,7 @@ client.sendContact = async (chatId, numbers, text = '', options = {}) => {
   try {
     const contacts = numbers.map(number => ({
       displayName: 'MAKAMESCO',
-      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nFN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Number\nitem2.EMAIL;type=INTERNET:muuoemmanuel649@gmail.com\nitem2.X-ABLabel:Email\nitem3.URL:https://instagram.com/peacemaker_hunter72\nitem3.X-ABLabel:Instagram\nitem4.ADR:;;Kenya;;\nitem4.X-ABLabel:Region\nEND:VCARD`
+      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nFN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Number\nitem2.EMAIL;type=INTERNET:makamescodigitalsolutions@gmail.com\nitem2.X-ABLabel:Email\nitem3.URL:https://instagram.com/peacemaker_hunter72\nitem3.X-ABLabel:Instagram\nitem4.ADR:;;Kenya;;\nitem4.X-ABLabel:Region\nEND:VCARD`
     }));
 
     await client.sendMessage(chatId, {
@@ -624,6 +624,45 @@ let cap =`━━ *KING MD* ━━
  *Speed* : ${Rspeed.toFixed(4)} ms
  *Time* : ${getCurrentTimeInNairobi()}
  *Ram* : ${ram()}
+ 
+ *SETTINGS MENU*
+• Antidelete
+• Antiedit
+• Anticall
+• Antibot
+• Badword
+• Antitag
+• Antilink
+• Antilinkall
+• Gptdm
+• Autoview
+• Autolike
+• Autoread
+• Autobio
+• Mode
+• Prefix
+• Welcomegoodbye
+• Wapresence
+*OWNER MENU*
+• Restart
+• Admin
+• Cast
+• Broadcast
+• Join
+• Getvar
+• Getcase
+• Redeploy
+• Update
+• Setvar
+• Botpp
+• Fullpp
+• Block
+• Unblock
+• Save
+• Blocklist
+• addsudo
+• remsudo 
+• listsudo
 
 *DOWNLOAD MENU*
 •Video
@@ -657,25 +696,6 @@ let cap =`━━ *KING MD* ━━
 • Take
 • Tweet
 • Quotely
-
-*SETTINGS MENU*
-• Antidelete
-• Antiedit
-• Anticall
-• Antibot
-• Badword
-• Antitag
-• Antilink
-• Antilinkall
-• Gptdm
-• Autoview
-• Autolike
-• Autoread
-• Autobio
-• Mode
-• Prefix
-• Welcomegoodbye
-• Wapresence
 
 *FOOTBALL MENU*
 • Epl
@@ -759,26 +779,6 @@ let cap =`━━ *KING MD* ━━
 • Mail
 • Inbox
 
-*OWNER MENU*
-• Restart
-• Admin
-• Cast
-• Broadcast
-• Join
-• Getvar
-• Getcase
-• Redeploy
-• Update
-• Setvar
-• Botpp
-• Fullpp
-• Block
-• Unblock
-• Save
-• Blocklist
-• addsudo
-• remsudo 
-• listsudo
 
 *LOGO MENU*
 • Hacker
