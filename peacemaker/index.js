@@ -107,59 +107,14 @@ try {
         client.readMessages([mek.key]);
       }
             
-if (
-    autoview === 'on' &&
-    autolike === 'on' &&
-    mek?.key &&
-    mek?.key?.remoteJid === "status@broadcast"
-) {
-    try {
-        const jid = mek?.key?.remoteJid;
-        const participant = mek?.key?.participant || jid; // fallback
+ if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
         const nickk = await client.decodeJid(client.user.id);
-
-        if (!jid) {
-            console.log("❌ Missing remoteJid");
-            return;
-        }
-
-        const emojis = [
-            '🗿','⌚️','💠','👣','🍆','💔','🤍','❤️‍🔥','💣','🧠','🦅','🌻','🧊','🛑','🧸',
-            '👑','📍','😅','🎭','🎉','😳','💯','🔥','💫','🐒','💗','❤️‍🔥','👁️','👀','🙌',
-            '🙆','🌟','💧','🦄','🟢','🎎','✅','🥱','🌚','💚','💕','😉','😒'
-        ];
-
+        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
         const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-        if (!randomEmoji) {
-            console.log("❌ randomEmoji undefined");
-            return;
-        }
-
-        await client.sendMessage(
-            jid.toString(),
-            {
-                react: {
-                    text: randomEmoji.toString(),
-                    key: mek.key
-                }
-            },
-            {
-                statusJidList: [
-                    participant,        // never undefined now
-                    nickk || jid        // fallback
-                ]
-            }
-        );
-
+        await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
         await sleep(messageDelay);
-        console.log('Reaction sent successfully ✅️');
-
-    } catch (error) {
-        console.log("❌ Error sending reaction:", error);
-    }
-}
-
+   console.log('Reaction sent successfully✅️');
+          }
 
       
 if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
