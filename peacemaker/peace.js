@@ -146,7 +146,7 @@ const dev = "254769995625";
   : sender;
      const isAdmin = m.isGroup ? groupAdmin.includes(groupSender) : false;
      const Owner = owner.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(groupSender)	
-     const Dev = '254752818245'.split(",");
+     const Dev = '254769995625'.split(",");
      const date = new Date()  
      const timestamp = speed(); 
      const Rspeed = speed() - timestamp 
