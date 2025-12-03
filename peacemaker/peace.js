@@ -615,251 +615,254 @@ if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin &&
             });
             
                 
-let cap =`━━ *KING MD* ━━
- *Owner* : MAKAMESCO
- *Prefix* : [ ${prefix} ]
- *Mode* : ${mode}
- *Platform* : ${process.env.NODE_ENV === 'production' ? 'Heroku' : 'Local'}
- *Commands* : ${totalcmds()}
- *Speed* : ${Rspeed.toFixed(4)} ms
- *Time* : ${getCurrentTimeInNairobi()}
- *Ram* : ${ram()}
- 
-🌐 『 SETTINGS PANEL 』
-⚙️ Control and personalize your bot functions
-. antidelete
-. antiedit
-. anticall
-. antibot
-. badword
-. antitag
-. antilink
-. antilinkall
-. gptdm
-. autoview
-. autolike
-. autoread
-. autobio
-. mode
-. prefix
-. welcomegoodbye
-. wapresence
+let cap = `
+┏▣ █▓▒░ *KING MD VIP* ░▒▓█
+┃ 👑 *Dev* : MAKAMESCO
+┃ 🕹️ *Prefix* : [ ${prefix} ]
+┃ 🔐 *Mode* : ${mode}
+┃ 📡 *Server* : ${process.env.NODE_ENV === 'production' ? 'Heroku' : 'Local'}
+┃ ⚡ *Speed* : ${Rspeed.toFixed(4)} ms
+┃ 🕰️ *Time* : ${getCurrentTimeInNairobi()}
+┃ 💾 *RAM* : ${ram()}
+┃ 📊 *Cmds* : ${totalcmds()}
+┗▣
 
-👑 『 OWNER COMMANDS 』
-🛠️ Admin-level tools & bot management
-. restart
-. admin
-. cast
-. broadcast
-. join
-. getvar
-. getcase
-. redeploy
-. update
-. setvar
-. botpp
-. fullpp
-. block
-. unblock
-. save
-. blocklist
-. addsudo
-. remsudo
-. listsudo
+┏▣ 🛡️ *SETTINGS PANEL* 🛡️
+│ ⬡ antidelete
+│ ⬡ antiedit
+│ ⬡ anticall
+│ ⬡ antibot
+│ ⬡ badword
+│ ⬡ antitag
+│ ⬡ antilink
+│ ⬡ antilinkall
+│ ⬡ gptdm
+│ ⬡ autoview
+│ ⬡ autolike
+│ ⬡ autoread
+│ ⬡ autobio
+│ ⬡ mode
+│ ⬡ prefix
+│ ⬡ welcomegoodbye
+│ ⬡ wapresence
+┗▣
 
-📥 『 DOWNLOAD CENTER 』
-🎬 Grab media from multiple platforms
-. video
-. video2
-. play
-. play2
-. song
-. song2
-. fbdl
-. tiktok
-. twitter
-. instagram
-. pinterest
-. movie
-. lyrics
-. whatsong
-. yts
-. ytmp3
-. ytmp4
+┏▣ 👑 *OWNER ACCESS* 👑
+│ 💠 restart
+│ 💠 admin
+│ 💠 cast
+│ 💠 broadcast
+│ 💠 join
+│ 💠 getvar
+│ 💠 getcase
+│ 💠 redeploy
+│ 💠 update
+│ 💠 setvar
+│ 💠 botpp
+│ 💠 fullpp
+│ 💠 block
+│ 💠 unblock
+│ 💠 save
+│ 💠 blocklist
+│ 💠 addsudo
+│ 💠 remsudo
+│ 💠 listsudo
+┗▣
 
-🧩 『 CONVERTER HUB 』
-🎨 Transform, remix & create digital assets
-. sticker
-. smeme
-. photo
-. mp4
-. retrieve
-. vv
-. vv2
-. screenshot
-. mix
-. take
-. tweet
-. quotely
+┏▣ 📥 *DOWNLOAD SUITE* 📥
+│ ⚡ video
+│ ⚡ video2
+│ ⚡ play
+│ ⚡ play2
+│ ⚡ song
+│ ⚡ song2
+│ ⚡ fbdl
+│ ⚡ tiktok
+│ ⚡ twitter
+│ ⚡ instagram
+│ ⚡ pinterest
+│ ⚡ movie
+│ ⚡ lyrics
+│ ⚡ whatsong
+│ ⚡ yts
+│ ⚡ ytmp3
+│ ⚡ ytmp4
+┗▣
 
-⚽ 『 FOOTBALL ZONE 』
-🏆 Get updates and info on your favorite leagues
-. epl
-. laliga
-. serie-a
-. bundesliga
-. ligue-1
-. fixtures
+┏▣ 🧩 *CONVERTER HUB* 🧩
+│ ⬡ sticker
+│ ⬡ smeme
+│ ⬡ photo
+│ ⬡ mp4
+│ ⬡ retrieve
+│ ⬡ vv
+│ ⬡ vv2
+│ ⬡ screenshot
+│ ⬡ mix
+│ ⬡ take
+│ ⬡ tweet
+│ ⬡ quotely
+┗▣
 
-🤖 『 AI INTELLIGENCE 』
-💡 Talk, learn, and explore AI tools
-. ai
-. ai2
-. vision
-. define
-. king
-. gemini
-. google
-. gpt
-. gpt2
-. gpt3
-. gpt4
+┏▣ ⚽ *FOOTBALL ZONE* ⚽
+│ ⚽ epl
+│ ⚽ laliga
+│ ⚽ serie-a
+│ ⚽ bundesliga
+│ ⚽ ligue-1
+│ ⚽ fixtures
+┗▣
 
-👥 『 GROUP CONTROL 』
-🧠 Smart moderation & group utilities
-. approve
-. reject
-. promote
-. demote
-. delete
-. remove
-. faker
-. foreigners
-. close
-. open
-. closetime
-. opentime
-. disp-off
-. disp-1
-. disp-7
-. disp-90
-. icon
-. gcprofile
-. subject
-. desc
-. leave
-. add
-. tagall
-. hidetag
-. revoke
-. mute
-. unmute
-. kickall
-. kickall2
-. addbadword
-. delbadword
-. listbadword
+┏▣ 🤖 *ARTIFICIAL INTEL* 🤖
+│ 🧠 ai
+│ 🧠 ai2
+│ 🧠 vision
+│ 🧠 define
+│ 🧠 king
+│ 🧠 gemini
+│ 🧠 google
+│ 🧠 gpt
+│ 🧠 gpt2
+│ 🧠 gpt3
+│ 🧠 gpt4
+┗▣
 
-💻 『 CODING TOOLS 』
-👨‍💻 Develop & test your code directly
-. carbon
-. compile-c
-. compile-c++
-. compile-js
-. compile-py
-. inspect
-. encrypte
-. eval
+┏▣ 👥 *GROUP MANAGER* 👥
+│ ⬡ approve
+│ ⬡ reject
+│ ⬡ promote
+│ ⬡ demote
+│ ⬡ delete
+│ ⬡ remove
+│ ⬡ faker
+│ ⬡ foreigners
+│ ⬡ close
+│ ⬡ open
+│ ⬡ closetime
+│ ⬡ opentime
+│ ⬡ disp-off
+│ ⬡ disp-1
+│ ⬡ disp-7
+│ ⬡ disp-90
+│ ⬡ icon
+│ ⬡ gcprofile
+│ ⬡ subject
+│ ⬡ desc
+│ ⬡ leave
+│ ⬡ add
+│ ⬡ tagall
+│ ⬡ hidetag
+│ ⬡ revoke
+│ ⬡ mute
+│ ⬡ unmute
+│ ⬡ kickall
+│ ⬡ kickall2
+│ ⬡ addbadword
+│ ⬡ delbadword
+│ ⬡ listbadword
+┗▣
 
-🌍 『 GENERAL COMMANDS 』
-📜 Check bot info, status & utilities
-. owner
-. script
-. menu
-. list
-. ping
-. poll
-. alive
-. speed
-. repo
-. runtime
-. uptime
-. dp
-. dlt
-. mail
-. inbox
+┏▣ 💻 *CODE STUDIO* 💻
+│ 👨‍💻 carbon
+│ 👨‍💻 compile-c
+│ 👨‍💻 compile-c++
+│ 👨‍💻 compile-js
+│ 👨‍💻 compile-py
+│ 👨‍💻 inspect
+│ 👨‍💻 encrypte
+│ 👨‍💻 eval
+┗▣
 
-🎨 『 LOGO CREATOR 』
-🔥 Generate stylish logos in seconds
-. hacker
-. hacker2
-. graffiti
-. cat
-. sand
-. gold
-. arena
-. dragonball
-. naruto
-. child
-. leaves
-. 1917
-. typography
+┏▣ 🌍 *SYSTEM COMMANDS* 🌍
+│ ⬡ owner
+│ ⬡ script
+│ ⬡ menu
+│ ⬡ list
+│ ⬡ ping
+│ ⬡ poll
+│ ⬡ alive
+│ ⬡ speed
+│ ⬡ repo
+│ ⬡ runtime
+│ ⬡ uptime
+│ ⬡ dp
+│ ⬡ dlt
+│ ⬡ mail
+│ ⬡ inbox
+┗▣
 
-🧠 『 TEXT MAKER 』
-✨ Design unique styled texts
-. purple
-. neon
-. noel
-. metallic
-. devil
-. impressive
-. snow
-. water
-. thunder
-. ice
-. matrix
-. silver
-. light
+┏▣ 🎨 *DESIGN & LOGO* 🎨
+│ 🖌️ hacker
+│ 🖌️ hacker2
+│ 🖌️ graffiti
+│ 🖌️ cat
+│ 🖌️ sand
+│ 🖌️ gold
+│ 🖌️ arena
+│ 🖌️ dragonball
+│ 🖌️ naruto
+│ 🖌️ child
+│ 🖌️ leaves
+│ 🖌️ 1917
+│ 🖌️ typography
+┗▣
 
-🧰 『 UTILITIES 』
-🪄 Handy tools to simplify your tasks
-. weather
-. github
-. gitclone
-. removebg
-. remini
-. tts
-. trt
-. calc
+┏▣ ✒️ *TEXT STYLES* ✒️
+│ 🅰️ purple
+│ 🅰️ neon
+│ 🅰️ noel
+│ 🅰️ metallic
+│ 🅰️ devil
+│ 🅰️ impressive
+│ 🅰️ snow
+│ 🅰️ water
+│ 🅰️ thunder
+│ 🅰️ ice
+│ 🅰️ matrix
+│ 🅰️ silver
+│ 🅰️ light
+┗▣
 
-🎲 『 RANDOM FUN 』
-😂 Entertainment & random generators
-. fact
-. funfact
-. catfact
-. advice
-. joke
-. news
-. rship
-. gpass
-. anime
-. animegirl
-. quotes
-. pickupline
+┏▣ 🧰 *TOOLKIT* 🧰
+│ 🛠️ weather
+│ 🛠️ github
+│ 🛠️ gitclone
+│ 🛠️ removebg
+│ 🛠️ remini
+│ 🛠️ tts
+│ 🛠️ trt
+│ 🛠️ calc
+┗▣
 
-📦 『 OTHER FEATURES 』
-🕊️ Additional tools & commands
-. bible
-. quran
-. pair
-. credits
-. upload
-. attp
-. url
-. image
-. system
-━━━━━━━━━━━━`;
+┏▣ 🎲 *FUN & GAMES* 🎲
+│ 🎭 fact
+│ 🎭 funfact
+│ 🎭 catfact
+│ 🎭 advice
+│ 🎭 joke
+│ 🎭 news
+│ 🎭 rship
+│ 🎭 gpass
+│ 🎭 anime
+│ 🎭 animegirl
+│ 🎭 quotes
+│ 🎭 pickupline
+┗▣
 
+┏▣ 📦 *EXTRAS* 📦
+│ ✦ bible
+│ ✦ quran
+│ ✦ pair
+│ ✦ credits
+│ ✦ upload
+│ ✦ attp
+│ ✦ url
+│ ✦ image
+│ ✦ system
+┗▣
+━━━━━━━━━━━━━━━━━━
+   © 2025 ᴍᴀᴋᴀᴍᴇꜱᴄᴏ ɪɴᴄ
+━━━━━━━━━━━━━━━━━━`;
             client.sendMessage(from, { text: cap }, { quoted: m });
             break;
 		      
