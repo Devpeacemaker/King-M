@@ -1,10 +1,39 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+// ================= UNIVERSAL DB CONNECTION =================
+const getDbConfig = () => {
+  // 1. If the Hosting Platform provides a generic DATABASE_URL (Heroku/Render)
+  if (process.env.DATABASE_URL) {
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    };
+  }
 
+  // 2. If the Panel provides specific variables (Pterodactyl/cPanel)
+  if (process.env.DB_HOST) {
+    return {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || process.env.DB_PASS || '',
+      database: process.env.DB_NAME || process.env.DB_DATABASE || 'postgres',
+      ssl: false 
+    };
+  }
+
+  // 3. FALLBACK: Hardcoded Database (The "Safety Net")
+  // If no .env is found, it uses this link automatically.
+  return {
+    connectionString: "postgres://ubjv0vpt8hr6hd:p0e3bf0e92ef4ed30adc06d153b09ba4ab336ec026a7a4a72881e13eda26ea9a3@c18qegamsgjut6.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d7q6gmnnl5aj9q",
+    ssl: { rejectUnauthorized: false }
+  };
+};
+
+const pool = new Pool(getDbConfig());
+
+// ================= DEFAULT BOT SETTINGS =================
 const defaultSettings = {
   antilink: 'on',
   antilinkall: 'off',
@@ -22,10 +51,11 @@ const defaultSettings = {
   prefix: '.',
   autolike: 'on',
   autoview: 'on',
-  wapresence: 'recording', 
-  antiedit: 'private' 
+  wapresence: 'recording',
+  antiedit: 'private'
 };
 
+// ================= DATABASE INITIALIZATION =================
 async function initializeDatabase() {
   const client = await pool.connect();
   console.log("📡 Connecting to PostgreSQL...");
@@ -66,7 +96,7 @@ async function initializeDatabase() {
       );
     }
 
-    console.log("✅ Database initialized.");
+    console.log("✅ Database initialized successfully.");
   } catch (err) {
     console.error("❌ Initialization error:", err);
   } finally {
@@ -74,10 +104,11 @@ async function initializeDatabase() {
   }
 }
 
-// ================= SETTINGS =================
+// ================= SETTINGS FUNCTIONS =================
 async function getSettings() {
   const client = await pool.connect();
   try {
+    // Fetch only keys that exist in our default settings to avoid errors
     const result = await client.query(
       `SELECT key, value FROM bot_settings WHERE key = ANY($1::text[])`,
       [Object.keys(defaultSettings)]
@@ -88,7 +119,8 @@ async function getSettings() {
       settings[row.key] = row.value;
     }
 
-    return settings;
+    // Merge with defaults to ensure missing keys have a value
+    return { ...defaultSettings, ...settings };
   } catch (err) {
     console.error("❌ Failed to fetch settings:", err);
     return defaultSettings;
@@ -103,9 +135,12 @@ async function updateSetting(key, value) {
     const validKeys = Object.keys(defaultSettings);
     if (!validKeys.includes(key)) throw new Error(`Invalid setting key: ${key}`);
 
+    // Update or Insert (Upsert) logic in case it was missing
     await client.query(
-      `UPDATE bot_settings SET value = $1 WHERE key = $2`,
-      [value, key]
+      `INSERT INTO bot_settings (key, value)
+       VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [key, value]
     );
 
     return true;
