@@ -26,7 +26,7 @@ const getDbConfig = () => {
   // 3. FALLBACK: Hardcoded Database (The "Safety Net")
   // If no .env is found, it uses this link automatically.
   return {
-    connectionString: "postgres://ubjv0vpt8hr6hd:p0e3bf0e92ef4ed30adc06d153b09ba4ab336ec026a7a4a72881e13eda26ea9a3@c18qegamsgjut6.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d7q6gmnnl5aj9q",
+    connectionString: "postgresql://neondb_owner:npg_lSc0PpxgeYn6@ep-rapid-forest-a4hm0939-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
     ssl: { rejectUnauthorized: false }
   };
 };
