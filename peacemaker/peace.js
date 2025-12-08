@@ -1577,50 +1577,63 @@ let options = []
     if (!text) return m.reply("Enter a song name. Example: .play Despacito");
 
     try {
-        // 1. SEARCH
-        // We log this to console to see if the link is correct
-        let searchUrl = `https://my-rest-apis-six.vercel.app/yts?query=${encodeURIComponent(text)}`;
-        console.log("Testing API URL:", searchUrl);
-        
-        let searchData = await fetchJson(searchUrl);
-        console.log("API Response:", searchData); // <--- CHECK YOUR LOGS FOR THIS
+        m.reply("🎵 Searching...");
 
-        // Check if the API returned a valid list
-        if (!searchData || !searchData.result || searchData.result.length === 0) {
-            return m.reply(`❌ Song not found on API.\n\nTry a different song name.`);
+        // 1. SEARCH using yt-search (More reliable than external APIs)
+        let search = await yts(text);
+        
+        // Check if we found any videos
+        if (!search || !search.all || search.all.length === 0) {
+            return m.reply("❌ No songs found! Try a different name.");
         }
 
-        // Get the first video
-        let firstVideo = searchData.result[0];
-        let videoUrl = firstVideo.videoUrl || firstVideo.url; 
-        let videoTitle = firstVideo.title;
+        // Get the first video result
+        let video = search.all[0];
+        let videoUrl = video.url;
+        let videoTitle = video.title;
+        let videoImage = video.thumbnail;
 
-        m.reply(`🎵 Found: *${videoTitle}*\nDownloading...`);
-
-        // 2. DOWNLOAD
+        // 2. DOWNLOAD using Apiskeith
+        // We use the URL found by yt-search
         let downloadApi = `https://apiskeith.vercel.app/download/dlmp3?url=${videoUrl}`;
         let dlData = await fetchJson(downloadApi);
 
+        // Verify the download link exists
         let downloadUrl = null;
         if (dlData.success && dlData.result) {
             downloadUrl = dlData.result.url || dlData.result.downloadUrl;
         }
 
-        if (!downloadUrl) throw new Error("Download API failed to give a link.");
+        if (!downloadUrl) {
+            // Backup Error Message if Apiskeith fails
+            return m.reply(`❌ Found *${videoTitle}*, but the download server is down.\n\nTry again later or check console.`);
+        }
 
-        // 3. SEND
+        // 3. SEND THE AUDIO
         await client.sendMessage(m.chat, {
             audio: { url: downloadUrl },
             mimetype: 'audio/mpeg',
-            fileName: `${videoTitle}.mp3`
+            fileName: `${videoTitle}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: videoTitle,
+                    body: `Duration: ${video.timestamp}`,
+                    thumbnailUrl: videoImage,
+                    sourceUrl: videoUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
         }, { quoted: m });
 
     } catch (e) {
-        console.error("PLAY ERROR:", e);
-        m.reply("Error: " + e.message);
+        console.error("PLAY CMD ERROR:", e);
+        m.reply("An error occurred: " + e.message);
     }
 }
 break;
+
+
 
 //========================================================================================================================//		      
  case "play2": {	      
