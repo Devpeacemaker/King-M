@@ -1,10 +1,15 @@
-const { Pool } = require('pg');
+require('dotenv').config();
+const path = require('path');
+// Import owner from set.js (Assumes set.js is in the main folder, one level up)
+let set;
+try {
+    set = require('../set');
+} catch (e) {
+    // Fallback if set.js is inside the Database folder or not found
+    try { set = require('./set'); } catch (e) { set = { owner: [] }; }
+}
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
+// ================= DEFAULT BOT SETTINGS =================
 const defaultSettings = {
   antilink: 'on',
   antilinkall: 'off',
@@ -22,201 +27,108 @@ const defaultSettings = {
   prefix: '.',
   autolike: 'on',
   autoview: 'on',
-  wapresence: 'recording', 
-  antiedit: 'private' 
+  wapresence: 'recording',
+  antiedit: 'private'
 };
 
-async function initializeDatabase() {
-  const client = await pool.connect();
-  console.log("📡 Connecting to PostgreSQL...");
+// ================= MODE DETECTION =================
+// If DATABASE_URL exists, use Postgres (Heroku/Render). 
+// If NOT, use SQLite (Panel/VPS) and sync owner from set.js.
+const usePostgres = !!process.env.DATABASE_URL;
 
-  try {
-    // 🔹 Bot settings
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS bot_settings (
-        id SERIAL PRIMARY KEY,
-        key TEXT UNIQUE NOT NULL,
-        value TEXT NOT NULL
-      );
-    `);
+let initializeDatabase, getSettings, updateSetting, addSudoOwner, removeSudoOwner, getSudoOwners, isSudoOwner, addBadword, removeBadword, getBadwords;
 
-    // 🔹 Sudo owners
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS sudo_owners (
-        id SERIAL PRIMARY KEY,
-        number TEXT UNIQUE NOT NULL
-      );
-    `);
+if (usePostgres) {
+  // ==========================================================
+  // 🟦 OPTION A: POSTGRESQL (Heroku / Render)
+  // ==========================================================
+  console.log("📡 Mode: Cloud (PostgreSQL detected)");
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
 
-    // 🔹 Badwords
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS badwords (
-        id SERIAL PRIMARY KEY,
-        word TEXT UNIQUE NOT NULL
-      );
-    `);
+  initializeDatabase = async function() {
+    const client = await pool.connect();
+    try {
+      await client.query(`CREATE TABLE IF NOT EXISTS bot_settings (id SERIAL PRIMARY KEY, key TEXT UNIQUE NOT NULL, value TEXT NOT NULL);`);
+      await client.query(`CREATE TABLE IF NOT EXISTS sudo_owners (id SERIAL PRIMARY KEY, number TEXT UNIQUE NOT NULL);`);
+      await client.query(`CREATE TABLE IF NOT EXISTS badwords (id SERIAL PRIMARY KEY, word TEXT UNIQUE NOT NULL);`);
 
-    // Insert default settings if not exist
-    for (const [key, value] of Object.entries(defaultSettings)) {
-      await client.query(
-        `INSERT INTO bot_settings (key, value)
-         VALUES ($1, $2)
-         ON CONFLICT (key) DO NOTHING;`,
-        [key, value]
-      );
-    }
+      for (const [key, value] of Object.entries(defaultSettings)) {
+        await client.query(`INSERT INTO bot_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING;`, [key, value]);
+      }
+      console.log("✅ PostgreSQL initialized.");
+    } catch (err) { console.error("❌ PG Init Error:", err); } finally { client.release(); }
+  };
 
-    console.log("✅ Database initialized.");
-  } catch (err) {
-    console.error("❌ Initialization error:", err);
-  } finally {
-    client.release();
+  // ... (Postgres functions remain the same) ...
+  getSettings = async function() { const client = await pool.connect(); try { const res = await client.query(`SELECT key, value FROM bot_settings`); const settings = {}; res.rows.forEach(row => settings[row.key] = row.value); return { ...defaultSettings, ...settings }; } catch (err) { return defaultSettings; } finally { client.release(); } };
+  updateSetting = async function(key, value) { const client = await pool.connect(); try { await client.query(`INSERT INTO bot_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [key, value]); return true; } catch (err) { return false; } finally { client.release(); } };
+  addSudoOwner = async function(number) { const client = await pool.connect(); try { await client.query(`INSERT INTO sudo_owners (number) VALUES ($1) ON CONFLICT DO NOTHING`, [number]); return true; } catch (err) { return false; } finally { client.release(); } };
+  removeSudoOwner = async function(number) { const client = await pool.connect(); try { await client.query(`DELETE FROM sudo_owners WHERE number = $1`, [number]); return true; } catch (err) { return false; } finally { client.release(); } };
+  getSudoOwners = async function() { const client = await pool.connect(); try { const res = await client.query(`SELECT number FROM sudo_owners`); return res.rows.map(r => r.number); } catch (err) { return []; } finally { client.release(); } };
+  isSudoOwner = async function(number) { const client = await pool.connect(); try { const res = await client.query(`SELECT 1 FROM sudo_owners WHERE number = $1`, [number]); return res.rowCount > 0; } catch (err) { return false; } finally { client.release(); } };
+  addBadword = async function(word) { const client = await pool.connect(); try { await client.query(`INSERT INTO badwords (word) VALUES ($1) ON CONFLICT DO NOTHING`, [word.toLowerCase()]); return true; } catch (err) { return false; } finally { client.release(); } };
+  removeBadword = async function(word) { const client = await pool.connect(); try { await client.query(`DELETE FROM badwords WHERE word = $1`, [word.toLowerCase()]); return true; } catch (err) { return false; } finally { client.release(); } };
+  getBadwords = async function() { const client = await pool.connect(); try { const res = await client.query(`SELECT word FROM badwords`); return res.rows.map(r => r.word); } catch (err) { return []; } finally { client.release(); } };
+
+} else {
+  // ==========================================================
+  // 🟩 OPTION B: SQLITE3 (Panel / VPS / Local)
+  // ==========================================================
+  console.log("📡 Mode: Panel (Switching to SQLite)");
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = path.resolve(__dirname, 'database.db');
+  const db = new sqlite3.Database(dbPath);
+
+  function query(sql, params = []) {
+    return new Promise((resolve, reject) => {
+      if (sql.trim().toUpperCase().startsWith('SELECT')) {
+        db.all(sql, params, (err, rows) => { if (err) reject(err); else resolve(rows); });
+      } else {
+        db.run(sql, params, function(err) { if (err) reject(err); else resolve(this); });
+      }
+    });
   }
-}
 
-// ================= SETTINGS =================
-async function getSettings() {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(
-      `SELECT key, value FROM bot_settings WHERE key = ANY($1::text[])`,
-      [Object.keys(defaultSettings)]
-    );
+  initializeDatabase = async function() {
+    try {
+      await query(`CREATE TABLE IF NOT EXISTS bot_settings (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE NOT NULL, value TEXT NOT NULL);`);
+      await query(`CREATE TABLE IF NOT EXISTS sudo_owners (id INTEGER PRIMARY KEY AUTOINCREMENT, number TEXT UNIQUE NOT NULL);`);
+      await query(`CREATE TABLE IF NOT EXISTS badwords (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL);`);
 
-    const settings = {};
-    for (const row of result.rows) {
-      settings[row.key] = row.value;
-    }
+      // 1. Sync Default Settings
+      for (const [key, value] of Object.entries(defaultSettings)) {
+        await query(`INSERT OR IGNORE INTO bot_settings (key, value) VALUES (?, ?)`, [key, value]);
+      }
 
-    return settings;
-  } catch (err) {
-    console.error("❌ Failed to fetch settings:", err);
-    return defaultSettings;
-  } finally {
-    client.release();
-  }
-}
+      // 2. 👑 AUTO-SYNC OWNER FROM SET.JS 👑
+      // This loops through the owner list in set.js and adds them to the database
+      if (set.owner && Array.isArray(set.owner)) {
+        for (const num of set.owner) {
+          if (num) {
+            await query(`INSERT OR IGNORE INTO sudo_owners (number) VALUES (?)`, [num.trim()]);
+          }
+        }
+        console.log(`✅ Auto-synced ${set.owner.length} owner(s) from set.js to SQLite.`);
+      }
 
-async function updateSetting(key, value) {
-  const client = await pool.connect();
-  try {
-    const validKeys = Object.keys(defaultSettings);
-    if (!validKeys.includes(key)) throw new Error(`Invalid setting key: ${key}`);
+      console.log("✅ SQLite initialized.");
+    } catch (err) { console.error("❌ SQLite Init Error:", err); }
+  };
 
-    await client.query(
-      `UPDATE bot_settings SET value = $1 WHERE key = $2`,
-      [value, key]
-    );
-
-    return true;
-  } catch (err) {
-    console.error("❌ Failed to update setting:", err.message || err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-// ================= SUDO FUNCTIONS =================
-async function addSudoOwner(number) {
-  const client = await pool.connect();
-  try {
-    await client.query(
-      `INSERT INTO sudo_owners (number) VALUES ($1) ON CONFLICT DO NOTHING`,
-      [number]
-    );
-    return true;
-  } catch (err) {
-    console.error("❌ Failed to add sudo owner:", err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-async function removeSudoOwner(number) {
-  const client = await pool.connect();
-  try {
-    await client.query(`DELETE FROM sudo_owners WHERE number = $1`, [number]);
-    return true;
-  } catch (err) {
-    console.error("❌ Failed to remove sudo owner:", err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-async function getSudoOwners() {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(`SELECT number FROM sudo_owners`);
-    return result.rows.map(r => r.number);
-  } catch (err) {
-    console.error("❌ Failed to fetch sudo owners:", err);
-    return [];
-  } finally {
-    client.release();
-  }
-}
-
-async function isSudoOwner(number) {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(
-      `SELECT 1 FROM sudo_owners WHERE number = $1`,
-      [number]
-    );
-    return result.rowCount > 0;
-  } catch (err) {
-    console.error("❌ Failed to check sudo owner:", err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-// ================= BADWORD FUNCTIONS =================
-async function addBadword(word) {
-  const client = await pool.connect();
-  try {
-    await client.query(
-      `INSERT INTO badwords (word) VALUES ($1) ON CONFLICT DO NOTHING`,
-      [word.toLowerCase()]
-    );
-    return true;
-  } catch (err) {
-    console.error("❌ Failed to add badword:", err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-async function removeBadword(word) {
-  const client = await pool.connect();
-  try {
-    await client.query(`DELETE FROM badwords WHERE word = $1`, [word.toLowerCase()]);
-    return true;
-  } catch (err) {
-    console.error("❌ Failed to remove badword:", err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-async function getBadwords() {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(`SELECT word FROM badwords`);
-    return result.rows.map(r => r.word);
-  } catch (err) {
-    console.error("❌ Failed to fetch badwords:", err);
-    return [];
-  } finally {
-    client.release();
-  }
+  // ... (SQLite functions remain the same) ...
+  getSettings = async function() { try { const rows = await query(`SELECT key, value FROM bot_settings`); const settings = {}; rows.forEach(row => settings[row.key] = row.value); return { ...defaultSettings, ...settings }; } catch (err) { return defaultSettings; } };
+  updateSetting = async function(key, value) { try { await query(`INSERT INTO bot_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, [key, value]); return true; } catch (err) { return false; } };
+  addSudoOwner = async function(number) { try { await query(`INSERT OR IGNORE INTO sudo_owners (number) VALUES (?)`, [number]); return true; } catch (err) { return false; } };
+  removeSudoOwner = async function(number) { try { await query(`DELETE FROM sudo_owners WHERE number = ?`, [number]); return true; } catch (err) { return false; } };
+  getSudoOwners = async function() { try { const rows = await query(`SELECT number FROM sudo_owners`); return rows.map(r => r.number); } catch (err) { return []; } };
+  isSudoOwner = async function(number) { try { const rows = await query(`SELECT 1 FROM sudo_owners WHERE number = ?`, [number]); return rows.length > 0; } catch (err) { return false; } };
+  addBadword = async function(word) { try { await query(`INSERT OR IGNORE INTO badwords (word) VALUES (?)`, [word.toLowerCase()]); return true; } catch (err) { return false; } };
+  removeBadword = async function(word) { try { await query(`DELETE FROM badwords WHERE word = ?`, [word.toLowerCase()]); return true; } catch (err) { return false; } };
+  getBadwords = async function() { try { const rows = await query(`SELECT word FROM badwords`); return rows.map(r => r.word); } catch (err) { return []; } };
 }
 
 module.exports = {
