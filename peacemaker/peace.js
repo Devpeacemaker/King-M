@@ -1320,7 +1320,7 @@ try {
     let search = await yts(text);
     if (!search.all.length) reply("No results found for your query.");
     let link = search.all[0].url; 
-    const apiUrl = `https://keith-api.vercel.app/download/dlmp3?url=${link}`;
+    const apiUrl = `https://apiskeith.vercel.app/download/audio?url=${link}`;
     let response = await fetch(apiUrl);
     let data = await response.json();
 
@@ -1454,7 +1454,7 @@ await client.sendMessage(from, {
     let search = await yts(text);
     if (!search.all.length) reply("No results found for your query.");
     let link = search.all[0].url; 
-    const apiUrl = `https://apis-keith.vercel.app/download/dlmp4?url=${link}`;
+    const apiUrl = `https://apiskeith.vercel.app/download/video?url=${link}`;
     let response = await fetch(apiUrl);
     let data = await response.json();
 
@@ -1573,67 +1573,62 @@ let options = []
 		break;
 
 //========================================================================================================================//		      
-	 case 'play':{
-  if (!text) return m.reply("Which song do you want to download?");
-  try {
-    let search = await yts(text);
-    let link = search.all[0].url;
-
-    const api = `https://casper-tech-apis.vercel.app/api/downloader/yt-audio?url=${link}`;
+	case 'play': {
+    if (!text) return m.reply("Enter a song name. Example: .play Despacito");
 
     try {
-      let data = await fetchJson(api);
+        m.reply("🎵 Searching...");
 
-      // Handle API response structure
-      let videoUrl;
-      if (data.success && data.result) {
-        videoUrl = data.result.url || data.result.downloadUrl;
-      }
+        // 1. SEARCH using your new API
+        // We use encodeURIComponent to handle spaces and special characters
+        let searchApi = `https://my-rest-apis-six.vercel.app/yts?query=${encodeURIComponent(text)}`;
+        let searchData = await fetchJson(searchApi);
 
-      if (!videoUrl) {
-        throw new Error("No download URL found in API response");
-      }
+        // API Safety Check: Ensure we actually got results
+        if (!searchData || !searchData.result || searchData.result.length === 0) {
+            return m.reply("Song not found!");
+        }
 
-      let outputFileName = `${search.all[0].title.replace(/[^a-zA-Z0-9 ]/g, "")}.mp3`;
-      let outputPath = path.join(__dirname, outputFileName);
+        // Get the first video result
+        let firstVideo = searchData.result[0];
+        let videoUrl = firstVideo.videoUrl || firstVideo.url; // Handle different API structures
+        let videoTitle = firstVideo.title;
 
-      const response = await axios({
-        url: videoUrl,
-        method: "GET",
-        responseType: "stream"
-      });
+        // 2. DOWNLOAD using the existing Apiskeith API
+        let downloadApi = `https://apiskeith.vercel.app/download/dlmp3?url=${videoUrl}`;
+        let dlData = await fetchJson(downloadApi);
 
-      if (response.status !== 200) {
-        throw new Error("API endpoint didn't respond correctly");
-      }
+        // Check if download API was successful
+        let downloadUrl = null;
+        if (dlData.success && dlData.result) {
+            downloadUrl = dlData.result.url || dlData.result.downloadUrl;
+        }
 
-      ffmpeg(response.data)
-        .toFormat("mp3")
-        .save(outputPath)
-        .on("end", async () => {
-          await client.sendMessage(
-            m.chat,
-            {
-              document: { url: outputPath },
-              mimetype: "audio/mp3",
-              caption: "KING M😏",
-              fileName: outputFileName,
-            },
-            { quoted: m }
-          );
-          fs.unlinkSync(outputPath);
-        })
-        .on("error", (err) => {
-          m.reply("Download failed\n" + err.message);
-        });
+        if (!downloadUrl) throw new Error("Could not retrieve download link.");
 
-    } catch (apiError) {
-      m.reply("Failed to fetch download URL from API: " + apiError.message);
+        // 3. SEND AUDIO (Optimized)
+        // Instead of downloading -> converting -> saving (which is slow),
+        // we send the URL directly. WhatsApp handles the rest.
+        await client.sendMessage(m.chat, {
+            audio: { url: downloadUrl },
+            mimetype: 'audio/mpeg',
+            fileName: `${videoTitle}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: videoTitle,
+                    body: "Downloaded via Bot",
+                    thumbnailUrl: firstVideo.thumbnail || "",
+                    sourceUrl: videoUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: m });
+
+    } catch (e) {
+        console.error(e);
+        m.reply("An error occurred: " + e.message);
     }
-
-  } catch (error) {
-    m.reply("Download failed\n" + error.message);
-  }
 }
 break;
 
@@ -3399,7 +3394,7 @@ const rel = await quote(xf, pushname, pppuser)
                 
                 client.sendImageAsSticker(m.chat, rel.result, m, {
                     packname: pushname,
-                    author: `𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱`
+                    author: `MAKA DEV`
                 })
 
 } catch (errr) { 
