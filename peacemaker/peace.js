@@ -641,7 +641,7 @@ let cap = `
 ┃ 👑 *Dev* : MAKAMESCO
 ┃ 🕹️ *Prefix* : [ ${prefix} ]
 ┃ 🔐 *Mode* : ${mode}
-┃ 📡 *Server* : ${process.env.NODE_ENV === 'production' ? 'Heroku' : 'Local'}
+┃ 📡 *Server* : ${process.env.RENDER ? 'Render' : process.env.HEROKU_APP_NAME ? 'Heroku' : process.env.HOME === '/home/container' ? 'Panel' : 'Local'}
 ┃ ⚡ *Speed* : ${Rspeed.toFixed(4)} ms
 ┃ 🕰️ *Time* : ${getCurrentTimeInNairobi()}
 ┃ 💾 *RAM* : ${ram()}
