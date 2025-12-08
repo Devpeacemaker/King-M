@@ -1578,10 +1578,7 @@ let options = []
 
 
         
-             const axios = require('axios');
-const yts = require('yt-search');
-
-case 'play': {
+case 'song': {
     if (!text) return m.reply("enter song name. eg: .play Sauti Sol");
 
     try {
