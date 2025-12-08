@@ -1577,57 +1577,47 @@ let options = []
     if (!text) return m.reply("Enter a song name. Example: .play Despacito");
 
     try {
-        m.reply("🎵 Searching...");
+        // 1. SEARCH
+        // We log this to console to see if the link is correct
+        let searchUrl = `https://my-rest-apis-six.vercel.app/yts?query=${encodeURIComponent(text)}`;
+        console.log("Testing API URL:", searchUrl);
+        
+        let searchData = await fetchJson(searchUrl);
+        console.log("API Response:", searchData); // <--- CHECK YOUR LOGS FOR THIS
 
-        // 1. SEARCH using your new API
-        // We use encodeURIComponent to handle spaces and special characters
-        let searchApi = `https://my-rest-apis-six.vercel.app/yts?query=${encodeURIComponent(text)}`;
-        let searchData = await fetchJson(searchApi);
-
-        // API Safety Check: Ensure we actually got results
+        // Check if the API returned a valid list
         if (!searchData || !searchData.result || searchData.result.length === 0) {
-            return m.reply("Song not found!");
+            return m.reply(`❌ Song not found on API.\n\nTry a different song name.`);
         }
 
-        // Get the first video result
+        // Get the first video
         let firstVideo = searchData.result[0];
-        let videoUrl = firstVideo.videoUrl || firstVideo.url; // Handle different API structures
+        let videoUrl = firstVideo.videoUrl || firstVideo.url; 
         let videoTitle = firstVideo.title;
 
-        // 2. DOWNLOAD using the existing Apiskeith API
+        m.reply(`🎵 Found: *${videoTitle}*\nDownloading...`);
+
+        // 2. DOWNLOAD
         let downloadApi = `https://apiskeith.vercel.app/download/dlmp3?url=${videoUrl}`;
         let dlData = await fetchJson(downloadApi);
 
-        // Check if download API was successful
         let downloadUrl = null;
         if (dlData.success && dlData.result) {
             downloadUrl = dlData.result.url || dlData.result.downloadUrl;
         }
 
-        if (!downloadUrl) throw new Error("Could not retrieve download link.");
+        if (!downloadUrl) throw new Error("Download API failed to give a link.");
 
-        // 3. SEND AUDIO (Optimized)
-        // Instead of downloading -> converting -> saving (which is slow),
-        // we send the URL directly. WhatsApp handles the rest.
+        // 3. SEND
         await client.sendMessage(m.chat, {
             audio: { url: downloadUrl },
             mimetype: 'audio/mpeg',
-            fileName: `${videoTitle}.mp3`,
-            contextInfo: {
-                externalAdReply: {
-                    title: videoTitle,
-                    body: "Downloaded via Bot",
-                    thumbnailUrl: firstVideo.thumbnail || "",
-                    sourceUrl: videoUrl,
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
-            }
+            fileName: `${videoTitle}.mp3`
         }, { quoted: m });
 
     } catch (e) {
-        console.error(e);
-        m.reply("An error occurred: " + e.message);
+        console.error("PLAY ERROR:", e);
+        m.reply("Error: " + e.message);
     }
 }
 break;
