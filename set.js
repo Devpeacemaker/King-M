@@ -25,7 +25,7 @@ const port = process.env.PORT || 8080;
 
 // 🔹 DATABASE
 // This uses the same fallback logic as your config.js
-const databaseUrl = process.env.DATABASE_URL || "postgres://ubjv0vpt8hr6hd:p0e3bf0e92ef4ed30adc06d153b09ba4ab336ec026a7a4a72881e13eda26ea9a3@c18qegamsgjut6.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d7q6gmnnl5aj9q";
+const databaseUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_lSc0PpxgeYn6@ep-rapid-forest-a4hm0939-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 // 🔹 VISUALS & MENUS
 const menulink = process.env.MENU_LINK || 'https://files.catbox.moe/as1b4c.png'; 
