@@ -228,7 +228,22 @@ if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
   process.on("Something went wrong", function (err) {
     console.log("Caught exception: ", err);
   });
+//play helper 
+  // =============================================
+// PASTE THIS AT THE VERY BOTTOM OF YOUR FILE
+// =============================================
 
+const fetch = require('node-fetch'); // Ensure you have this: npm install node-fetch
+
+async function fetchJson(url, options) {
+    try {
+        options ? options : {};
+        const res = await fetch(url, options);
+        return await res.json();
+    } catch (err) {
+        return err;
+    }
+}
   // Setting
   client.decodeJid = (jid) => {
     if (!jid) return jid;
