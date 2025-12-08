@@ -1573,43 +1573,70 @@ let options = []
 		break;
 
 //========================================================================================================================//		      
-	case 'play': {
+	// Ensure you have this at the top: const yts = require('yt-search');
+
+case 'play': {
     if (!text) return m.reply("Enter a song name. Example: .play Despacito");
 
     try {
-        m.reply("🎵 Searching...");
-
-        // 1. SEARCH using yt-search (More reliable than external APIs)
+        // 1. SEARCH (This part is working now)
         let search = await yts(text);
-        
-        // Check if we found any videos
         if (!search || !search.all || search.all.length === 0) {
             return m.reply("❌ No songs found! Try a different name.");
         }
 
-        // Get the first video result
         let video = search.all[0];
         let videoUrl = video.url;
         let videoTitle = video.title;
         let videoImage = video.thumbnail;
+        
+        m.reply(`🎵 Found: *${videoTitle}*\nTrying to download...`);
 
-        // 2. DOWNLOAD using Apiskeith
-        // We use the URL found by yt-search
-        let downloadApi = `https://apiskeith.vercel.app/download/dlmp3?url=${videoUrl}`;
-        let dlData = await fetchJson(downloadApi);
+        // 2. DEFINE BACKUP APIs
+        // We encode the URL safely so special characters don't break the link
+        let enc = encodeURIComponent(videoUrl);
+        
+        const apis = [
+            `https://apiskeith.vercel.app/download/dlmp3?url=${enc}`, // Priority 1
+            `https://apiskeith.vercel.app/download/ytmp3?url=${enc}`, // Priority 2
+            `https://apiskeith.vercel.app/download/audio?url=${enc}`, // Priority 3
+            `https://apiskeith.vercel.app/download/ytv?url=${enc}`    // Last Resort (Video)
+        ];
 
-        // Verify the download link exists
         let downloadUrl = null;
-        if (dlData.success && dlData.result) {
-            downloadUrl = dlData.result.url || dlData.result.downloadUrl;
+
+        // 3. LOOP THROUGH APIS (The Failover Logic)
+        for (let api of apis) {
+            try {
+                // console.log("Trying API:", api); // Uncomment to debug
+                let data = await fetchJson(api);
+
+                // Different APIs return different structures. We check all common ones:
+                if (data.status || data.success) {
+                    // Check structure A: data.result.url
+                    if (data.result && data.result.url) downloadUrl = data.result.url;
+                    // Check structure B: data.result.downloadUrl
+                    else if (data.result && data.result.downloadUrl) downloadUrl = data.result.downloadUrl;
+                    // Check structure C: data.url (some apis return this)
+                    else if (data.url) downloadUrl = data.url;
+                }
+                
+                // If we found a valid URL starting with http, STOP the loop
+                if (downloadUrl && downloadUrl.startsWith('http')) {
+                    break; 
+                }
+            } catch (err) {
+                // If this API fails, the loop just continues to the next one automatically
+                continue;
+            }
         }
 
+        // 4. FINAL CHECK
         if (!downloadUrl) {
-            // Backup Error Message if Apiskeith fails
-            return m.reply(`❌ Found *${videoTitle}*, but the download server is down.\n\nTry again later or check console.`);
+            return m.reply(`❌ Failed to download *${videoTitle}*.\n\nI tried 4 different servers but all are down. Please try again later.`);
         }
 
-        // 3. SEND THE AUDIO
+        // 5. SEND AUDIO
         await client.sendMessage(m.chat, {
             audio: { url: downloadUrl },
             mimetype: 'audio/mpeg',
@@ -1617,7 +1644,7 @@ let options = []
             contextInfo: {
                 externalAdReply: {
                     title: videoTitle,
-                    body: `Duration: ${video.timestamp}`,
+                    body: `Duration: ${video.timestamp} • Views: ${video.views}`,
                     thumbnailUrl: videoImage,
                     sourceUrl: videoUrl,
                     mediaType: 1,
@@ -1632,7 +1659,6 @@ let options = []
     }
 }
 break;
-
 
 
 //========================================================================================================================//		      
