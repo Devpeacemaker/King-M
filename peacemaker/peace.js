@@ -1575,99 +1575,79 @@ let options = []
 //========================================================================================================================//		      
 	// Ensure you have this at the top: const yts = require('yt-search');
 
-case 'song': {
-    if (!text) return m.reply("Enter a song name. Example: .play Despacito");
+
+
+        
+             const axios = require('axios');
+const yts = require('yt-search');
+
+case 'play': {
+    if (!text) return m.reply("enter song name. eg: .play Sauti Sol");
 
     try {
-        // 1. SEARCH (Reliable Local Search)
+        // 1. SEARCH
         let search = await yts(text);
+        if (!search.all.length) return m.reply("❌ song not found.");
+        
         let video = search.all[0];
-
-        if (!video) return m.reply("❌ 404: Song not found.");
-
         let videoUrl = video.url;
-        let title = video.title;
-        let thumb = video.thumbnail;
-
+        
         await client.sendMessage(m.chat, { 
-            text: `🎵 *Found:* ${title}\n⤵️ *Downloading from Main Server...*` 
+            text: `🎵 *searchin:* ${video.title}\n⏳ *wait we are sniffing ur request...*` 
         }, { quoted: m });
 
-        // 2. THE WORKING APIS (Used by Siputzx & Suhail-MD)
-        // We use a "Race" strategy: Try the best one, if it fails, try the next.
-        
         let downloadUrl = null;
+
+        // 2. NEW SERVER LIST (Non-Indonesian based to bypass Heroku Ban)
         
-        // List of currently active "Premium-Free" APIs
-        let apis = [
-            // API 1: Siputzx (Very reliable, used by 500+ bots)
-            `https://api.siputzx.my.id/api/d/ytmp3?url=${videoUrl}`,
-            
-            // API 2: RyzenDesu (Backup used by Xeon Bot)
-            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${videoUrl}`,
-            
-            // API 3: D-Tech (Old reliable backup)
-            `https://api.davidcyriltech.my.id/download/ytmp3?url=${videoUrl}`
-        ];
-
-        for (let api of apis) {
-            try {
-                // We use axios for better stability than fetch
-                let res = await axios.get(api);
-                let data = res.data;
-
-                // Siputzx format: data.data.dl
-                if (data.data && data.data.dl) {
-                    downloadUrl = data.data.dl;
-                    break;
-                } 
-                // Ryzen format: data.url
-                else if (data.url) {
-                    downloadUrl = data.url;
-                    break;
-                }
-                // D-Tech format: data.result.downloadUrl
-                else if (data.result && data.result.downloadUrl) {
-                    downloadUrl = data.result.downloadUrl;
-                    break;
-                }
-            } catch (err) {
-                console.log(`API Failed: ${api}`);
-                continue; // Move to next API
+        // SERVER A: GuruAPI (Tech-based, very high limits)
+        try {
+            let res = await axios.get(`https://api.guruapi.tech/ytdl/ytmp3?url=${videoUrl}`);
+            if (res.data && res.data.data && res.data.data.audio) {
+                downloadUrl = res.data.data.audio;
             }
-        }
+        } catch (e) { console.log("GuruAPI Failed, trying next..."); }
 
-        // 3. FINAL ERROR TRAP
+        // SERVER B: Vreden (If Server A fails)
         if (!downloadUrl) {
-            return m.reply("❌ All 3 Servers are down. This usually means YouTube has blocked the bot IPs. Try again in 1 hour.");
+            try {
+                let res = await axios.get(`https://api.vreden.web.id/api/ytmp3?url=${videoUrl}`);
+                if (res.data && res.data.result && res.data.result.download && res.data.result.download.url) {
+                    downloadUrl = res.data.result.download.url;
+                }
+            } catch (e) { console.log("Vreden Failed, trying next..."); }
         }
 
-        // 4. SEND (Document Mode - Safer)
+        // SERVER C: Yt1s (Old School Scraper as last resort)
+        if (!downloadUrl) {
+            try {
+                let res = await axios.get(`https://api.agatz.xyz/api/ytmp3?url=${videoUrl}`);
+                if (res.data && res.data.data) {
+                    downloadUrl = res.data.data;
+                }
+            } catch (e) { console.log("Agatz Failed."); }
+        }
+
+        // 3. FINAL CHECK
+        if (!downloadUrl) {
+            return m.reply("❌ Leo mambo ni magumu. Servers zote zimekataa.");
+        }
+
+        // 4. SEND AS DOCUMENT (No Fancy Metadata to prevent crashes)
         await client.sendMessage(m.chat, {
             document: { url: downloadUrl },
             mimetype: 'audio/mpeg',
-            fileName: `${title}.mp3`,
-            caption: `*${title}*\nDownloaded by Bot`,
-            contextInfo: {
-                externalAdReply: {
-                    title: title,
-                    body: "2025 Working Downloader",
-                    thumbnailUrl: thumb,
-                    sourceUrl: videoUrl,
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
-            }
+            fileName: `${video.title}.mp3`,
+            caption: `*${video.title}*`
         }, { quoted: m });
 
     } catch (e) {
-        console.error(e);
-        m.reply("Critical Error: " + e.message);
+        console.error("ERROR:", e);
+        m.reply("Error: " + e.message);
     }
 }
 break;
-
-
+             
 
 //========================================================================================================================//		      
  case "play2": {	      
