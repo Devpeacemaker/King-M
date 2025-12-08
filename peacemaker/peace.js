@@ -1353,7 +1353,7 @@ await client.sendMessage(
 break;
 
 //========================================================================================================================//	      		      
-  case "song": {		      
+  case "play": {		      
  if (!text) {
       return client.sendMessage(from, { text: 'Please provide a song name.' }, { quoted: m });
     }
@@ -1575,74 +1575,84 @@ let options = []
 //========================================================================================================================//		      
 	// Ensure you have this at the top: const yts = require('yt-search');
 
-
-case 'play': {
+case 'song': {
     if (!text) return m.reply("Enter a song name. Example: .play Despacito");
 
     try {
-        // 1. SEARCH (Using yt-search locally)
+        // 1. SEARCH (Reliable Local Search)
         let search = await yts(text);
-        if (!search || !search.all || search.all.length === 0) {
-            return m.reply("❌ No songs found! Try a different name.");
-        }
-
         let video = search.all[0];
+
+        if (!video) return m.reply("❌ 404: Song not found.");
+
         let videoUrl = video.url;
-        let videoTitle = video.title;
-        let videoImage = video.thumbnail;
-        
-        // Notify user we found it
+        let title = video.title;
+        let thumb = video.thumbnail;
+
         await client.sendMessage(m.chat, { 
-            text: `🎵 *Found:* ${videoTitle}\n⏳ *Downloading as Document...*` 
+            text: `🎵 *Found:* ${title}\n⤵️ *Downloading from Main Server...*` 
         }, { quoted: m });
 
-        // 2. NEW WORKING APIs (Failover System)
-        // We use encodeURIComponent to prevent link breaking
-        let enc = encodeURIComponent(videoUrl);
+        // 2. THE WORKING APIS (Used by Siputzx & Suhail-MD)
+        // We use a "Race" strategy: Try the best one, if it fails, try the next.
         
-        const apis = [
-            // API 1: David Cyril (Very Stable)
-            `https://api.davidcyriltech.my.id/download/ytmp3?url=${enc}`,
-            // API 2: Widipe (Backup)
-            `https://widipe.com/download/ytmp3?url=${enc}`,
-            // API 3: Siputzx (Backup)
-            `https://api.siputzx.my.id/api/d/ytmp3?url=${enc}`
+        let downloadUrl = null;
+        
+        // List of currently active "Premium-Free" APIs
+        let apis = [
+            // API 1: Siputzx (Very reliable, used by 500+ bots)
+            `https://api.siputzx.my.id/api/d/ytmp3?url=${videoUrl}`,
+            
+            // API 2: RyzenDesu (Backup used by Xeon Bot)
+            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${videoUrl}`,
+            
+            // API 3: D-Tech (Old reliable backup)
+            `https://api.davidcyriltech.my.id/download/ytmp3?url=${videoUrl}`
         ];
 
-        let downloadUrl = null;
-
-        // 3. TRY APIs ONE BY ONE
         for (let api of apis) {
             try {
-                let data = await fetchJson(api);
-                
-                // Logic to find the link in different JSON structures
-                if (data.result && data.result.downloadUrl) downloadUrl = data.result.downloadUrl;
-                else if (data.result && data.result.url) downloadUrl = data.result.url;
-                else if (data.url) downloadUrl = data.url;
-                else if (typeof data === 'string' && data.startsWith('http')) downloadUrl = data;
+                // We use axios for better stability than fetch
+                let res = await axios.get(api);
+                let data = res.data;
 
-                if (downloadUrl) break; // If we found a link, stop the loop
+                // Siputzx format: data.data.dl
+                if (data.data && data.data.dl) {
+                    downloadUrl = data.data.dl;
+                    break;
+                } 
+                // Ryzen format: data.url
+                else if (data.url) {
+                    downloadUrl = data.url;
+                    break;
+                }
+                // D-Tech format: data.result.downloadUrl
+                else if (data.result && data.result.downloadUrl) {
+                    downloadUrl = data.result.downloadUrl;
+                    break;
+                }
             } catch (err) {
-                continue; // If this API fails, try the next one
+                console.log(`API Failed: ${api}`);
+                continue; // Move to next API
             }
         }
 
+        // 3. FINAL ERROR TRAP
         if (!downloadUrl) {
-            return m.reply(`❌ Failed to download *${videoTitle}*. All servers are busy.`);
+            return m.reply("❌ All 3 Servers are down. This usually means YouTube has blocked the bot IPs. Try again in 1 hour.");
         }
 
-        // 4. SEND AS DOCUMENT (FILE)
+        // 4. SEND (Document Mode - Safer)
         await client.sendMessage(m.chat, {
             document: { url: downloadUrl },
             mimetype: 'audio/mpeg',
-            fileName: `${videoTitle}.mp3`,
-            caption: `*${videoTitle}*\nDownloaded via Bot`,
+            fileName: `${title}.mp3`,
+            caption: `*${title}*\nDownloaded by Bot`,
             contextInfo: {
                 externalAdReply: {
-                    title: videoTitle,
-                    body: "Audio Document",
-                    thumbnailUrl: videoImage,
+                    title: title,
+                    body: "2025 Working Downloader",
+                    thumbnailUrl: thumb,
                     sourceUrl: videoUrl,
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -1651,11 +1661,13 @@ case 'play': {
         }, { quoted: m });
 
     } catch (e) {
-        console.error("PLAY ERROR:", e);
-        m.reply("Error: " + e.message);
+        console.error(e);
+        m.reply("Critical Error: " + e.message);
     }
 }
 break;
+
+
 
 //========================================================================================================================//		      
  case "play2": {	      
