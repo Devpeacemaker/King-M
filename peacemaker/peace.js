@@ -552,8 +552,7 @@ if (
 //========================================================================================================================//	  
  // 1. Add .toLowerCase() to body to catch 'Chat.whatsapp.com'
 // 2. Ensure 'body' actually exists before checking
-
-                    if (antilink === 'on' && body.includes('chat.whatsapp.com') && !Owner && isBotAdmin && !isAdmin && m.isGroup) { 
+  if (antilink === 'on' && body.includes('chat.whatsapp.com') && !Owner && isBotAdmin && !isAdmin && m.isGroup) { 
     kid = m.sender; 
     
     client.sendMessage(m.chat, { 
@@ -576,20 +575,24 @@ if (
         
 //========================================================================================================================//
 if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin && !isAdmin && m.isGroup) { 
-  
- ki = m.sender; 
-  
- client.sendMessage(m.chat, { 
-  
-                delete: { 
-                   remoteJid: m.chat, 
-                   fromMe: false, 
-                   id: m.key.id, 
-                   participant: ki
-                } 
-             }).then(() => client.groupParticipantsUpdate(m.chat, [ki], 'remove')); 
- client.sendMessage(m.chat, {text:`𝗛𝗲𝘆 @${ki.split("@")[0]}👋\n\n𝗦𝗲𝗻𝗱𝗶𝗻𝗴 𝗟𝗶𝗻𝗸𝘀 𝗶𝘀 𝗣𝗿𝗼𝗵𝗶𝗯𝗶𝘁𝗲𝗱 𝗶𝗻 𝘁𝗵𝗶𝘀 𝗚𝗿𝗼𝘂𝗽 !`, contextInfo:{mentionedJid:[ki]}}, {quoted:m}); 
-       }   
+    ki = m.sender; 
+    
+    client.sendMessage(m.chat, { 
+        delete: { 
+            remoteJid: m.chat, 
+            fromMe: false, 
+            id: m.key.id, 
+            participant: ki
+        } 
+    }).then(() => {
+        client.groupParticipantsUpdate(m.chat, [ki], 'remove');
+        
+        client.sendMessage(m.chat, {
+            text: `⚠️ *King M WARNING:*\n@${ki.split("@")[0]}, external links prohibited.\nRemoved from group.`,
+            mentions: [ki]
+        }, { quoted: m });
+    });
+}
   
   //========================================================================================================================//
   //========================================================================================================================//
