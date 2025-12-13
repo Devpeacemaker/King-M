@@ -37,9 +37,7 @@ module.exports = peace = async (client, m, chatUpdate, store) => {
   try {
 
 const {
-  alwaysonline, 
-  autotyping,
-  autorecording,
+  wapresence,
   autoread,
   mode,
   prefix,
@@ -98,7 +96,7 @@ const {
 	  // ==================================
 const ownerNumber = botNumber.replace(/[^0-9]/g, "");   
 const senderNumber = sender.split("@")[0];              
-const isOwner = senderNumber === ownerNumber || senderNumber === "254752818245";
+const isOwner = senderNumber === ownerNumber || senderNumber === "254769995625";
 const isSudo = await isSudoOwner(senderNumber);
 const isPrivileged = isOwner || isSudo;
 const dev = "254769995625"; 
@@ -235,7 +233,7 @@ async function handleMessageRevocation(client, revocationMessage, antideleteMode
     const deletedDate = localNow.toLocaleDateString();
 
     // Base notification text
-    let notificationText = `🚨 *ᴘᴇᴀᴄᴇ ᴄᴏʀᴇ ᴀɴᴛɪᴅᴇʟᴇᴛᴇ* 🚨\n\n` +
+    let notificationText = `🚨 *KING-M ᴀɴᴛɪᴅᴇʟᴇᴛᴇ* 🚨\n\n` +
       `👤 ᴅᴇʟᴇᴛᴇᴅ ʙʏ: ${deletedByFormatted}\n` +
       `✉️ sᴇɴᴛ ʙʏ: ${sentByFormatted}\n` +
       `📅 ᴅᴀᴛᴇ: ${deletedDate}\n` +
@@ -352,20 +350,19 @@ async function handleMessageRevocation(client, revocationMessage, antideleteMode
     let argsLog = budy.length > 30 ? `${q.substring(0, 30)}...` : budy;
 	  
 //========================================================================================================================//
-async function updatePresence(client) {
-    const settings = await getSettings();
-    const Grace = mek.key.remoteJid; 
-    
-    if (settings.alwaysonline === 'on') {
-        client.sendPresenceUpdate('available', Grace);
-    } else if (settings.autotyping === 'on') {
-        client.sendPresenceUpdate('composing', Grace);
-    } else if (settings.autorecording === 'on') {
-        client.sendPresenceUpdate('recording', Grace);
+const Grace = mek.key.remoteJid;
+if (wapresence === 'online') { 
+             client.sendPresenceUpdate('available', Grace);
+	
+} else if (wapresence === 'typing') { 
+             client.sendPresenceUpdate('composing', Grace);
+	
+      }	else if (wapresence === 'recording') { 
+             client.sendPresenceUpdate('recording', Grace);
+             
     } else {
-        client.sendPresenceUpdate('unavailable', Grace);
+             client.sendPresenceUpdate('unavailable', Grace);
     }
-}
 //========================================================================================================================//    
 if (cmd && mode === 'private' && !itsMe && !isPrivileged && m.sender !== dev) {
     return;
@@ -394,13 +391,13 @@ if (antidelete !== "off") {
 client.sendContact = async (chatId, numbers, text = '', options = {}) => {
   try {
     const contacts = numbers.map(number => ({
-      displayName: 'ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ',
-      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nFN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Number\nitem2.EMAIL;type=INTERNET:muuoemmanuel649@gmail.com\nitem2.X-ABLabel:Email\nitem3.URL:https://instagram.com/peacemaker_hunter72\nitem3.X-ABLabel:Instagram\nitem4.ADR:;;Kenya;;\nitem4.X-ABLabel:Region\nEND:VCARD`
+      displayName: 'MAKAMESCO',
+      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nFN:ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Number\nitem2.EMAIL;type=INTERNET:makamescodigitalsolutions@gmail.com\nitem2.X-ABLabel:Email\nitem3.URL:https://instagram.com/peacemaker_hunter72\nitem3.X-ABLabel:Instagram\nitem4.ADR:;;Kenya;;\nitem4.X-ABLabel:Region\nEND:VCARD`
     }));
 
     await client.sendMessage(chatId, {
       contacts: {
-        displayName: 'ᴘᴇᴀᴄᴇᴍᴀᴋᴇʀ',
+        displayName: 'MAKAMESCCO',
         contacts: contacts
       },
       ...options
@@ -426,7 +423,7 @@ if (
     try {
       const kid = m.sender;
       await client.sendMessage(m.chat, {
-        text: `𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 anti-spam!\n\n@${kid.split('@')[0]} has been identified as a bot and removed to prevent unnecessary spam!`,
+        text: `king m anti-spam!\n\n@${kid.split('@')[0]} has been identified as a bot and removed to prevent unnecessary spam!`,
         contextInfo: { mentionedJid: [kid] }
       }, { quoted: m });
 
@@ -553,47 +550,58 @@ if (
   client.groupParticipantsUpdate(from, [sender], 'remove');
 }
 //========================================================================================================================//	  
-    if (antilink === 'on' && body.includes('chat.whatsapp.com') && !Owner && isBotAdmin && !isAdmin && m.isGroup) { 
-    kid = m.sender; 
-    
-    client.sendMessage(m.chat, { 
-        delete: { 
-            remoteJid: m.chat, 
-            fromMe: false, 
-            id: m.key.id, 
-            participant: kid 
-        } 
-    }).then(() => {
-        client.groupParticipantsUpdate(m.chat, [kid], 'remove');
-        
-        client.sendMessage(m.chat, {
-            text: `⚠️ *KING M WARNING:*\n@${kid.split("@")[0]}, WhatsApp links not allowed here.\nRemoved from group.`,
-            mentions: [kid]
-        }, { quoted: m });
-    });
-}
+ // 1. Add .toLowerCase() to body to catch 'Chat.whatsapp.com'
+// 2. Ensure 'body' actually exists before checking
+if (antilink === 'on' && m.isGroup && body && body.toLowerCase().includes('chat.whatsapp.com')) {
 
+    // Check permissions
+    if (!Owner && !isAdmin && isBotAdmin) {
+        let kid = m.sender;
+        
+        try {
+            // STEP 1: Delete the link message
+            // We use 'await' to make sure it deletes before we try to kick
+            await client.sendMessage(m.chat, {
+                delete: {
+                    remoteJid: m.chat,
+                    fromMe: false,
+                    id: m.key.id,
+                    participant: kid
+                }
+            });
+
+            // STEP 2: Kick the user
+            await client.groupParticipantsUpdate(m.chat, [kid], 'remove');
+
+            // STEP 3: Send Warning (Don't quote the message 'm' because it's already deleted)
+            await client.sendMessage(m.chat, {
+                text: `𝗛𝗲𝘆 @${kid.split("@")[0]}👋\n\n𝗦𝗲𝗻𝗱𝗶𝗻𝗴 𝗚𝗿𝗼𝘂𝗽 𝗟𝗶𝗻𝗸𝘀 𝗶𝘀 𝗣𝗿𝗼𝗵𝗶𝗯𝗶𝘁𝗲𝗱!`,
+                contextInfo: { mentionedJid: [kid] }
+            });
+
+        } catch (err) {
+            console.log("Antilink Error:", err);
+            // Optional: Reply if bot failed to kick (usually permission error)
+            // client.sendMessage(m.chat, { text: "I need Admin permissions to kick!" });
+        }
+    }
+}
 //========================================================================================================================//
-
 if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin && !isAdmin && m.isGroup) { 
-    ki = m.sender; 
-    
-    client.sendMessage(m.chat, { 
-        delete: { 
-            remoteJid: m.chat, 
-            fromMe: false, 
-            id: m.key.id, 
-            participant: ki
-        } 
-    }).then(() => {
-        client.groupParticipantsUpdate(m.chat, [ki], 'remove');
-        
-        client.sendMessage(m.chat, {
-            text: `⚠️ *KING WARNING:*\n@${ki.split("@")[0]}, external links prohibited.\nRemoved from group.`,
-            mentions: [ki]
-        }, { quoted: m });
-    });
-}
+  
+ ki = m.sender; 
+  
+ client.sendMessage(m.chat, { 
+  
+                delete: { 
+                   remoteJid: m.chat, 
+                   fromMe: false, 
+                   id: m.key.id, 
+                   participant: ki
+                } 
+             }).then(() => client.groupParticipantsUpdate(m.chat, [ki], 'remove')); 
+ client.sendMessage(m.chat, {text:`𝗛𝗲𝘆 @${ki.split("@")[0]}👋\n\n𝗦𝗲𝗻𝗱𝗶𝗻𝗴 𝗟𝗶𝗻𝗸𝘀 𝗶𝘀 𝗣𝗿𝗼𝗵𝗶𝗯𝗶𝘁𝗲𝗱 𝗶𝗻 𝘁𝗵𝗶𝘀 𝗚𝗿𝗼𝘂𝗽 !`, contextInfo:{mentionedJid:[ki]}}, {quoted:m}); 
+       }   
   
   //========================================================================================================================//
   //========================================================================================================================//
@@ -614,9 +622,6 @@ if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin &&
 //========================================================================================================================//
 //========================================================================================================================//	  
     
-  
-  /========================================================================================  
- 
   
   if (cmd) {
     switch (command) {
@@ -1008,8 +1013,7 @@ case "mode": {
   reply(`✅ Mode changed to *${text.toUpperCase()}*`);
 }
 break;
-			
-case "setprefix":
+
 case "prefix": {
 if(!Owner) throw NotOwner;
   const newPrefix = args[0];
@@ -1028,7 +1032,7 @@ if (newPrefix === 'none') {
       await updateSetting('prefix', newPrefix);
       await m.reply(`✅ Prefix has been updated to: ${newPrefix}`);
     } else {
-      await m.reply(`👤 Prefix is currently: ${settings.prefix || 'No prefix set.'}\n\nUse _${settings.prefix || '.'}setprefix none to remove the prefix.`);
+      await m.reply(`👤 Prefix is currently: ${settings.prefix || 'No prefix set.'}\n\nUse _${settings.prefix || '.'}prefix none to remove the prefix.`);
     }
   }
 break;
@@ -1069,127 +1073,15 @@ case "autoview": {
 }
 break;
 
-case "autotyping": {
-    if(!Owner) throw NotOwner;
-    const settings = await getSettings();
-    const current = settings.autotyping;
-    
-    if (!text) return reply(`🤖 Auto Typing is currently: *${current === 'on' ? 'ON' : 'OFF'}*`);
-    
-    const args = text.toLowerCase().split(' ');
-    const action = args[0];
-    
-    if (!["on", "off"].includes(action)) {
-        return reply("Usage: autotyping on/off");
-    }
-    
-    if (action === current) {
-        return reply(`⚠️ Auto Typing is already *${action === 'on' ? 'ON' : 'OFF'}*`);
-    }
-    
-   
-    if (action === 'on') {
-        await updateSetting("autorecording", "off");
-        await updateSetting("alwaysonline", "off");
-    }
-    
-    await updateSetting("autotyping", action);
-    await updatePresence(client); // Update presence immediately
-    
-    reply(`✅ Auto Typing *${action === 'on' ? 'enabled' : 'disabled'}*`);
-}
-break;
-
-case "alwaysonline": {
-    if(!Owner) throw NotOwner;
-    const settings = await getSettings();
-    const current = settings.alwaysonline;
-    
-    if (!text) return reply(`🌐 Always Online is currently: *${current === 'on' ? 'ON' : 'OFF'}*`);
-    
-    const args = text.toLowerCase().split(' ');
-    const action = args[0];
-    
-    if (!["on", "off"].includes(action)) {
-        return reply("Usage: alwaysonline on/off");
-    }
-    
-    if (action === current) {
-        return reply(`⚠️ Always Online is already *${action === 'on' ? 'ON' : 'OFF'}*`);
-    }
-    
-    
-    if (action === 'on') {
-        await updateSetting("autotyping", "off");
-        await updateSetting("autorecording", "off");
-    }
-    
-    await updateSetting("alwaysonline", action);
-    await updatePresence(client); // Update presence immediately
-    
-    reply(`✅ Always Online *${action === 'on' ? 'enabled' : 'disabled'}*`);
-}
-break;
-
-case "autorecording": {
-    if(!Owner) throw NotOwner;
-    const settings = await getSettings();
-    const current = settings.autorecording;
-    
-    if (!text) return reply(`🎙️ Auto Recording is currently: *${current === 'on' ? 'ON' : 'OFF'}*`);
-    
-    const args = text.toLowerCase().split(' ');
-    const action = args[0];
-    
-    if (!["on", "off"].includes(action)) {
-        return reply("Usage: autorecording on/off");
-    }
-    
-    if (action === current) {
-        return reply(`⚠️ Auto Recording is already *${action === 'on' ? 'ON' : 'OFF'}*`);
-    }
-    
-    // Turn off other presences if turning this on
-    if (action === 'on') {
-        await updateSetting("autotyping", "off");
-        await updateSetting("alwaysonline", "off");
-    }
-    
-    await updateSetting("autorecording", action);
-    await updatePresence(client); // Update presence immediately
-    
-    reply(`✅ Auto Recording *${action === 'on' ? 'enabled' : 'disabled'}*`);
-}
-break;
-
 case "wapresence": {
-    if(!Owner) throw NotOwner;
-    const settings = await getSettings();
-    
-    let status = [];
-    
-    if (settings.alwaysonline === 'on') status.push("🌐 Online");
-    if (settings.autotyping === 'on') status.push("✍️ Typing");
-    if (settings.autorecording === 'on') status.push("🎙️ Recording");
-    if (status.length === 0) status.push("⚫ Unavailable");
-    
-    const currentStatus = status.join(", ");
-    const message = `
-📱 *Current Presence Status:*
-    
-*Online Mode:* ${settings.alwaysonline === 'on' ? '✅ ON' : '❌ OFF'}
-*Auto Typing:* ${settings.autotyping === 'on' ? '✅ ON' : '❌ OFF'}
-*Auto Recording:* ${settings.autorecording === 'on' ? '✅ ON' : '❌ OFF'}
-
-*Active Presence:* ${currentStatus}
-
-*Commands to control:*
-• \`autotyping on/off\`
-• \`alwaysonline on/off\`
-• \`autorecording on/off\`
-    `;
-    
-    reply(message);
+       if(!Owner) throw NotOwner;
+  const settings = await getSettings();
+  const current = settings.wapresence;
+  if (!text) return reply(`👤 Presence is currently *${current}*`);
+  if (!["typing", "online", "recording"].includes(text)) return reply("Usage: wapresence typing/online/recording");
+  if (text === current) return reply(`✅ Presence is already *${text}*`);
+  await updateSetting("wapresence", text);
+  reply(`✅ Presence updated to *${text}*`);
 }
 break;
 
@@ -1428,7 +1320,7 @@ try {
     let search = await yts(text);
     if (!search.all.length) reply("No results found for your query.");
     let link = search.all[0].url; 
-    const apiUrl = `https://keith-api.vercel.app/download/dlmp3?url=${link}`;
+    const apiUrl = `https://apiskeith.vercel.app/download/audio?url=${link}`;
     let response = await fetch(apiUrl);
     let data = await response.json();
 
@@ -1461,7 +1353,7 @@ await client.sendMessage(
 break;
 
 //========================================================================================================================//	      		      
-  case "song": {		      
+  case "play": {		      
  if (!text) {
       return client.sendMessage(from, { text: 'Please provide a song name.' }, { quoted: m });
     }
@@ -1562,7 +1454,7 @@ await client.sendMessage(from, {
     let search = await yts(text);
     if (!search.all.length) reply("No results found for your query.");
     let link = search.all[0].url; 
-    const apiUrl = `https://apis-keith.vercel.app/download/dlmp4?url=${link}`;
+    const apiUrl = `https://apiskeith.vercel.app/download/video?url=${link}`;
     let response = await fetch(apiUrl);
     let data = await response.json();
 
@@ -1580,7 +1472,7 @@ await client.sendMessage(from, {
         {
           video: { url: videoData.downloadUrl },
           mimetype: "video/mp4",
-          caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
+          caption: "KING M",
         },
         { quoted: m }
       );
@@ -1609,12 +1501,12 @@ case "redeploy": {
         try {
             await axios.post(
                 `https://api.heroku.com/apps/${appname}/builds`,
-                { source_blob: { url: "https://github.com/Devpeacemaker/unknown-error/tarball/main" } },
+                { source_blob: { url: "https://github.com/mesuit/King-M/tarball/main" } },
                 { headers: { Authorization: `Bearer ${herokuapi}`, Accept: "application/vnd.heroku+json; version=3" } }
             );
-            await m.reply("🌟 *KING M deployment triggered* 🌟");
+            await m.reply("🌟 *king m deployment triggered* 🌟");
         } catch (error) {
-            await m.reply("💥 *KING  DEPLOYMENT FAILED* 💥");
+            await m.reply("💥 *KING -M DEPLOYMENT FAILED* 💥");
             console.error("Redeploy error:", error.response?.data || error.message);
         }
     }
@@ -1628,16 +1520,16 @@ case "redeploy": {
     const creatorInfo = {
         text: `
 ╭─────────────────╮
-   *KING  M OFFICIAL*  
+   *KING M OFFICIAL*  
 ╰─────────────────╯
 
 🔐 *Verified Developer Credentials*
 
-🛠️ *Core Development*
+🛠️ *KING Development*
 ┌─────────────────────
-│ ✦ Founder: MAKAMESCO (Kenya)
-│ ✦ GitHub: https://github.com/sesco001/KING-MD
-│ ✦ Version:  v3.0
+│ ✦ Founder: Makamesco (Kenya)
+│ ✦ GitHub: Https://github.com/sesco001/KING-MD
+│ ✦ Version: KING M v1.0
 └─────────────────────
 
 ⚙️ *Technical Specifications*
@@ -1647,10 +1539,10 @@ case "redeploy": {
 │ ✓ Multi-Device Support
 └─────────────────────
 
-*"WE PENETRATE WE DONT BEG"*
+*"Engineered for seamless communication"*
 
 ╭─────────────────╮
- © KING M2025 │ 
+ © KING M 2025 │ 
 ╰─────────────────╯
 `,
     };
@@ -1681,52 +1573,78 @@ let options = []
 		break;
 
 //========================================================================================================================//		      
-	
-case "play": {		      
- if (!text) {
-      return client.sendMessage(from, { text: 'Please provide a song name.' }, { quoted: m });
-    }
+	// Ensure you have this at the top: const yts = require('yt-search');
 
-try {
-     const search = await yts(text);
-     const video = search.videos[0];
 
-        if (!video) {
-          return client.sendMessage(from, {
-            text: 'No results found for your query.'
-          }, { quoted: m });
+
+        
+case 'song': {
+    if (!text) return m.reply("enter song name. eg: .play Sauti Sol");
+
+    try {
+        // 1. SEARCH
+        let search = await yts(text);
+        if (!search.all.length) return m.reply("❌ song not found.");
+        
+        let video = search.all[0];
+        let videoUrl = video.url;
+        
+        await client.sendMessage(m.chat, { 
+            text: `🎵 *searchin:* ${video.title}\n⏳ *wait we are sniffing ur request...*` 
+        }, { quoted: m });
+
+        let downloadUrl = null;
+
+        // 2. NEW SERVER LIST (Non-Indonesian based to bypass Heroku Ban)
+        
+        // SERVER A: GuruAPI (Tech-based, very high limits)
+        try {
+            let res = await axios.get(`https://api.guruapi.tech/ytdl/ytmp3?url=${videoUrl}`);
+            if (res.data && res.data.data && res.data.data.audio) {
+                downloadUrl = res.data.data.audio;
+            }
+        } catch (e) { console.log("GuruAPI Failed, trying next..."); }
+
+        // SERVER B: Vreden (If Server A fails)
+        if (!downloadUrl) {
+            try {
+                let res = await axios.get(`https://api.vreden.web.id/api/ytmp3?url=${videoUrl}`);
+                if (res.data && res.data.result && res.data.result.download && res.data.result.download.url) {
+                    downloadUrl = res.data.result.download.url;
+                }
+            } catch (e) { console.log("Vreden Failed, trying next..."); }
         }
-	
-m.reply("_Wait a moment..._");
-	
-        const safeTitle = video.title.replace(/[\\/:*?"<>|]/g, '');
-        const fileName = `${safeTitle}.mp3`;
-        const apiURL = `${BASE_URL}/dipto/ytDl3?link=${encodeURIComponent(video.videoId)}&format=mp3`;
 
-        const response = await axios.get(apiURL);
-        const data = response.data;
+        // SERVER C: Yt1s (Old School Scraper as last resort)
+        if (!downloadUrl) {
+            try {
+                let res = await axios.get(`https://api.agatz.xyz/api/ytmp3?url=${videoUrl}`);
+                if (res.data && res.data.data) {
+                    downloadUrl = res.data.data;
+                }
+            } catch (e) { console.log("Agatz Failed."); }
+        }
 
-        if (!data.downloadLink) {
-          return client.sendMessage(from, {
-            text: 'Failed to retrieve the MP3 download link.'
-          }, { quoted: m });
-	} 
-	
-	
-await client.sendMessage(from, {
-          document: { url: data.downloadLink },
-          mimetype: 'audio/mpeg',
-          fileName
+        // 3. FINAL CHECK
+        if (!downloadUrl) {
+            return m.reply("❌ Leo mambo ni magumu. Servers zote zimekataa.");
+        }
+
+        // 4. SEND AS DOCUMENT (No Fancy Metadata to prevent crashes)
+        await client.sendMessage(m.chat, {
+            document: { url: downloadUrl },
+            mimetype: 'audio/mpeg',
+            fileName: `${video.title}.mp3`,
+            caption: `*${video.title}*`
         }, { quoted: m });
 
-      } catch (err) {
-        console.error('[PLAY] Error:', err);
-        await client.sendMessage(from, {
-          text: 'An error occurred while processing your request.'
-        }, { quoted: m });
-}
+    } catch (e) {
+        console.error("ERROR:", e);
+        m.reply("Error: " + e.message);
+    }
 }
 break;
+             
 
 //========================================================================================================================//		      
  case "play2": {	      
@@ -1755,7 +1673,7 @@ try {
     await client.sendMessage(m.chat, {
       document: { url: downloadResult.downloadUrl },
       mimetype: "audio/mp3",
-      caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
+      caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING-M😔",
       fileName: `${result.title.replace(/[^a-zA-Z0-9 ]/g, "")}.mp3`,
       }, { quoted: m });
  
@@ -1858,7 +1776,7 @@ const cheerio = require('cheerio');
       image: {
         url: _0x29a9n6e5.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING M😏`
     });
   } catch (_0x180d0734) {
     m.reply(_0x180d0734);
@@ -1879,7 +1797,7 @@ const cheerio = require('cheerio');
       image: {
         url: _0x295.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M😏`
     });
   } catch (_0x180d) {
     m.reply(_0x180d);
@@ -1900,7 +1818,7 @@ const cheerio = require('cheerio');
       image: {
         url: _029a96e5.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     });
   } catch (_0180d034) {
     m.reply(_0180d034);
@@ -1921,7 +1839,7 @@ const cheerio = require('cheerio');
       image: {
         url: _0x29a96em5.image
       },
-      caption: `KING M`
+      caption: `KING-M🥱`
     });
   } catch (_0x18d034) {
     m.reply(_0x18d034);
@@ -1943,7 +1861,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: hunte.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -1967,7 +1885,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: hunterr.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -1991,7 +1909,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: hunteer.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2014,7 +1932,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: hunteqr.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2037,7 +1955,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x29a96e5.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     });
   } catch (_0x180d034) {
     m.reply(_0x180d034);
@@ -2058,7 +1976,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x2996e.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     });
   } catch (_0x180d3) {
     m.reply(_0x180d3);
@@ -2079,7 +1997,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x9a96e.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M😏`
     });
   } catch (_0x80d03) {
     m.reply(_0x80d03);
@@ -2100,7 +2018,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x29a996e.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING M🥱`
     });
   } catch (_0x180d063) {
     m.reply(_0x180d063);
@@ -2121,7 +2039,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x29a96e.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING M`
     });
   } catch (_0x180d03) {
     m.reply(_0x180d03);
@@ -2142,7 +2060,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x29a96.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     });
   } catch (_0x180d0) {
     m.reply(_0x180d0);
@@ -2163,7 +2081,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x14192dl.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M😏`
     }, {
       quoted: m
     });
@@ -2186,7 +2104,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x14192.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2209,7 +2127,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x14192d.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2232,7 +2150,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x4086bb.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2255,7 +2173,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x4959e5.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2278,7 +2196,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x26f3ed.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2301,7 +2219,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x357389.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2324,7 +2242,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: _0x57ef84.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2346,7 +2264,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: nick.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2370,7 +2288,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: hunter.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `KING-M🥱`
     }, {
       quoted: m
     });
@@ -2394,7 +2312,7 @@ m.reply("*Wait a moment...*");
       image: {
         url: tumba.image
       },
-      caption: `𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M`
+      caption: `▶️KING M`
     }, {
       quoted: m
     });
@@ -2746,7 +2664,7 @@ if (!m.isGroup) throw group;
     } else if (args[0] == "-x") {
       setTimeout(() => {
         client.sendMessage(m.chat, {
-          text: `𝗣𝗲𝗮𝗰𝗲 𝘄𝗶𝗹𝗹 𝗻𝗼𝘄 𝗿𝗲𝗺𝗼𝘃𝗲 𝗮𝗹𝗹 ${_0x2f8982.length} 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀 𝗳𝗿𝗼𝗺 𝘁𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽 𝗰𝗵𝗮𝘁 𝗶𝗻 𝘁𝗵𝗲 𝗻𝗲𝘅𝘁 𝘀𝗲𝗰𝗼𝗻𝗱.\n\n𝗚𝗼𝗼𝗱 𝗯𝘆𝗲 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀. 𝗧𝗵𝗶𝘀 𝗽𝗿𝗼𝗰𝗲𝘀𝘀 𝗰𝗮𝗻𝗻𝗼𝘁 𝗯𝗲 𝘁𝗲𝗿𝗺𝗶𝗻𝗮𝘁𝗲𝗱⚠️`
+          text: `King 𝘄𝗶𝗹𝗹 𝗻𝗼𝘄 𝗿𝗲𝗺𝗼𝘃𝗲 𝗮𝗹𝗹 ${_0x2f8982.length} 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀 𝗳𝗿𝗼𝗺 𝘁𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽 𝗰𝗵𝗮𝘁 𝗶𝗻 𝘁𝗵𝗲 𝗻𝗲𝘅𝘁 𝘀𝗲𝗰𝗼𝗻𝗱.\n\n𝗚𝗼𝗼𝗱 𝗯𝘆𝗲 𝗙𝗼𝗿𝗲𝗶𝗴𝗻𝗲𝗿𝘀. 𝗧𝗵𝗶𝘀 𝗽𝗿𝗼𝗰𝗲𝘀𝘀 𝗰𝗮𝗻𝗻𝗼𝘁 𝗯𝗲 𝘁𝗲𝗿𝗺𝗶𝗻𝗮𝘁𝗲𝗱⚠️`
         }, {
           quoted: m
         });
@@ -2849,12 +2767,12 @@ const axios = require("axios");
 try {
 if (!m.quoted) return m.reply("Send the image then tag it with the instruction.");
 
-if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵! 𝗧𝗵𝗶𝘀 𝗣𝗘𝗔𝗖𝗘 𝗔𝗶 𝗨𝘀𝗲 𝗚𝗲𝗺𝗶𝗻𝗶-𝗽𝗿𝗼-𝘃𝗶𝘀𝗶𝗼𝗻 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘀𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
+if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵! 𝗧𝗵𝗶𝘀 KING 𝗔𝗶 𝗨𝘀𝗲 𝗚𝗲𝗺𝗶𝗻𝗶-𝗽𝗿𝗼-𝘃𝗶𝘀𝗶𝗼𝗻 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘀𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
 if (!/image|pdf/.test(mime)) return m.reply("That is not an image, try again while quoting an actual image.");             
 
                     let fdr = await client.downloadAndSaveMediaMessage(m.quoted)
                     let fta = await uploadToCatbox(fdr)
-                    m.reply(`𝗔 𝗠𝗼𝗺𝗲𝗻𝘁, 𝗣𝗲𝗮𝗰𝗲[𝗣𝗘𝗔𝗖𝗘-𝗔𝗶] 𝗶𝘀 𝗮𝗻𝗮𝗹𝘆𝘇𝗶𝗻𝗴 𝘁𝗵𝗲 𝗰𝗼𝗻𝘁𝗲𝗻𝘁𝘀 𝗼𝗳 𝘁𝗵𝗲 ${mime.includes("pdf") ? "𝗣𝗗𝗙" : "𝗜𝗺𝗮𝗴𝗲"} . . .`);
+                    m.reply(`𝗔 𝗠𝗼𝗺𝗲𝗻𝘁, KING[KING-M] 𝗶𝘀 𝗮𝗻𝗮𝗹𝘆𝘇𝗶𝗻𝗴 𝘁𝗵𝗲 𝗰𝗼𝗻𝘁𝗲𝗻𝘁𝘀 𝗼𝗳 𝘁𝗵𝗲 ${mime.includes("pdf") ? "𝗣𝗗𝗙" : "𝗜𝗺𝗮𝗴𝗲"} . . .`);
 
 const data = await fetchJson(`https://api.dreaded.site/api/gemini-vision?url=${fta}&instruction=${text}`);
 let res = data.result
@@ -2871,7 +2789,7 @@ m.reply("I am unable to analyze images at the moment\n" + e)
 //========================================================================================================================//		      
 	      case "vision": {
 		      if (!msgR || !text) {
-    m.reply("𝗤𝘂𝗼𝘁𝗲 𝗮𝗻 𝗶𝗺𝗮𝗴𝗲 𝗮𝗻𝗱 𝗴𝗶𝘃𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵. 𝗜'𝗺 𝗣𝗘𝗔𝗖𝗘 𝗔𝗶, 𝗶 𝘂𝘀𝗲 𝗕𝗮𝗿𝗱 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘇𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
+    m.reply("𝗤𝘂𝗼𝘁𝗲 𝗮𝗻 𝗶𝗺𝗮𝗴𝗲 𝗮𝗻𝗱 𝗴𝗶𝘃𝗲 𝘀𝗼𝗺𝗲 𝗶𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗼𝗻𝘀 𝗲𝗵. 𝗜'𝗺 KING M, 𝗶 𝘂𝘀𝗲 𝗕𝗮𝗿𝗱 𝘁𝗼 𝗮𝗻𝗮𝗹𝘆𝘇𝗲 𝗶𝗺𝗮𝗴𝗲𝘀.");
     return;
   }
   ;
@@ -2907,7 +2825,7 @@ m.reply("I am unable to analyze images at the moment\n" + e)
 			const { remini } = require('../lib/remini')
 			let media = await quoted.download()
 			let proses = await remini(media, "enhance")
-			client.sendMessage(m.chat, { image: proses, caption: '𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱'}, { quoted: m })
+			client.sendMessage(m.chat, { image: proses, caption: '𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳  𝙱𝚈 KING M'}, { quoted: m })
 			}
 			break;
 
@@ -3322,7 +3240,7 @@ m.reply("An error occured.")
         mimetype: 'audio/mp4',
         ptt: true,
         waveform:  [100, 0, 100, 0, 100, 0, 100],
-        fileName: "KING M",
+        fileName: "king m",
 
         contextInfo: {
           mentionedJid: [m.sender],
@@ -3349,7 +3267,7 @@ if (!/image/.test(mime)) return m.reply("That is not an image, try again while q
 
 let fdr = await client.downloadAndSaveMediaMessage(m.quoted)
 let fta = await uploadToCatbox(fdr)
-                    m.reply("𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, 𝗣𝗲𝗮𝗰𝗲 𝗶𝘀 𝗲𝗿𝗮𝘀𝗶𝗻𝗴 𝘁𝗵𝗲 𝗯𝗮𝗰𝗸𝗴𝗿𝗼𝘂𝗻𝗱. . .");
+                    m.reply("𝗔 𝗺𝗼𝗺𝗲𝗻𝘁, KING 𝗶𝘀 𝗲𝗿𝗮𝘀𝗶𝗻𝗴 𝘁𝗵𝗲 𝗯𝗮𝗰𝗸𝗴𝗿𝗼𝘂𝗻𝗱. . .");
 
 const image = `https://api.dreaded.site/api/removebg?imageurl=${fta}`
 await client.sendMessage(m.chat, { image: { url: image }, caption: cap}, {quoted: m });
@@ -3490,7 +3408,7 @@ const rel = await quote(xf, pushname, pppuser)
                 
                 client.sendImageAsSticker(m.chat, rel.result, m, {
                     packname: pushname,
-                    author: `𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱`
+                    author: `MAKA DEV`
                 })
 
 } catch (errr) { 
@@ -3747,7 +3665,7 @@ case "faker": {
       if (_0x2f8982.length == 0) {
         return m.reply("𝙽𝚘 𝚏𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍.");
       }
-      let _0x2d7d67 = `KING M 𝚑𝚊𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍 𝚝𝚑𝚎 𝚏𝚘𝚕𝚕𝚘𝚠𝚒𝚗𝚐 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝚊𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚒𝚗 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙:- \n`;
+      let _0x2d7d67 = `KING 𝚑𝚊𝚜 𝚍𝚎𝚝𝚎𝚌𝚝𝚎𝚍 𝚝𝚑𝚎 𝚏𝚘𝚕𝚕𝚘𝚠𝚒𝚗𝚐 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝚊𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚒𝚗 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙:- \n`;
       for (let _0x28761c of _0x2f8982) {
         _0x2d7d67 += `🚮 @${_0x28761c.split("@")[0]}\n`;
       }
@@ -3761,7 +3679,7 @@ case "faker": {
     } else if (args[0] == "-x") {
       setTimeout(() => {
         client.sendMessage(m.chat, {
-          text: `𝙽𝚘𝚠 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱 𝚠𝚒𝚕𝚕 𝚛𝚎𝚖𝚘𝚟𝚎 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚏𝚛𝚘𝚖 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙.\n\n𝙶𝚘𝚘𝚍𝚋𝚢𝚎👋 𝙵𝚊𝚔𝚎 𝚙𝚎𝚘𝚙𝚕𝚎.`
+          text: `𝙽𝚘𝚠 KING M 𝚠𝚒𝚕𝚕 𝚛𝚎𝚖𝚘𝚟𝚎 ${_0x2f8982.length} 𝙵𝚊𝚔𝚎 𝙰𝚌𝚌𝚘𝚞𝚗𝚝𝚜 𝚏𝚛𝚘𝚖 𝚝𝚑𝚒𝚜 𝚐𝚛𝚘𝚞𝚙.\n\n𝙶𝚘𝚘𝚍𝚋𝚢𝚎👋 𝙵𝚊𝚔𝚎 𝚙𝚎𝚘𝚙𝚕𝚎.`
         }, {
           quoted: m
         });
@@ -3952,7 +3870,7 @@ m.reply("𝗣𝗲𝗻𝗱𝗶𝗻𝗴 𝗣𝗮𝗿𝘁𝗶𝗰𝗶𝗽𝗮𝗻�
      });  
      let baseUR = "/apps/" + appname;  
      let h9 = await heroku.get(baseUR + '/config-vars');  
-     let stoy = '*𝗕𝗲𝗹𝗼𝘄 𝗔𝗿𝗲 𝗛𝗲𝗿𝗼𝗸𝘂 𝗩𝗮𝗿𝗶𝗮𝗯𝗹𝗲𝘀 𝗙𝗼𝗿 𝗣𝗘𝗔𝗖𝗘-𝗠𝗗:*\n\n';  
+     let stoy = '*𝗕𝗲𝗹𝗼𝘄 𝗔𝗿𝗲 𝗛𝗲𝗿𝗼𝗸𝘂 𝗩𝗮𝗿𝗶𝗮𝗯𝗹𝗲𝘀 𝗙𝗼𝗿 KING:*\n\n';  
      for ( vrt in h9) { // Added 'const' to declare 'vr' 
          stoy += vrt + '=' + h9[vrt] + '\n\n'; // Fixed variable name 'str' to 'sto' 
      }  
@@ -3980,7 +3898,7 @@ case "remove": case "kick": {
         let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null;
         const parts = users.split('@')[0];
 
-if (users == "254769995625@s.whatsapp.net") return m.reply("It's an Owner Number! 😡");
+if (users == "254752818245@s.whatsapp.net") return m.reply("It's an Owner Number! 😡");
 
 	  if (users  == client.decodeJid(client.user.id)) throw 'I cannot remove Myself 😡';
 
@@ -4026,7 +3944,7 @@ await client.sendMessage(m.chat, {
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
         mimetype: "video/mp4",
-        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING"
+        caption: "KING M"
       },{ quoted: m });
     }
   } catch (error) {
@@ -4060,7 +3978,7 @@ try {
 
 	await client.sendMessage(m.chat, {
               video: { url: video_hd },
-              caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 🤴KING M"
+              caption: "KING M"
             }, { quoted: m });
 
 	} catch (error) {
@@ -4101,7 +4019,7 @@ await client.sendMessage(m.chat, {
             m.chat,
             {
                 video: { url: fbvid },
-                caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 king m",
+                caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
                 gifPlayback: false,
             },
             { quoted: m }
@@ -4144,7 +4062,7 @@ await client.sendMessage(m.chat, {
 
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
-        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 king m",
+        caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
         gifPlayback: false
       }, { quoted: m });
 
@@ -4179,7 +4097,7 @@ try {
         }
 
         const media = response.data.BK9;
-        const capp = `𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 king m`;
+        const capp = `𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M`;
 
 if (media.length > 0) {
             const videoUrl = media.find(item => item.url.includes('.mp4'))?.url;
@@ -4558,32 +4476,41 @@ break;
 case 'sc':
 case 'script':
 case 'repo': {
-  const res = await fetch('https://api.github.com/repos/Devpeacemaker/PEACE-CORE');
-  const data = await res.json();
+  try {
+    // Fetch GitHub repo data as JSON
+    const res = await fetch('https://api.github.com/repos/sesco001/KING-MD');
+    const data = await res.json();
 
-  // Adjust time to Kenya timezone (UTC+3)
-  const now = new Date();
-  const kenyaTime = new Date(now.getTime() + 3 * 60 * 60 * 1000); // UTC + 3
+    // Adjust to Kenya time (UTC+3)
+    const now = new Date();
+    const kenyaTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    const hours = kenyaTime.getHours().toString().padStart(2, '0');
+    const minutes = kenyaTime.getMinutes().toString().padStart(2, '0');
+    const currentTime = `${hours}:${minutes}`;
 
-  const hours = kenyaTime.getHours().toString().padStart(2, '0');
-  const minutes = kenyaTime.getMinutes().toString().padStart(2, '0');
-  const currentTime = `${hours}:${minutes}`;
+    const caption = `
+🔷 *KING-M*  
 
-  const caption =  ${data.description || '_No description provided_'}
+🟣 *Deploy Here:*  
+https://github.com/sesco001/KING-MD
 
-🟣 *ᴅᴇᴘʟᴏʏ here : https://github.com/sesco001/KING-MD*
+🔶 *Stars:* ${data.stargazers_count}
+🔶 *Forks:* ${data.forks_count}
+🔶 *Watchers:* ${data.subscribers_count}
 
-🔶  *Stars:* ${data.stargazers_count}  
-🔶  *Forks:* ${data.forks_count}
+🕒 *Time:* ${currentTime}
 
-🕒 *Time:* ${currentTime} 
+🚀 *Coded by:* ᴍᴀᴋᴀᴍᴇꜱᴄᴏ
+    `.trim();
 
-🚀 𝙲𝙾𝙳𝙴𝙳 𝙱𝚈 MAKAMESCO-MD 
-  `.trim();
-
-  await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+    await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+  } catch (e) {
+    console.error(e);
+    await client.sendMessage(m.chat, { text: '⚠️ Error fetching repository info. Try again later.' }, { quoted: m });
+  }
   break;
 }
+
                                                   
 //========================================================================================================================//
 		      case 'closetime':
@@ -4983,7 +4910,7 @@ case "vv": case "retrieve": {
 
     await client.sendMessage(m.chat, {
       image: { url: imagePath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${imageCaption}`
+      caption: `✨ *KING M is alive!* ✨\n\n${imageCaption}`
     }, { quoted: m });
   }
 
@@ -4993,7 +4920,7 @@ case "vv": case "retrieve": {
 
     await client.sendMessage(m.chat, {
       video: { url: videoPath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${videoCaption}`
+      caption: `✨ *KING M is alive!* ✨\n\n${videoCaption}`
     }, { quoted: m });
   }
 }
@@ -5012,7 +4939,7 @@ break;
 
     await client.sendMessage(client.user.id, {
       image: { url: imagePath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${imageCaption}`
+      caption: `✨ *KING Mis alive!* ✨\n\n${imageCaption}`
     }, { quoted: m });
   }
 
@@ -5022,7 +4949,7 @@ break;
 
     await client.sendMessage(client.user.id, {
       video: { url: videoPath },
-      caption: `✨ *KING is alive!* ✨\n\n${videoCaption}`
+      caption: `✨ *Peace Core is alive!* ✨\n\n${videoCaption}`
     }, { quoted: m });
   }
 }
@@ -5141,7 +5068,7 @@ if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶�
                 {
                   document: { url: outputPath },
                   mimetype: "audio/mp3",
-		  caption: "KING M",
+		  caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
                   fileName: outputFileName,
                 },
                 { quoted: m }
@@ -5204,7 +5131,7 @@ if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶�
         {
           video: { url: videoData.downloadUrl },
           mimetype: "video/mp4",
-          caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M😜",
+          caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱",
         },
         { quoted: m }
       );
@@ -5227,14 +5154,14 @@ case "speed": {
     const start = performance.now();
 
     // Send initial message
-    let { key } = await client.sendMessage(m.chat, { text: "🔶PeaceCore Speed" });
+    let { key } = await client.sendMessage(m.chat, { text: "King Speed" });
 
     const end = performance.now();
     const Rspeed = end - start;
     const formattedSpeed = formatSpeed(Rspeed);
 
     // Edit so speed is next to text
-    await client.sendMessage(m.chat, { text: `🔶PeaceCore Speed ${formattedSpeed}`, edit: key });
+    await client.sendMessage(m.chat, { text: `🔶Pong Speed ${formattedSpeed}`, edit: key });
 }
 break;
 
@@ -5252,10 +5179,10 @@ break;
                     contextInfo: {
                         externalAdReply: {
                             showAdAttribution: true,
-                            title: '𝙿𝙴𝙰𝙲𝙴 𝙷𝚄𝙱',
-                            body: 'https://github.com/Devpeacemaker/PEACE-HUB',
-                            thumbnailUrl: 'https://files.catbox.moe/yusei5.jpg',
-                            sourceUrl: 'https://github.com/Devpeacemaker/unknown-error',
+                            title: 'KING M',
+                            body: 'https://github.com/sesco001/KING-MD',
+                            thumbnailUrl: '',
+                            sourceUrl: 'https://github.com/sesco001/KING-MD',
                             mediaType: 1,
                             renderLargerThumbnail: true
                         }
@@ -5279,7 +5206,7 @@ break;
                 mimetype: "application/vnd.android.package-archive",
                 contextInfo: {
         externalAdReply: {
-          title: `𝙿𝙴𝙰𝙲𝙴-𝙷𝚄𝙱`,
+          title: `KING M`,
           body: `${tylor.BK9.name}`,
           thumbnailUrl: `${tylor.BK9.icon}`,
           sourceUrl: `${tylor.BK9.dllink}`,
@@ -5392,7 +5319,7 @@ if (!text) return m.reply("No emojis provided ? ")
    fs.unlinkSync(media); 
    if (err) throw err 
    let buffer = fs.readFileSync(mokaya); 
-   client.sendMessage(m.chat, { image: buffer, caption: `ᴄᴏɴᴠᴇʀᴛᴇᴅ BY KING `}, { quoted: m }) 
+   client.sendMessage(m.chat, { image: buffer, caption: `ᴄᴏɴᴠᴇʀᴛᴇᴅ ʙʏ ᴘᴇᴀᴄᴇ ʜᴜʙ`}, { quoted: m }) 
    fs.unlinkSync(mokaya); 
     }); 
     } 
@@ -5468,7 +5395,7 @@ if (!text) return m.reply("No emojis provided ? ")
          let res = groups.map(v => v.id) 
          reply(` Broadcasting in ${res.length} Group Chat, in ${res.length * 1.5} seconds`) 
          for (let i of res) { 
-             let txt = `KING-𝗔𝗶 𝗕𝗥𝗢𝗔𝗗𝗖𝗔𝗦𝗧\n\n🀄 Message: ${text}\n\nAuthor: ${pushname}` 
+             let txt = `MAKA 𝗕𝗥𝗢𝗔𝗗𝗖𝗔𝗦𝗧\n\n🀄 Message: ${text}\n\nAuthor: ${pushname}` 
              await client.sendMessage(i, { 
                  image: { 
                      url: menulink
@@ -5559,7 +5486,7 @@ case "block": {
             ? m.quoted.sender 
             : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
     
-    if (users == "254769995625@s.whatsapp.net") return m.reply("*😠 I cannot block my Owner!*");
+    if (users == "254752818245@s.whatsapp.net") return m.reply("*😠 I cannot block my Owner!*");
     if (users == client.decodeJid(client.user.id)) return m.reply("*🤦 I cannot block myself!*");
     
     await client.updateBlockStatus(users, 'block');
