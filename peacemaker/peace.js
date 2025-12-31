@@ -564,7 +564,7 @@ if (antilink === 'on' && body.includes('chat.whatsapp.com') && !Owner && isBotAd
         client.groupParticipantsUpdate(m.chat, [kid], 'remove');
         
         client.sendMessage(m.chat, {
-            text: `⚠️ *PEACE CORE WARNING:*\n@${kid.split("@")[0]}, WhatsApp links not allowed here.\nRemoved from group.`,
+            text: `⚠️ *KING M WARNING:*\n@${kid.split("@")[0]}, WhatsApp links not allowed here.\nRemoved from group.`,
             mentions: [kid]
         }, { quoted: m });
     });
@@ -586,7 +586,7 @@ if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin &&
         client.groupParticipantsUpdate(m.chat, [ki], 'remove');
         
         client.sendMessage(m.chat, {
-            text: `⚠️ *PEACE CORE WARNING:*\n@${ki.split("@")[0]}, external links prohibited.\nRemoved from group.`,
+            text: `⚠️ *KING M WARNING:*\n@${ki.split("@")[0]}, external links prohibited.\nRemoved from group.`,
             mentions: [ki]
         }, { quoted: m });
     });
