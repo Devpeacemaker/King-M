@@ -900,7 +900,75 @@ case "antilinkall": {
   await updateSetting("antilinkall", text);
   reply(`✅ Antilinkall has been turned *${text.toUpperCase()}*`);
 }
-break;		      
+break;		    
+			//togstatus
+			case 'gstatus':
+case 'gs': 
+case 'groupstatus': {
+    // 1. Basic Checks
+    if (!m.isGroup) return m.reply("❌ This command is for groups only.");
+    if (!isBotAdmin) return m.reply("❌ I need to be Admin to post official statuses.");
+
+    // 2. Define Styling
+    const formatMsg = (txt) => `◈━━━━━━━━━━━━━━━◈\n${txt}\n◈━━━━━━━━━━━━━━━◈`;
+    
+    // 3. Prepare Text
+    let statusText = text || ""; 
+    let credit = `📢 *Group Status*\n👑 *Posted By: KING M*`;
+
+    try {
+        let quoted = m.quoted ? m.quoted : m;
+        // detailed check for mime type to avoid "undefined" errors
+        let mime = (quoted.msg || quoted).mimetype || '';
+
+        // --- SCENARIO A: IMAGE ---
+        if (/image/.test(mime)) {
+            // SAFE DOWNLOAD METHOD:
+            let media = await client.downloadMediaMessage(quoted);
+            
+            await client.sendMessage(m.chat, { 
+                image: media, 
+                caption: `${credit}\n\n${statusText}`
+            });
+            m.reply(formatMsg("Image status posted successfully ✅"));
+
+        // --- SCENARIO B: VIDEO ---
+        } else if (/video/.test(mime)) {
+            let media = await client.downloadMediaMessage(quoted);
+            
+            await client.sendMessage(m.chat, { 
+                video: media, 
+                caption: `${credit}\n\n${statusText}`
+            });
+            m.reply(formatMsg("Video status posted successfully ✅"));
+
+        // --- SCENARIO C: AUDIO ---
+        } else if (/audio/.test(mime)) {
+            let media = await client.downloadMediaMessage(quoted);
+            
+            await client.sendMessage(m.chat, { 
+                audio: media, 
+                mimetype: 'audio/mp4',
+                ptt: true // Sends as Green Voice Note
+            });
+            m.reply(formatMsg("Audio status posted successfully ✅"));
+
+        // --- SCENARIO D: JUST TEXT ---
+        } else {
+            // If they didn't reply to media AND didn't type text
+            if (!statusText) return m.reply(`❌ Reply to an image/video or type a message.\nExample: *${prefix}gs Hello World*`);
+            
+            await client.sendMessage(m.chat, { 
+                text: `${formatMsg(statusText)}\n\n${credit}`
+            });
+        }
+
+    } catch (e) {
+        console.error("GS Error:", e);
+        m.reply("❌ Error: " + e.message);
+    }
+}
+break;
 
 // ================== ANTIDELETE COMMAND ==================
 case 'antidelete': {
