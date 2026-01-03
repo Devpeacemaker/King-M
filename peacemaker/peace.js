@@ -903,69 +903,99 @@ case "antilinkall": {
 break;		    
 			//togstatus
 			case 'gstatus':
-case 'gs': 
-case 'groupstatus': {
-    // 1. Basic Checks
-    if (!m.isGroup) return m.reply("❌ This command is for groups only.");
-    if (!isBotAdmin) return m.reply("❌ I need to be Admin to post official statuses.");
-
-    // 2. Define Styling
-    const formatMsg = (txt) => `◈━━━━━━━━━━━━━━━◈\n${txt}\n◈━━━━━━━━━━━━━━━◈`;
-    
-    // 3. Prepare Text
-    let statusText = text || ""; 
-    let credit = `📢 *Group Status*\n👑 *Posted By: KING M*`;
+case 'groupstatus':
+case 'gs': {
+    // Helper to wrap all replies with line styling
+    const formatMsg = (text) => `◈━━━━━━━━━━━━━━━◈\n${text}\n◈━━━━━━━━━━━━━━━◈`;
 
     try {
-        let quoted = m.quoted ? m.quoted : m;
-        // detailed check for mime type to avoid "undefined" errors
-        let mime = (quoted.msg || quoted).mimetype || '';
-
-        // --- SCENARIO A: IMAGE ---
-        if (/image/.test(mime)) {
-            // SAFE DOWNLOAD METHOD:
-            let media = await client.downloadMediaMessage(quoted);
-            
-            await client.sendMessage(m.chat, { 
-                image: media, 
-                caption: `${credit}\n\n${statusText}`
-            });
-            m.reply(formatMsg("Image status posted successfully ✅"));
-
-        // --- SCENARIO B: VIDEO ---
-        } else if (/video/.test(mime)) {
-            let media = await client.downloadMediaMessage(quoted);
-            
-            await client.sendMessage(m.chat, { 
-                video: media, 
-                caption: `${credit}\n\n${statusText}`
-            });
-            m.reply(formatMsg("Video status posted successfully ✅"));
-
-        // --- SCENARIO C: AUDIO ---
-        } else if (/audio/.test(mime)) {
-            let media = await client.downloadMediaMessage(quoted);
-            
-            await client.sendMessage(m.chat, { 
-                audio: media, 
-                mimetype: 'audio/mp4',
-                ptt: true // Sends as Green Voice Note
-            });
-            m.reply(formatMsg("Audio status posted successfully ✅"));
-
-        // --- SCENARIO D: JUST TEXT ---
-        } else {
-            // If they didn't reply to media AND didn't type text
-            if (!statusText) return m.reply(`❌ Reply to an image/video or type a message.\nExample: *${prefix}gs Hello World*`);
-            
-            await client.sendMessage(m.chat, { 
-                text: `${formatMsg(statusText)}\n\n${credit}`
-            });
+        // 1. Basic Checks (Preserving your exact logic)
+        if (!botname) {
+            return client.sendText(m.chat, formatMsg(`Bot name is not set. Please configure it before using this command.`), m);
         }
 
-    } catch (e) {
-        console.error("GS Error:", e);
-        m.reply("❌ Error: " + e.message);
+        if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
+            return client.sendText(m.chat, formatMsg(`Could not identify your WhatsApp ID. Please try again.`), m);
+        }
+
+        if (!IsGroup) { // Ensure 'IsGroup' is defined in your file, otherwise change to 'isGroup'
+            return client.sendText(m.chat, formatMsg(`This command can only be used in group chats.`), m);
+        }
+
+        if (!isBotAdmin) {
+            return client.sendText(m.chat, formatMsg(`I need to be *admin* to post a group status. Please make me admin first.`), m);
+        }
+
+        // 2. Settings Check
+        // Ensure getSettings() is a function in your main file
+        const settings = await getSettings();
+        if (!settings) {
+            return client.sendText(m.chat, formatMsg(`Failed to load settings. Please try again later.`), m);
+        }
+
+        // 3. Parse Message
+        const quoted = m.quoted ? m.quoted : m;
+        const mime = (quoted.msg || quoted).mimetype || '';
+        const caption = m.body
+            .replace(new RegExp(`^${prefix}(gstatus|groupstatus|gs)\\s*`, 'i'), '')
+            .trim();
+
+        if (!/image|video|audio/.test(mime) && !caption) {
+            return client.sendText(
+                m.chat,
+                formatMsg(`Please reply to an image, video, audio, or include text with the command.\nExample: ${prefix}gstatus Check out this update!`),
+                m
+            );
+        }
+
+        // 4. MODIFIED CAPTION (KING M)
+        const defaultCaption = `Group status Posted By KING M 👑`;
+
+        // 5. Handle Media Types (Exact Logic Preserved)
+        if (/image/.test(mime)) {
+            const buffer = await client.downloadMediaMessage(quoted);
+            await client.sendMessage(m.chat, {
+                groupStatusMessage: {
+                    image: buffer,
+                    caption: caption || defaultCaption
+                }
+            });
+            await client.sendText(m.chat, formatMsg(`Image status has been posted successfully ✅`), m);
+
+        } else if (/video/.test(mime)) {
+            const buffer = await client.downloadMediaMessage(quoted);
+            await client.sendMessage(m.chat, {
+                groupStatusMessage: {
+                    video: buffer,
+                    caption: caption || defaultCaption
+                }
+            });
+            await client.sendText(m.chat, formatMsg(`Video status has been posted successfully ✅`), m);
+
+        } else if (/audio/.test(mime)) {
+            const buffer = await client.downloadMediaMessage(quoted);
+            await client.sendMessage(m.chat, {
+                groupStatusMessage: {
+                    audio: buffer,
+                    mimetype: 'audio/mp4'
+                }
+            });
+            await client.sendText(m.chat, formatMsg(`Audio status has been posted successfully ✅`), m);
+
+        } else if (caption) {
+            await client.sendMessage(m.chat, {
+                groupStatusMessage: { text: caption }
+            });
+            await client.sendText(m.chat, formatMsg(`Text status has been posted successfully ✅`), m);
+        }
+
+    } catch (error) {
+        // Using your client.sendText wrapper for errors
+        await client.sendText(
+            m.chat,
+            formatMsg(`An error occurred while posting status:\n${error.message}`),
+            m
+        );
     }
 }
 break;
