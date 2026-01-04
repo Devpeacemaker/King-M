@@ -380,21 +380,21 @@ if (autoread === 'on' && !m.isGroup) {
       if (itsMe && mek.key.id.startsWith("BAE5") && mek.key.id.length === 16 && !m.isGroup) return;
 //========================================================================================================================//
 // ================== ANTIDELETE LISTENER ==================
-if (antidelete !== "off") {
-  if (
-    mek.message?.protocolMessage &&
-    mek.message.protocolMessage.type === 0 // 0 = message delete
-  ) {
-    // Only trigger on deleted messages
-    await handleMessageRevocation(client, mek, antidelete);
-  } else {
-    handleIncomingMessage(mek); // Normal incoming message
-  }
+// 1. Always save incoming messages
+if (!mek.message?.protocolMessage) {
+    handleIncomingMessage(mek);
 }
-//========================================================================================================================//
+
+// 2. Handle deletions if enabled
+if (antidelete !== "off") {
+  if (mek.message?.protocolMessage && mek.message.protocolMessage.type === 0) {
+    await handleMessageRevocation(client, mek, antidelete);
+  } 
+}=================================================================================================================//
 	  // ================== STATUS MONITORING (MENTION & GROUP DETECT) ==================
+// ================== STATUS MONITORING (Anti-Group & Anti-Status Mention) ==================
 if (m.key.remoteJid === 'status@broadcast') {
-    // 1. Extract Content & Context safely from Text, Image, or Video statuses
+    // 1. UNIVERSAL FETCH: Get content from Text, Image, or Video statuses
     const msgContent = m.message?.extendedTextMessage || 
                        m.message?.imageMessage || 
                        m.message?.videoMessage;
@@ -403,16 +403,14 @@ if (m.key.remoteJid === 'status@broadcast') {
     const mentions = context?.mentionedJid || [];
     const groupMentions = context?.groupMentions || [];
 
-    // ================== 1. ANTI-GROUP MENTION (REMOVE ADVERTISERS) ==================
+    // --- A. ANTI-GROUP MENTION (REMOVE ADVERTISERS) ---
     if (antigroupmention === 'on') {
         const statusSender = m.sender || m.key.participant;
-        
-        // Combine normal mentions and specific group mentions
+        // Collect Group JIDs
         const allMentions = [...mentions, ...groupMentions.map(g => g.groupJid)];
         const mentionedGroups = allMentions.filter(jid => jid && jid.endsWith('@g.us'));
 
         if (mentionedGroups.length > 0) {
-             // Check privileges
             const isPrivileged = statusSender.includes(owner[0].replace(/[^0-9]/g, "")) || await isSudoOwner(statusSender.split("@")[0]);
 
             if (!isPrivileged) {
@@ -430,42 +428,30 @@ if (m.key.remoteJid === 'status@broadcast') {
                         if (isBotAdmin) {
                             const offender = participants.find(p => p.id === statusSender);
                             if (offender && !offender.admin) {
-                                console.log(`[ANTI-GROUP-MENTION] Removing ${statusSender} from ${groupMetadata.subject}`);
-                                
-                                await client.sendMessage(statusSender, { 
-                                    text: `⚠️ *REMOVAL NOTICE* ⚠️\n\nYou have been removed from *${groupMetadata.subject}*.\n\n*Reason:* You illegally mentioned the group in your status update.` 
-                                });
-
+                                console.log(`[ANTI-GROUP] Removing ${statusSender} from ${groupMetadata.subject}`);
+                                await client.sendMessage(statusSender, { text: `⚠️ *REMOVED* from ${groupMetadata.subject} for mentioning the group in status.` });
                                 await client.groupParticipantsUpdate(groupJid, [statusSender], "remove");
                             }
                         }
-                    } catch (err) {
-                        console.error(`Failed to handle group mention for ${groupJid}`, err);
-                    }
+                    } catch (err) { console.error(err); }
                 }
             }
         }
     }
 
-    // ================== 2. ANTI STATUS MENTION (NOTIFY OWNER) ==================
+    // --- B. ANTI-STATUS MENTION (NOTIFY OWNER) ---
     if (antistatusmention === 'on') {
         const botJid = client.user.id.split(':')[0] + "@s.whatsapp.net";
         const ownerJid = owner[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
-        // Check if Bot or Owner is in the extracted mentions
-        const isMentioned = mentions.includes(botJid) || mentions.includes(ownerJid);
-
-        if (isMentioned) {
+        if (mentions.includes(botJid) || mentions.includes(ownerJid)) {
             let statusSender = m.sender || m.key.participant;
             let statusText = msgContent?.text || msgContent?.caption || "Media Status";
 
-            // Notify Owner
             await client.sendMessage(ownerJid, {
-                text: `🚨 *ANTI-STATUS MENTION DETECTED* 🚨\n\n👤 *User:* @${statusSender.split("@")[0]}\n📝 *Content:* ${statusText}\n\n_Forwarding status to your DM..._`,
+                text: `🚨 *STATUS MENTION* 🚨\n👤 @${statusSender.split("@")[0]}\n📝 ${statusText}`,
                 mentions: [statusSender]
             });
-
-            // Forward the status
             await client.sendMessage(ownerJid, { forward: m }, { quoted: m });
         }
     }
