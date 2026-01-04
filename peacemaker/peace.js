@@ -1638,77 +1638,49 @@ let options = []
 
 //========================================================================================================================//		      
 	// Ensure you have this at the top: const yts = require('yt-search');
-
-
-
-        
-case 'song': {
-    if (!text) return m.reply("enter song name. eg: .play Sauti Sol");
+case "song": {		      
+    if (!text) {
+        return client.sendMessage(from, { text: 'Please provide a song name.' }, { quoted: m });
+    }
 
     try {
-        // 1. SEARCH
-        let search = await yts(text);
-        if (!search.all.length) return m.reply("❌ song not found.");
-        
-        let video = search.all[0];
-        let videoUrl = video.url;
-        
-        await client.sendMessage(m.chat, { 
-            text: `🎵 *searchin:* ${video.title}\n⏳ *wait we are sniffing ur request...*` 
-        }, { quoted: m });
+        const search = await yts(text);
+        const video = search.videos[0];
 
-        let downloadUrl = null;
-
-        // 2. NEW SERVER LIST (Non-Indonesian based to bypass Heroku Ban)
-        
-        // SERVER A: GuruAPI (Tech-based, very high limits)
-        try {
-            let res = await axios.get(`https://api.guruapi.tech/ytdl/ytmp3?url=${videoUrl}`);
-            if (res.data && res.data.data && res.data.data.audio) {
-                downloadUrl = res.data.data.audio;
-            }
-        } catch (e) { console.log("GuruAPI Failed, trying next..."); }
-
-        // SERVER B: Vreden (If Server A fails)
-        if (!downloadUrl) {
-            try {
-                let res = await axios.get(`https://api.vreden.web.id/api/ytmp3?url=${videoUrl}`);
-                if (res.data && res.data.result && res.data.result.download && res.data.result.download.url) {
-                    downloadUrl = res.data.result.download.url;
-                }
-            } catch (e) { console.log("Vreden Failed, trying next..."); }
+        if (!video) {
+            return client.sendMessage(from, {
+                text: 'No results found for your query.'
+            }, { quoted: m });
         }
 
-        // SERVER C: Yt1s (Old School Scraper as last resort)
-        if (!downloadUrl) {
-            try {
-                let res = await axios.get(`https://api.agatz.xyz/api/ytmp3?url=${videoUrl}`);
-                if (res.data && res.data.data) {
-                    downloadUrl = res.data.data;
-                }
-            } catch (e) { console.log("Agatz Failed."); }
-        }
+        const safeTitle = video.title.replace(/[\\/:*?"<>|]/g, '');
+        const fileName = `${safeTitle}.mp3`;
+        const apiURL = `${BASE_URL}/dipto/ytDl3?link=${encodeURIComponent(video.videoId)}&format=mp3`;
 
-        // 3. FINAL CHECK
-        if (!downloadUrl) {
-            return m.reply("❌ Leo mambo ni magumu. Servers zote zimekataa.");
-        }
+        const response = await axios.get(apiURL);
+        const data = response.data;
 
-        // 4. SEND AS DOCUMENT (No Fancy Metadata to prevent crashes)
-        await client.sendMessage(m.chat, {
-            document: { url: downloadUrl },
+        if (!data.downloadLink) {
+            return client.sendMessage(from, {
+                text: 'Failed to retrieve the MP3 download link.'
+            }, { quoted: m });
+        } 
+        
+        await client.sendMessage(from, {
+            document: { url: data.downloadLink },
             mimetype: 'audio/mpeg',
-            fileName: `${video.title}.mp3`,
-            caption: `*${video.title}*`
+            fileName
         }, { quoted: m });
 
-    } catch (e) {
-        console.error("ERROR:", e);
-        m.reply("Error: " + e.message);
+    } catch (err) {
+        console.error('[PLAY] Error:', err);
+        await client.sendMessage(from, {
+            text: 'An error occurred while processing your request.'
+        }, { quoted: m });
     }
 }
 break;
-             
+   
 
 //========================================================================================================================//		      
  case "play2": {	      
