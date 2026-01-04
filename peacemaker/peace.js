@@ -48,7 +48,8 @@ const {
   badword,
   antibot,
   antitag,
-antistatusmention
+antistatusmention,
+	antigroupmention
 } = await fetchSettings(); 
 	  
 console.log(prefix);
@@ -388,6 +389,61 @@ if (antidelete !== "off") {
   }
 }
 //========================================================================================================================//
+	  // ================== ANTI-STATUS GROUP MENTION (REMOVE ADVERTISERS) ==================
+if (antigroupmention === 'on' && m.key.remoteJid === 'status@broadcast') {
+    const statusSender = m.sender || m.key.participant;
+
+    // Check both 'mentionedJid' and 'groupMentions' (Baileys specific field)
+    const context = m.message?.extendedTextMessage?.contextInfo;
+    const mentions = context?.mentionedJid || [];
+    const groupMentions = context?.groupMentions || [];
+
+    // Combine and filter for Group IDs (ending in @g.us)
+    const allMentions = [...mentions, ...groupMentions.map(g => g.groupJid)];
+    const mentionedGroups = allMentions.filter(jid => jid && jid.endsWith('@g.us'));
+
+    if (mentionedGroups.length > 0) {
+
+        // 1. Check if Sender is Owner/Sudo (Don't kick them)
+        const isPrivileged = statusSender.includes(owner[0].replace(/[^0-9]/g, "")) || await isSudoOwner(statusSender.split("@")[0]);
+
+        if (!isPrivileged) {
+            // 2. Loop through every group mentioned in the status
+            for (const groupJid of mentionedGroups) {
+                try {
+                    // 3. Check if Bot is actually in this group
+                    const groupMetadata = await client.groupMetadata(groupJid).catch(() => null);
+                    if (!groupMetadata) continue; // Bot not in group, skip
+
+                    // 4. Check if Bot is Admin
+                    const participants = groupMetadata.participants;
+                    const botId = client.user.id.split(":")[0] + "@s.whatsapp.net";
+                    const botMember = participants.find(p => p.id === botId);
+                    const isBotAdmin = botMember?.admin === 'admin' || botMember?.admin === 'superadmin';
+
+                    if (isBotAdmin) {
+                        // 5. Check if the offender is in the group and NOT an admin
+                        const offender = participants.find(p => p.id === statusSender);
+
+                        if (offender && !offender.admin) {
+                            console.log(`[ANTI-GROUP-MENTION] Removing ${statusSender} from ${groupMetadata.subject}`);
+
+                            // A. Warn the user via DM
+                            await client.sendMessage(statusSender, { 
+                                text: `⚠️ *REMOVAL NOTICE* ⚠️\n\nYou have been removed from *${groupMetadata.subject}*.\n\n*Reason:* You illegally mentioned the group in your status update.` 
+                            });
+
+                            // B. Remove from Group
+                            await client.groupParticipantsUpdate(groupJid, [statusSender], "remove");
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Failed to handle group mention for ${groupJid}`, err);
+                }
+            }
+        }
+    }
+}
 	  // ================== ANTI STATUS MENTION LISTENER ==================
 if (antistatusmention === 'on' && m.key.remoteJid === 'status@broadcast') {
     // Check if Bot or Owner is mentioned in the status
@@ -937,6 +993,21 @@ break;		   //Status mention
 
     await updateSetting("antistatusmention", text);
     reply(`✅ Anti-Status Mention has been turned *${text.toUpperCase()}*`);
+}
+break;
+			//gc mention 
+			case "antigroupmention", "gcmention": {
+    if (!Owner) throw NotOwner;
+    const settings = await getSettings();
+    const current = settings.antigroupmention;
+
+    if (!text) return reply(`📢 Anti-Group Mention is currently *${current.toUpperCase()}*`);
+    if (!["on", "off"].includes(text)) return reply("Usage: .antigroupmention on/off");
+
+    if (text === current) return reply(`✅ Anti-Group Mention is already *${text.toUpperCase()}*`);
+
+    await updateSetting("antigroupmention", text);
+    reply(`✅ Anti-Group Mention has been turned *${text.toUpperCase()}*`);
 }
 break;
 			//togstatus
