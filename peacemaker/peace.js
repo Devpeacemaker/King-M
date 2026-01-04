@@ -378,7 +378,7 @@ if (autoread === 'on' && !m.isGroup) {
              client.readMessages([m.key])
     }
       if (itsMe && mek.key.id.startsWith("BAE5") && mek.key.id.length === 16 && !m.isGroup) return;
-//========================================================================================================================//
+
 // ================== ANTIDELETE LISTENER ==================
 // 1. Always save incoming messages
 if (!mek.message?.protocolMessage) {
