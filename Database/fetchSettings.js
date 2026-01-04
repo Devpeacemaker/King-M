@@ -22,7 +22,8 @@ async function fetchSettings() {
     gptdm: data.gptdm, 
     anticall: data.anticall, 
     antiedit: data.antiedit,
-    antistatusmention: data.antistatusmention
+    antistatusmention: data.antistatusmention,
+    antistatuslink: data.antistatuslink
   };
 }
 
