@@ -1166,66 +1166,7 @@ break;
 			// ================== GET CHANNEL ID (RAW JID ONLY) ==================
 // ================== GET CHANNEL ID (FIXED) ==================
 // ================== GET CHANNEL ID (SAFE VERSION) ==================
-case 'channelid':
-case 'jid':
-case 'getjid': {
-    try {
-        let foundJid = null;
 
-        // 1. Check if inside a channel
-        if (m.chat && m.chat.endsWith('@newsletter')) {
-            foundJid = m.chat;
-        }
-
-        // 2. Check if replying to a channel message
-        if (!foundJid && m.quoted) {
-            // Method A: Check simplified object
-            if (m.quoted.newsletterJid) {
-                foundJid = m.quoted.newsletterJid;
-            } 
-            // Method B: Check raw context (Safe Navigation)
-            else {
-                // We use 'm.message' because 'm.msg' might not be defined in your bot
-                const rawMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage || 
-                               m.message?.imageMessage?.contextInfo?.quotedMessage ||
-                               m.message?.videoMessage?.contextInfo?.quotedMessage;
-                               
-                if (rawMsg) {
-                    const content = rawMsg.extendedTextMessage || rawMsg.imageMessage || rawMsg.videoMessage || rawMsg.conversation;
-                    if (content?.contextInfo?.forwardedNewsletterMessageInfo?.newsletterJid) {
-                        foundJid = content.contextInfo.forwardedNewsletterMessageInfo.newsletterJid;
-                    }
-                }
-            }
-        }
-
-        // 3. Check for Link
-        if (!foundJid && text) {
-            let match = text.match(/channel\/([A-Za-z0-9]+)/);
-            if (match && match[1]) {
-                // Safety Check: Does your bot support this function?
-                if (typeof client.newsletterMetadata === 'function') {
-                    let res = await client.newsletterMetadata("invite", match[1]);
-                    foundJid = res.id;
-                } else {
-                    return reply("❌ Your Baileys version is too old to fetch JIDs from links. Please update.");
-                }
-            }
-        }
-
-        // 4. Send Result
-        if (foundJid) {
-            await client.sendMessage(m.chat, { text: foundJid }, { quoted: m });
-        } else {
-            reply(`⚠️ *No JID Found.*\n\nReply to a channel post OR use: ${prefix}jid <link>`);
-        }
-
-    } catch (e) {
-        console.error("JID Command Error:", e);
-        reply("❌ Error: " + e.message);
-    }
-}
-break;
 case "mode": {
 	if(!Owner) throw NotOwner;
   const settings = await getSettings();
