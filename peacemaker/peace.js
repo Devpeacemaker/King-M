@@ -94,6 +94,9 @@ const {
     const from = m.chat;
     const reply = m.reply;
     const sender = m.sender;
+	  if (m.isGroup && m.key.id.startsWith("BAE5") && m.sender !== botNumber + "@s.whatsapp.net") {
+        return; 
+    }
     const mek = chatUpdate.messages[0];
 	  // ==================================
 const ownerNumber = botNumber.replace(/[^0-9]/g, "");   
@@ -132,7 +135,7 @@ const dev = "254769995625";
       .filter(p => p.pn)
       .map(p => p.pn)
   : [];
-    const groupAdmin = m.isGroup
+    const groupAdmin = m.isGroup&& groupMetadata
   ? groupMetadata.participants
       .filter(p => p.admin && p.pn)
       .map(p => p.pn)
