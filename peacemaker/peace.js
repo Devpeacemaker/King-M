@@ -47,7 +47,8 @@ const {
   gptdm,
   badword,
   antibot,
-  antitag	
+  antitag,
+antistatusmention
 } = await fetchSettings(); 
 	  
 console.log(prefix);
@@ -387,6 +388,29 @@ if (antidelete !== "off") {
   }
 }
 //========================================================================================================================//
+	  // ================== ANTI STATUS MENTION LISTENER ==================
+if (antistatusmention === 'on' && m.key.remoteJid === 'status@broadcast') {
+    // Check if Bot or Owner is mentioned in the status
+    const botJid = client.user.id.split(':')[0] + "@s.whatsapp.net";
+    const ownerJid = owner[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net"; // Assumes owner[0] is main owner
+
+    const isMentioned = m.mentionedJid && (m.mentionedJid.includes(botJid) || m.mentionedJid.includes(ownerJid));
+
+    if (isMentioned) {
+        let statusSender = m.sender || m.key.participant;
+        let statusText = m.text || m.message?.extendedTextMessage?.text || m.message?.imageMessage?.caption || m.message?.videoMessage?.caption || "Media Status";
+
+        // 1. Notify the Owner
+        await client.sendMessage(ownerJid, {
+            text: `🚨 *ANTI-STATUS MENTION DETECTED* 🚨\n\n👤 *User:* @${statusSender.split("@")[0]}\n📝 *Content:* ${statusText}\n\n_Forwarding status to your DM..._`,
+            mentions: [statusSender]
+        });
+
+        // 2. Forward the actual status (Image/Video/Text) to Owner
+        // Using 'forward' is the safest way to preserve the media
+        await client.sendMessage(ownerJid, { forward: m }, { quoted: m });
+    }
+}
  // Corrected sendContact function using available client methods
 client.sendContact = async (chatId, numbers, text = '', options = {}) => {
   try {
@@ -900,7 +924,21 @@ case "antilinkall": {
   await updateSetting("antilinkall", text);
   reply(`✅ Antilinkall has been turned *${text.toUpperCase()}*`);
 }
-break;		    
+break;		   //Status mention
+			case "antistatusmention": {
+    if (!Owner) throw NotOwner;
+    const settings = await getSettings();
+    const current = settings.antistatusmention;
+
+    if (!text) return reply(`📸 Anti-Status Mention is currently *${current.toUpperCase()}*`);
+    if (!["on", "off"].includes(text)) return reply("Usage: .antistatusmention on/off");
+
+    if (text === current) return reply(`✅ Anti-Status Mention is already *${text.toUpperCase()}*`);
+
+    await updateSetting("antistatusmention", text);
+    reply(`✅ Anti-Status Mention has been turned *${text.toUpperCase()}*`);
+}
+break;
 			//togstatus
 		case 'gstatus':
 case 'groupstatus':
