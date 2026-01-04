@@ -996,7 +996,7 @@ break;		   //Status mention
 }
 break;
 			//gc mention 
-			case "antigroupmention", "gcmention": {
+case "antigroupmention": {
     if (!Owner) throw NotOwner;
     const settings = await getSettings();
     const current = settings.antigroupmention;
