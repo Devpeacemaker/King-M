@@ -30,7 +30,7 @@ antistatusmention: 'off',
   autoview: 'on',
   wapresence: 'recording',
   antiedit: 'private',
-    antistatuslink: 'off',
+    antigroupmention: 'off'
 };
 
 // ================= MODE DETECTION =================
