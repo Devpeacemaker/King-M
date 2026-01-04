@@ -1164,45 +1164,76 @@ case "autoread": {
 }
 break;
 			// ================== GET CHANNEL ID (RAW JID ONLY) ==================
+// ================== GET CHANNEL ID (FIXED) ==================
 case 'channelid':
 case 'jid':
 case 'getjid': {
     try {
-        // SCENARIO 1: You are inside the channel (Userbot/Admin mode)
+        let foundJid = null;
+
+        // SCENARIO 1: Inside a Channel (Admin Mode)
         if (m.chat.endsWith('@newsletter')) {
-            return await client.sendMessage(m.chat, { text: m.chat }, { quoted: m });
+            foundJid = m.chat;
         }
 
-        // SCENARIO 2: You replied to a message forwarded from a channel
-        const context = m.msg?.contextInfo;
-        if (context?.forwardedNewsletterMessageInfo?.newsletterJid) {
-            return await client.sendMessage(m.chat, { text: context.forwardedNewsletterMessageInfo.newsletterJid }, { quoted: m });
-        }
-
-        // SCENARIO 3: You provided a Link (e.g., .jid https://whatsapp.com/channel/...)
-        if (text) {
-            // Extract code
-            let match = text.match(/(?:channel\/)([\w-]+)/);
-            let inviteCode = match ? match[1] : null;
-
-            if (inviteCode) {
-                // Fetch metadata solely to get the ID
-                let res = await client.newsletterMetadata("invite", inviteCode);
-                // Reply with ONLY the ID
-                return await client.sendMessage(m.chat, { text: res.id }, { quoted: m });
+        // SCENARIO 2: Reply to a Channel Post (The Fix)
+        // We must check the QUOTED message's context, not the command message
+        else if (m.quoted) {
+            // 1. Check if the helper 'm.quoted' already grabbed it
+            if (m.quoted.newsletterJid) {
+                foundJid = m.quoted.newsletterJid;
+            } 
+            // 2. Deep search in the raw quoted message object
+            else {
+                // Get the raw content of the message you replied to
+                const quotedMsg = m.msg?.contextInfo?.quotedMessage;
+                if (quotedMsg) {
+                    // Content type could be text, image, video, etc.
+                    const content = quotedMsg.extendedTextMessage || 
+                                    quotedMsg.imageMessage || 
+                                    quotedMsg.videoMessage || 
+                                    quotedMsg.conversation;
+                    
+                    // Check for newsletter info inside that content's contextInfo
+                    const fwInfo = content?.contextInfo?.forwardedNewsletterMessageInfo;
+                    if (fwInfo?.newsletterJid) {
+                        foundJid = fwInfo.newsletterJid;
+                    }
+                }
             }
         }
 
-        // If no link and no context found
-        reply(`⚠️ Give me a link or reply to a channel message.\nExample: ${prefix}jid https://whatsapp.com/channel/...`);
+        // SCENARIO 3: Link Provided
+        if (!foundJid && text) {
+            // Regex to find the code after 'channel/'
+            let match = text.match(/channel\/([A-Za-z0-9]+)/);
+            if (match && match[1]) {
+                try {
+                    // Fetch metadata from WhatsApp servers
+                    let res = await client.newsletterMetadata("invite", match[1]);
+                    foundJid = res.id;
+                } catch (err) {
+                    console.error("Metadata fetch failed:", err);
+                    return reply("❌ Invalid Link or API Error.");
+                }
+            }
+        }
+
+        // === FINAL OUTPUT ===
+        if (foundJid) {
+            return await client.sendMessage(m.chat, { 
+                text: foundJid 
+            }, { quoted: m });
+        } else {
+            return reply(`⚠️ *Could not find JID.*\n\n1. Reply to a channel post\n2. OR use: ${prefix}jid <link>`);
+        }
 
     } catch (e) {
-        console.error("JID Fetch Error:", e);
-        reply("❌ Error: Invalid link or private channel.");
+        console.error("JID Command Error:", e);
+        reply("❌ Error: " + e.message);
     }
 }
 break;
-
 case "mode": {
 	if(!Owner) throw NotOwner;
   const settings = await getSettings();
