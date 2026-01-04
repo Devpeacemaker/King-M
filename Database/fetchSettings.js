@@ -23,7 +23,8 @@ async function fetchSettings() {
     anticall: data.anticall, 
     antiedit: data.antiedit,
     antistatusmention: data.antistatusmention,
-    antistatuslink: data.antistatuslink
+    antistatuslink: data.antistatuslink,
+    antigroupmention: data.antigroupmention
   };
 }
 
