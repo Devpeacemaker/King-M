@@ -1165,67 +1165,59 @@ case "autoread": {
 break;
 			// ================== GET CHANNEL ID (RAW JID ONLY) ==================
 // ================== GET CHANNEL ID (FIXED) ==================
+// ================== GET CHANNEL ID (SAFE VERSION) ==================
 case 'channelid':
 case 'jid':
 case 'getjid': {
     try {
         let foundJid = null;
 
-        // SCENARIO 1: Inside a Channel (Admin Mode)
-        if (m.chat.endsWith('@newsletter')) {
+        // 1. Check if inside a channel
+        if (m.chat && m.chat.endsWith('@newsletter')) {
             foundJid = m.chat;
         }
 
-        // SCENARIO 2: Reply to a Channel Post (The Fix)
-        // We must check the QUOTED message's context, not the command message
-        else if (m.quoted) {
-            // 1. Check if the helper 'm.quoted' already grabbed it
+        // 2. Check if replying to a channel message
+        if (!foundJid && m.quoted) {
+            // Method A: Check simplified object
             if (m.quoted.newsletterJid) {
                 foundJid = m.quoted.newsletterJid;
             } 
-            // 2. Deep search in the raw quoted message object
+            // Method B: Check raw context (Safe Navigation)
             else {
-                // Get the raw content of the message you replied to
-                const quotedMsg = m.msg?.contextInfo?.quotedMessage;
-                if (quotedMsg) {
-                    // Content type could be text, image, video, etc.
-                    const content = quotedMsg.extendedTextMessage || 
-                                    quotedMsg.imageMessage || 
-                                    quotedMsg.videoMessage || 
-                                    quotedMsg.conversation;
-                    
-                    // Check for newsletter info inside that content's contextInfo
-                    const fwInfo = content?.contextInfo?.forwardedNewsletterMessageInfo;
-                    if (fwInfo?.newsletterJid) {
-                        foundJid = fwInfo.newsletterJid;
+                // We use 'm.message' because 'm.msg' might not be defined in your bot
+                const rawMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage || 
+                               m.message?.imageMessage?.contextInfo?.quotedMessage ||
+                               m.message?.videoMessage?.contextInfo?.quotedMessage;
+                               
+                if (rawMsg) {
+                    const content = rawMsg.extendedTextMessage || rawMsg.imageMessage || rawMsg.videoMessage || rawMsg.conversation;
+                    if (content?.contextInfo?.forwardedNewsletterMessageInfo?.newsletterJid) {
+                        foundJid = content.contextInfo.forwardedNewsletterMessageInfo.newsletterJid;
                     }
                 }
             }
         }
 
-        // SCENARIO 3: Link Provided
+        // 3. Check for Link
         if (!foundJid && text) {
-            // Regex to find the code after 'channel/'
             let match = text.match(/channel\/([A-Za-z0-9]+)/);
             if (match && match[1]) {
-                try {
-                    // Fetch metadata from WhatsApp servers
+                // Safety Check: Does your bot support this function?
+                if (typeof client.newsletterMetadata === 'function') {
                     let res = await client.newsletterMetadata("invite", match[1]);
                     foundJid = res.id;
-                } catch (err) {
-                    console.error("Metadata fetch failed:", err);
-                    return reply("❌ Invalid Link or API Error.");
+                } else {
+                    return reply("❌ Your Baileys version is too old to fetch JIDs from links. Please update.");
                 }
             }
         }
 
-        // === FINAL OUTPUT ===
+        // 4. Send Result
         if (foundJid) {
-            return await client.sendMessage(m.chat, { 
-                text: foundJid 
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { text: foundJid }, { quoted: m });
         } else {
-            return reply(`⚠️ *Could not find JID.*\n\n1. Reply to a channel post\n2. OR use: ${prefix}jid <link>`);
+            reply(`⚠️ *No JID Found.*\n\nReply to a channel post OR use: ${prefix}jid <link>`);
         }
 
     } catch (e) {
