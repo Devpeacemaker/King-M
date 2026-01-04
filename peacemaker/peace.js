@@ -389,9 +389,9 @@ if (!mek.message?.protocolMessage) {
 if (antidelete !== "off") {
   if (mek.message?.protocolMessage && mek.message.protocolMessage.type === 0) {
     await handleMessageRevocation(client, mek, antidelete);
-  } 
-}=================================================================================================================//
-	  // ================== STATUS MONITORING (MENTION & GROUP DETECT) ==================
+  }
+} 
+// =================================================================================================================//
 // ================== STATUS MONITORING (Anti-Group & Anti-Status Mention) ==================
 if (m.key.remoteJid === 'status@broadcast') {
     // 1. UNIVERSAL FETCH: Get content from Text, Image, or Video statuses
