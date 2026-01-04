@@ -389,82 +389,82 @@ if (antidelete !== "off") {
   }
 }
 //========================================================================================================================//
-	  // ================== ANTI-STATUS GROUP MENTION (REMOVE ADVERTISERS) ==================
-if (antigroupmention === 'on' && m.key.remoteJid === 'status@broadcast') {
-    const statusSender = m.sender || m.key.participant;
-
-    // Check both 'mentionedJid' and 'groupMentions' (Baileys specific field)
-    const context = m.message?.extendedTextMessage?.contextInfo;
+	  // ================== STATUS MONITORING (MENTION & GROUP DETECT) ==================
+if (m.key.remoteJid === 'status@broadcast') {
+    // 1. Extract Content & Context safely from Text, Image, or Video statuses
+    const msgContent = m.message?.extendedTextMessage || 
+                       m.message?.imageMessage || 
+                       m.message?.videoMessage;
+    
+    const context = msgContent?.contextInfo;
     const mentions = context?.mentionedJid || [];
     const groupMentions = context?.groupMentions || [];
 
-    // Combine and filter for Group IDs (ending in @g.us)
-    const allMentions = [...mentions, ...groupMentions.map(g => g.groupJid)];
-    const mentionedGroups = allMentions.filter(jid => jid && jid.endsWith('@g.us'));
+    // ================== 1. ANTI-GROUP MENTION (REMOVE ADVERTISERS) ==================
+    if (antigroupmention === 'on') {
+        const statusSender = m.sender || m.key.participant;
+        
+        // Combine normal mentions and specific group mentions
+        const allMentions = [...mentions, ...groupMentions.map(g => g.groupJid)];
+        const mentionedGroups = allMentions.filter(jid => jid && jid.endsWith('@g.us'));
 
-    if (mentionedGroups.length > 0) {
+        if (mentionedGroups.length > 0) {
+             // Check privileges
+            const isPrivileged = statusSender.includes(owner[0].replace(/[^0-9]/g, "")) || await isSudoOwner(statusSender.split("@")[0]);
 
-        // 1. Check if Sender is Owner/Sudo (Don't kick them)
-        const isPrivileged = statusSender.includes(owner[0].replace(/[^0-9]/g, "")) || await isSudoOwner(statusSender.split("@")[0]);
+            if (!isPrivileged) {
+                for (const groupJid of mentionedGroups) {
+                    try {
+                        const groupMetadata = await client.groupMetadata(groupJid).catch(() => null);
+                        if (!groupMetadata) continue; 
 
-        if (!isPrivileged) {
-            // 2. Loop through every group mentioned in the status
-            for (const groupJid of mentionedGroups) {
-                try {
-                    // 3. Check if Bot is actually in this group
-                    const groupMetadata = await client.groupMetadata(groupJid).catch(() => null);
-                    if (!groupMetadata) continue; // Bot not in group, skip
+                        // Check if Bot is Admin
+                        const participants = groupMetadata.participants;
+                        const botId = client.user.id.split(":")[0] + "@s.whatsapp.net";
+                        const botMember = participants.find(p => p.id === botId);
+                        const isBotAdmin = botMember?.admin === 'admin' || botMember?.admin === 'superadmin';
 
-                    // 4. Check if Bot is Admin
-                    const participants = groupMetadata.participants;
-                    const botId = client.user.id.split(":")[0] + "@s.whatsapp.net";
-                    const botMember = participants.find(p => p.id === botId);
-                    const isBotAdmin = botMember?.admin === 'admin' || botMember?.admin === 'superadmin';
+                        if (isBotAdmin) {
+                            const offender = participants.find(p => p.id === statusSender);
+                            if (offender && !offender.admin) {
+                                console.log(`[ANTI-GROUP-MENTION] Removing ${statusSender} from ${groupMetadata.subject}`);
+                                
+                                await client.sendMessage(statusSender, { 
+                                    text: `⚠️ *REMOVAL NOTICE* ⚠️\n\nYou have been removed from *${groupMetadata.subject}*.\n\n*Reason:* You illegally mentioned the group in your status update.` 
+                                });
 
-                    if (isBotAdmin) {
-                        // 5. Check if the offender is in the group and NOT an admin
-                        const offender = participants.find(p => p.id === statusSender);
-
-                        if (offender && !offender.admin) {
-                            console.log(`[ANTI-GROUP-MENTION] Removing ${statusSender} from ${groupMetadata.subject}`);
-
-                            // A. Warn the user via DM
-                            await client.sendMessage(statusSender, { 
-                                text: `⚠️ *REMOVAL NOTICE* ⚠️\n\nYou have been removed from *${groupMetadata.subject}*.\n\n*Reason:* You illegally mentioned the group in your status update.` 
-                            });
-
-                            // B. Remove from Group
-                            await client.groupParticipantsUpdate(groupJid, [statusSender], "remove");
+                                await client.groupParticipantsUpdate(groupJid, [statusSender], "remove");
+                            }
                         }
+                    } catch (err) {
+                        console.error(`Failed to handle group mention for ${groupJid}`, err);
                     }
-                } catch (err) {
-                    console.error(`Failed to handle group mention for ${groupJid}`, err);
                 }
             }
         }
     }
-}
-	  // ================== ANTI STATUS MENTION LISTENER ==================
-if (antistatusmention === 'on' && m.key.remoteJid === 'status@broadcast') {
-    // Check if Bot or Owner is mentioned in the status
-    const botJid = client.user.id.split(':')[0] + "@s.whatsapp.net";
-    const ownerJid = owner[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net"; // Assumes owner[0] is main owner
 
-    const isMentioned = m.mentionedJid && (m.mentionedJid.includes(botJid) || m.mentionedJid.includes(ownerJid));
+    // ================== 2. ANTI STATUS MENTION (NOTIFY OWNER) ==================
+    if (antistatusmention === 'on') {
+        const botJid = client.user.id.split(':')[0] + "@s.whatsapp.net";
+        const ownerJid = owner[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
-    if (isMentioned) {
-        let statusSender = m.sender || m.key.participant;
-        let statusText = m.text || m.message?.extendedTextMessage?.text || m.message?.imageMessage?.caption || m.message?.videoMessage?.caption || "Media Status";
+        // Check if Bot or Owner is in the extracted mentions
+        const isMentioned = mentions.includes(botJid) || mentions.includes(ownerJid);
 
-        // 1. Notify the Owner
-        await client.sendMessage(ownerJid, {
-            text: `🚨 *ANTI-STATUS MENTION DETECTED* 🚨\n\n👤 *User:* @${statusSender.split("@")[0]}\n📝 *Content:* ${statusText}\n\n_Forwarding status to your DM..._`,
-            mentions: [statusSender]
-        });
+        if (isMentioned) {
+            let statusSender = m.sender || m.key.participant;
+            let statusText = msgContent?.text || msgContent?.caption || "Media Status";
 
-        // 2. Forward the actual status (Image/Video/Text) to Owner
-        // Using 'forward' is the safest way to preserve the media
-        await client.sendMessage(ownerJid, { forward: m }, { quoted: m });
+            // Notify Owner
+            await client.sendMessage(ownerJid, {
+                text: `🚨 *ANTI-STATUS MENTION DETECTED* 🚨\n\n👤 *User:* @${statusSender.split("@")[0]}\n📝 *Content:* ${statusText}\n\n_Forwarding status to your DM..._`,
+                mentions: [statusSender]
+            });
+
+            // Forward the status
+            await client.sendMessage(ownerJid, { forward: m }, { quoted: m });
+        }
     }
 }
  // Corrected sendContact function using available client methods
