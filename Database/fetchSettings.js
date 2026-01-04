@@ -21,7 +21,8 @@ async function fetchSettings() {
     badword: data.badword,
     gptdm: data.gptdm, 
     anticall: data.anticall, 
-    antiedit: data.antiedit
+    antiedit: data.antiedit,
+    antistatusmention: data.antistatusmention
   };
 }
 
