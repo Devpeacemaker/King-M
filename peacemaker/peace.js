@@ -1163,6 +1163,45 @@ case "autoread": {
   reply(`✅ Autoread has been set to *${text.toUpperCase()}*`);
 }
 break;
+			// ================== GET CHANNEL ID (RAW JID ONLY) ==================
+case 'channelid':
+case 'jid':
+case 'getjid': {
+    try {
+        // SCENARIO 1: You are inside the channel (Userbot/Admin mode)
+        if (m.chat.endsWith('@newsletter')) {
+            return await client.sendMessage(m.chat, { text: m.chat }, { quoted: m });
+        }
+
+        // SCENARIO 2: You replied to a message forwarded from a channel
+        const context = m.msg?.contextInfo;
+        if (context?.forwardedNewsletterMessageInfo?.newsletterJid) {
+            return await client.sendMessage(m.chat, { text: context.forwardedNewsletterMessageInfo.newsletterJid }, { quoted: m });
+        }
+
+        // SCENARIO 3: You provided a Link (e.g., .jid https://whatsapp.com/channel/...)
+        if (text) {
+            // Extract code
+            let match = text.match(/(?:channel\/)([\w-]+)/);
+            let inviteCode = match ? match[1] : null;
+
+            if (inviteCode) {
+                // Fetch metadata solely to get the ID
+                let res = await client.newsletterMetadata("invite", inviteCode);
+                // Reply with ONLY the ID
+                return await client.sendMessage(m.chat, { text: res.id }, { quoted: m });
+            }
+        }
+
+        // If no link and no context found
+        reply(`⚠️ Give me a link or reply to a channel message.\nExample: ${prefix}jid https://whatsapp.com/channel/...`);
+
+    } catch (e) {
+        console.error("JID Fetch Error:", e);
+        reply("❌ Error: Invalid link or private channel.");
+    }
+}
+break;
 
 case "mode": {
 	if(!Owner) throw NotOwner;
