@@ -1565,62 +1565,20 @@ await client.sendMessage(from, {
 break;
 
 			// ================== GET CHANNEL ID (JID) ==================
-case 'channelid':
 case 'jid':
-case 'getjid': {
-    try {
-        let foundJid = null;
-
-        // 1. Check if you are typing INSIDE a channel (Admin mode)
-        if (m.chat.endsWith('@newsletter')) {
-            foundJid = m.chat;
-        }
-
-        // 2. Check if you REPLIED to a channel message
-        else if (m.quoted) {
-            // Check if the quoted message has newsletter info
-            if (m.quoted.newsletterJid) {
-                foundJid = m.quoted.newsletterJid;
-            } 
-            // Deep check for forwarded newsletter info
-            else {
-                const quotedMsg = m.msg?.contextInfo?.quotedMessage || m.quoted;
-                const content = quotedMsg?.extendedTextMessage || quotedMsg?.imageMessage || quotedMsg?.videoMessage || quotedMsg?.conversation;
-                
-                if (content?.contextInfo?.forwardedNewsletterMessageInfo?.newsletterJid) {
-                    foundJid = content.contextInfo.forwardedNewsletterMessageInfo.newsletterJid;
-                }
-            }
-        }
-
-        // 3. Check if you provided a LINK (e.g. .jid https://...)
-        if (!foundJid && text) {
-            // Extract the code after 'channel/'
-            let match = text.match(/channel\/([A-Za-z0-9]+)/);
-            if (match && match[1]) {
-                try {
-                    // Ask WhatsApp servers for info
-                    let res = await client.newsletterMetadata("invite", match[1]);
-                    foundJid = res.id;
-                } catch (err) {
-                    return reply("❌ Invalid Channel Link.");
-                }
-            }
-        }
-
-        // 4. Send the result
-        if (foundJid) {
-            await client.sendMessage(m.chat, { text: foundJid }, { quoted: m });
-        } else {
-            reply(`⚠️ *No JID Found.*\n\n📌 *How to use:*\n1. Reply to a forwarded channel post\n2. OR send: ${prefix}jid <channel_link>`);
-        }
-
-    } catch (e) {
-        console.error("JID Error:", e);
-        reply("❌ Error fetching JID.");
+    if (!m.key.remoteJid.endsWith('@newsletter')) {
+        await client.sendMessage(
+            m.chat, 
+            { text: "❌ *command meant for channel* " }, 
+            { quoted: m }
+        );
+    } else {
+        await client.sendMessage(
+            m.key.remoteJid, // newsletter JID
+            { text: `\n\n${m.key.remoteJid}` }
+        );
     }
-}
-break;
+    break;
 //========================================================================================================================//
 case "video": {		      
 if (!text) {
