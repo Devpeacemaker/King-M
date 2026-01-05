@@ -1566,16 +1566,22 @@ break;
 
 			// ================== GET CHANNEL ID (JID) ==================
 case 'jid':
+   
     if (!m.key.remoteJid.endsWith('@newsletter')) {
         await client.sendMessage(
-            m.chat, 
-            { text: "❌ *command meant for channel* " }, 
+            m.key.remoteJid, 
+            { 
+                text: "❌ *command is meant for channels*" 
+            }, 
             { quoted: m }
         );
     } else {
+        
         await client.sendMessage(
-            m.key.remoteJid, // newsletter JID
-            { text: `\n\n${m.key.remoteJid}` }
+            m.key.remoteJid, 
+            { 
+                text: ` *Channel JID:*\n${m.key.remoteJid}` 
+            }
         );
     }
     break;
