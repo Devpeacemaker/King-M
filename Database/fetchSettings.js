@@ -24,6 +24,7 @@ async function fetchSettings() {
     antiedit: data.antiedit,
     antistatusmention: data.antistatusmention,
     antistatuslink: data.antistatuslink,
+    menuTitle: data.menuTitle,
     antigroupmention: data.antigroupmention
   };
 }
