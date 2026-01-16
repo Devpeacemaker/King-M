@@ -1749,31 +1749,55 @@ await client.sendMessage(from, {
 	            case "update":
 case "redeploy": {
     const axios = require('axios');
+    const fs = require('fs');
+    const path = require('path');
 
-    if(!Owner) throw NotOwner;
-    if (!appname || !herokuapi) {
-        await m.reply("❌ *Config Error*: Missing Heroku credentials");
-        return;
-    }
+    if (!Owner) throw NotOwner;
 
-    async function redeployApp() {
+    // --- STRATEGY 1: HEROKU (Keep your existing working logic) ---
+    if (appname && herokuapi) {
+        async function redeployApp() {
+            try {
+                await m.reply("🔄 *Heroku Detected: Triggering Build...*");
+                await axios.post(
+                    `https://api.heroku.com/apps/${appname}/builds`,
+                    { source_blob: { url: "https://github.com/mesuit/King-M/tarball/main" } },
+                    { headers: { Authorization: `Bearer ${herokuapi}`, Accept: "application/vnd.heroku+json; version=3" } }
+                );
+                await m.reply("🌟 *Deployment Triggered! Bot will restart shortly.* 🌟");
+            } catch (error) {
+                await m.reply("💥 *Heroku Deployment Failed* 💥\n" + (error.response?.data?.message || error.message));
+            }
+        }
+        redeployApp();
+        
+    // --- STRATEGY 2: PANELS / VPS (The Fix) ---
+    } else {
+        await m.reply("🖥️ *Panel Detected!*\n\n🗑️ *Deleting old files to force redownload...*");
+        
         try {
-            await axios.post(
-                `https://api.heroku.com/apps/${appname}/builds`,
-                { source_blob: { url: "https://github.com/mesuit/King-M/tarball/main" } },
-                { headers: { Authorization: `Bearer ${herokuapi}`, Accept: "application/vnd.heroku+json; version=3" } }
-            );
-            await m.reply("🌟 *king m deployment triggered* 🌟");
+            // We delete the 'package.json' file.
+            // When the Loader restarts, it checks for this file. 
+            // If it's missing, the Loader thinks the bot is gone and downloads the new update!
+            const packageJsonPath = path.join(__dirname, 'package.json');
+            
+            if (fs.existsSync(packageJsonPath)) {
+                fs.unlinkSync(packageJsonPath); // Deletes the file
+            }
+            
+            await m.reply("✅ *Files cleared! Restarting to download update...*");
+            
+            // This kills the bot. The Panel/Loader will automatically restart it.
+            // Since package.json is gone, the Loader will fetch the new update.
+            process.exit(0);
+
         } catch (error) {
-            await m.reply("💥 *KING -M DEPLOYMENT FAILED* 💥");
-            console.error("Redeploy error:", error.response?.data || error.message);
+            console.error(error);
+            await m.reply("❌ *Failed to clear files manually.* You may need to delete the files in your File Manager.");
         }
     }
-    redeployApp();
     break;
 }
-
-
 //========================================================================================================================//		      
 		      case "credits": {
     const creatorInfo = {
