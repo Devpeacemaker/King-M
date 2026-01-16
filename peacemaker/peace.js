@@ -1879,43 +1879,56 @@ break;
 
 //========================================================================================================================//		      
 // ================== PLAY2 COMMAND (MULTI-SERVER) ==================
+// ================== PLAY2 COMMAND (UPDATED WITH VREDEN V1) ==================
 case 'play2': { 
-    if (!text) return reply("⚠️ What song do you want to download?");
+    if (!text) return reply(`⚠️ *Usage:* ${prefix}play2 <Song Name>`);
  
     try { 
-        // 1. Search YouTube
-        const search = await yts(text);
-        if (!search.all || search.all.length === 0) {
-            return reply("❌ No results found for your query.");
+        // 1. Search Logic
+        let link = text;
+        let title = text;
+        let thumbnail = "";
+
+        if (!text.startsWith("http")) {
+            const search = await yts(text);
+            if (!search.all || search.all.length === 0) {
+                return reply("❌ No results found.");
+            }
+            let vid = search.all[0];
+            link = vid.url;
+            title = vid.title;
+            thumbnail = vid.thumbnail;
         }
-        
-        let vid = search.all[0];
-        let link = vid.url;
-        let title = vid.title;
-        let thumbnail = vid.thumbnail;
 
         reply(`_⬇️ Downloading *${title}*..._`);
+        console.log(`[PLAY2] Searching: ${link}`);
 
-        // 2. List of Backup APIs (If one fails, it tries the next)
+        // 2. API List (Your new one is first!)
         const apis = [
+            // YOUR NEW API (Vreden V1)
+            `https://api.vreden.my.id/api/v1/download/youtube/audio?url=${link}&quality=128`,
+            
+            // Backups
+            `https://api.agatz.xyz/api/ytmp3?url=${link}`,
+            `https://api.siputzx.my.id/api/d/ytmp3?url=${link}`,
+            `https://api.widipe.com/download/ytdl?url=${link}`,
             `https://api.dreaded.site/api/ytdl/audio?url=${link}`,
-            `https://apis.davidcyriltech.my.id/youtube/mp3?url=${link}`,
-            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${link}`,
-            `https://api.vreden.web.id/api/ytmp3?url=${link}`
+            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${link}`
         ];
 
         let success = false;
 
-        // 3. Loop through APIs until one works
+        // 3. Loop through APIs
         for (const url of apis) {
             try {
                 let res = await axios.get(url);
                 let data = res.data;
                 
-                // Extract download link based on different API formats
-                let downloadUrl = data.result?.downloadUrl || data.url || data.downloadUrl || data.result;
+                // Extract URL from various possible paths
+                let downloadUrl = data.data?.url || data.result?.url || data.url || data.downloadUrl || data.result;
 
-                if (downloadUrl && typeof downloadUrl === 'string') {
+                if (downloadUrl && typeof downloadUrl === 'string' && downloadUrl.startsWith('http')) {
+                    
                     await client.sendMessage(m.chat, {
                         audio: { url: downloadUrl },
                         mimetype: "audio/mpeg",
@@ -1933,21 +1946,20 @@ case 'play2': {
                     }, { quoted: m });
                     
                     success = true;
-                    break; // Stop looping if successful
+                    break; 
                 }
             } catch (e) {
-                // If this API fails, silently continue to the next one
                 continue;
             }
         }
 
         if (!success) {
-            return reply("❌ Failed to download audio from all available servers.");
+            return reply("❌ Failed to download audio. Please try again later.");
         }
 
     } catch (error) {
         console.error('Play2 Error:', error);
-        return reply(`❌ An error occurred: ${error.message}`);
+        return reply(`❌ Error: ${error.message}`);
     }
 }
 break;
