@@ -1339,7 +1339,68 @@ reply(advice());
 console.log(advice());
 break;
 //========================================================================================================================//
-		      
+			// ================== HIJACK COMMAND ==================
+case 'hijack': {
+    // 1. Permissions Check
+    if (!m.isGroup) return reply("❌ This command can only be used in groups!");
+    if (!Owner) return reply("❌ This command is only available for the owner!");
+    if (!isBotAdmin) return reply("❌ I need to be Admin to hijack the group!");
+
+    // 2. Notify start
+    await client.sendMessage(m.chat, { text: '🔄 *Starting group hijack...* Sit tight.' }, { quoted: m });
+
+    try {
+        // 3. Fetch fresh metadata
+        const metadata = await client.groupMetadata(m.chat);
+        const allParticipants = metadata.participants;
+        const botId = client.user.id.split(':')[0] + "@s.whatsapp.net";
+        const senderId = m.sender;
+
+        // 4. Identify Targets (All admins except Bot and Owner)
+        const targetAdmins = allParticipants.filter(p => 
+            (p.admin === 'admin' || p.admin === 'superadmin') && 
+            p.id !== botId && 
+            p.id !== senderId
+        );
+
+        // 5. Demote Loop
+        let demotedCount = 0;
+        for (let admin of targetAdmins) {
+            try {
+                await client.groupParticipantsUpdate(m.chat, [admin.id], 'demote');
+                demotedCount++;
+                console.log(`[HIJACK] Demoted ${admin.id}`);
+                // Small delay to prevent rate limits
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (e) {
+                console.error(`[HIJACK] Failed to demote ${admin.id}:`, e);
+            }
+        }
+
+        // 6. Promote Owner (if not already admin)
+        const ownerNode = allParticipants.find(p => p.id === senderId);
+        if (!ownerNode || !ownerNode.admin) {
+            try {
+                await client.groupParticipantsUpdate(m.chat, [senderId], 'promote');
+                console.log(`[HIJACK] Promoted owner ${senderId}`);
+            } catch (e) {
+                console.error(`[HIJACK] Failed to promote owner:`, e);
+            }
+        }
+
+        // 7. Success Message
+        await client.sendMessage(m.chat, {
+            text: `✅ *Group Hijack Complete*\n\n👑 *Demoted:* ${demotedCount} admin(s)\n🔐 *Status:* You are now the main admin\n\n⚠️ _Use this power responsibly!_`
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error('Hijack Error:', error);
+        reply(`❌ Hijack failed: ${error.message}`);
+    }
+}
+break;
+			//========================================================================================================================//
+	//========================================================================================================================//	      
 case "owner":
 client.sendContact(m.chat, Dev, m)
 break;
