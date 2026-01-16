@@ -1817,47 +1817,79 @@ break;
    
 
 //========================================================================================================================//		      
- case "play2": {	      
-    if (!text)  return reply("What song do you want to download?");		      
-try {
-    let result = await searchYouTube(text);
-    let downloadResult = result ? await downloadYouTube(result.url) : null;
-    let platform = 'YouTube';
-
-    if (!downloadResult) {
-      result = await searchSpotify(text);
-      downloadResult = result ? await downloadSpotify(result.url) : null;
-      platform = 'Spotify';
-    }
-
-    if (!downloadResult) {
-      result = await searchSoundCloud(text);
-      downloadResult = result ? await downloadSoundCloud(result.url) : null;
-      platform = 'SoundCloud';
-    }
-
-    if (!result || !downloadResult) {
-      return reply("Unable to retrieve download URL from all sources!");
-    }
-
-    await client.sendMessage(m.chat, {
-      document: { url: downloadResult.downloadUrl },
-      mimetype: "audio/mp3",
-      caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING-M😔",
-      fileName: `${result.title.replace(/[^a-zA-Z0-9 ]/g, "")}.mp3`,
-      }, { quoted: m });
+// ================== PLAY2 COMMAND (MULTI-SERVER) ==================
+case 'play2': { 
+    if (!text) return reply("⚠️ What song do you want to download?");
  
-    await client.sendMessage(m.chat, {
-      audio: { url: downloadResult.downloadUrl },
-      mimetype: "audio/mp4",
-      }, { quoted: m }); 
+    try { 
+        // 1. Search YouTube
+        const search = await yts(text);
+        if (!search.all || search.all.length === 0) {
+            return reply("❌ No results found for your query.");
+        }
+        
+        let vid = search.all[0];
+        let link = vid.url;
+        let title = vid.title;
+        let thumbnail = vid.thumbnail;
 
-  } catch (error) {
-    console.error('Error:', error);
-    return reply(`An error occurred: ${error.message}`);
-  }
+        reply(`_⬇️ Downloading *${title}*..._`);
+
+        // 2. List of Backup APIs (If one fails, it tries the next)
+        const apis = [
+            `https://api.dreaded.site/api/ytdl/audio?url=${link}`,
+            `https://apis.davidcyriltech.my.id/youtube/mp3?url=${link}`,
+            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${link}`,
+            `https://api.vreden.web.id/api/ytmp3?url=${link}`
+        ];
+
+        let success = false;
+
+        // 3. Loop through APIs until one works
+        for (const url of apis) {
+            try {
+                let res = await axios.get(url);
+                let data = res.data;
+                
+                // Extract download link based on different API formats
+                let downloadUrl = data.result?.downloadUrl || data.url || data.downloadUrl || data.result;
+
+                if (downloadUrl && typeof downloadUrl === 'string') {
+                    await client.sendMessage(m.chat, {
+                        audio: { url: downloadUrl },
+                        mimetype: "audio/mpeg",
+                        fileName: `${title}.mp3`,
+                        contextInfo: {
+                            externalAdReply: {
+                                title: title,
+                                body: "KING M PLAYER",
+                                thumbnailUrl: thumbnail,
+                                sourceUrl: link,
+                                mediaType: 1,
+                                renderLargerThumbnail: true
+                            }
+                        }
+                    }, { quoted: m });
+                    
+                    success = true;
+                    break; // Stop looping if successful
+                }
+            } catch (e) {
+                // If this API fails, silently continue to the next one
+                continue;
+            }
+        }
+
+        if (!success) {
+            return reply("❌ Failed to download audio from all available servers.");
+        }
+
+    } catch (error) {
+        console.error('Play2 Error:', error);
+        return reply(`❌ An error occurred: ${error.message}`);
+    }
 }
- break;
+break;
 		      
 //========================================================================================================================//	      	      
 	      case "inspect": {
