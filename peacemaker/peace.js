@@ -49,6 +49,7 @@ const {
   antibot,
   antitag,
 antistatusmention,
+	menuTitle,
 	antigroupmention
 } = await fetchSettings(); 
 	  
@@ -694,7 +695,7 @@ if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin &&
             
                 
 let cap = `
-┏▣ █▓▒░ *KING MD VIP* ░▒▓█
+┏▣ █▓▒░ *${menuTitle}* ░▒▓█
 ┃ 👑 *Dev* : MAKAMESCO
 ┃ 🕹️ *Prefix* : [ ${prefix} ]
 ┃ 🔐 *Mode* : ${mode}
@@ -945,6 +946,17 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// ================== SET BOT NAME (MENU TITLE) ==================
+case 'setbotname': 
+case 'setmenutitle': {
+    if (!Owner) throw NotOwner;
+
+    if (!text) return reply(`⚠️ *Current Name:* ${menuTitle}\n\nUsage: ${prefix}setbotname <New Name>\nExample: ${prefix}setbotname SUPER BOT V1`);
+
+    await updateSetting("menuTitle", text);
+    reply(`✅ Bot menu title has been changed to:\n*${text}*`);
+}
+break;
 //========================================================================================================================//
 
 case "antilink": {
