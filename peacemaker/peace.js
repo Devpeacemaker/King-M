@@ -26,7 +26,6 @@ const Client = new Genius.Client("TUoAEhL79JJyU-MpOsBDkFhJFWFH28nv6dgVgPA-9R1YRw
 const { downloadYouTube, downloadSoundCloud, downloadSpotify, searchYouTube, searchSoundCloud, searchSpotify } = require('../peacemaker/wee');
 const { getSettings, updateSetting } = require('../Database/config');
 const fetchSettings = require('../Database/fetchSettings');
-const fancy = require('./lib/style');
 const { TelegraPh, UploadFileUgu, webp2mp4File, floNime } = require('../lib/peaceupload');
 const { Configuration, OpenAI } = require("openai");
 const { menu, menulink, appname, herokuapi, botname, author, packname, mycode, admin, botAdmin, dev, group, bad, owner, NotOwner } = require("../set.js");
