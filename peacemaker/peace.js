@@ -27,6 +27,7 @@ const { downloadYouTube, downloadSoundCloud, downloadSpotify, searchYouTube, sea
 const { getSettings, updateSetting } = require('../Database/config');
 const fetchSettings = require('../Database/fetchSettings');
 const { TelegraPh, UploadFileUgu, webp2mp4File, floNime } = require('../lib/peaceupload');
+const fancy = require('../lib/style');
 const { Configuration, OpenAI } = require("openai");
 const { menu, menulink, appname, herokuapi, botname, author, packname, mycode, admin, botAdmin, dev, group, bad, owner, NotOwner } = require("../set.js");
 
@@ -947,6 +948,59 @@ let cap = `
             client.sendMessage(from, { text: cap }, { quoted: m });
             break;
 		      
+//========================================================================================================================//
+			//========================================================================================================================//
+        case 'fancy':
+        case 'font':
+            try {
+                // Check if user provided arguments
+                // We use 'args' which you defined at the top of your file
+                let id = args[0];
+                let textToChange = args.slice(1).join(" ");
+
+                if (!id) {
+                    // No arguments provided? Show the list of styles
+                    const readMore = String.fromCharCode(8206).repeat(4001);
+                    let demoText = "King-M"; 
+                    
+                    let menu = `🎨 *KING-M FANCY FONTS* 🎨\n\n` +
+                               `Usage: *${prefix}fancy [ID] [TEXT]*\n` +
+                               `Example: *${prefix}fancy 10 King-M*\n` +
+                               readMore + "\n" +
+                               fancy.list(demoText, fancy);
+                    
+                    // Using client.sendMessage to be safe
+                    await client.sendMessage(m.chat, { text: menu }, { quoted: m });
+                    break;
+                }
+
+                // Check if the first argument is actually a number
+                if (isNaN(id)) {
+                    return reply(`❌ *Invalid Format!*\n\nPlease provide a Style ID number first.\nExample: *${prefix}fancy 15 Hello World*`);
+                }
+
+                // Check if text exists
+                if (!textToChange) {
+                    return reply(`❌ *Missing Text!*\n\nPlease provide the text you want to convert.\nExample: *${prefix}fancy ${id} I love King-M*`);
+                }
+
+                // Calculate the array index (User types 1, we access index 0)
+                let selectedStyleIndex = parseInt(id) - 1;
+                let selectedStyle = fancy[selectedStyleIndex];
+
+                // Apply the style
+                if (selectedStyle) {
+                    let result = fancy.apply(selectedStyle, textToChange);
+                    await client.sendMessage(m.chat, { text: result }, { quoted: m });
+                } else {
+                    await reply(`❌ *Style Not Found!*\n\nPlease choose a number from the list (Type ${prefix}fancy to see list).`);
+                }
+
+            } catch (error) {
+                console.error(error);
+                reply('❌ An error occurred while generating fancy text. Check logs.');
+            }
+            break;
 //========================================================================================================================//
 			
 			// ================== SET BOT NAME (MENU TITLE) ==================
