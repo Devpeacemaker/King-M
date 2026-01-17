@@ -13,6 +13,7 @@ try {
 const defaultSettings = {
   antilink: 'on',
   antilinkall: 'off',
+ autobioText: 'KING M 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 SHARP📌',
   autobio: 'on',
   antidelete: 'on',
   antitag: 'on',
