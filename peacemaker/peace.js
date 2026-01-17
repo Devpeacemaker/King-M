@@ -720,6 +720,9 @@ let cap = `
 │ ⬡ autoview
 │ ⬡ autolike
 │ ⬡ autoread
+│ ⬡ autotyping
+│ ⬡ autorecording
+│ ⬡ alwaysonline
 │ ⬡ autobio
 │ ⬡ mode
 │ ⬡ prefix
