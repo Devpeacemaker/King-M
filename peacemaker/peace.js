@@ -952,6 +952,20 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// ================== SET CUSTOM AUTOBIO ==================
+case 'setbio':
+case 'setautobio': {
+    if (!Owner) throw NotOwner;
+    
+    if (!text) return reply(`⚠️ *Current Bio Settings:*\n\nUsage: ${prefix}setbio <Your Custom Text>\n\n*Note:* Time and Date are added automatically at the start.`);
+
+    // Update the setting in database
+    // Ensure your updateSetting function can handle new keys dynamically
+    await updateSetting("autobioText", text);
+    
+    reply(`✅ *Autobio Updated!*\n\nNew preview:\n📅 [DATE] ⏰ [DAY]. ${text}`);
+}
+break;
 			//========================================================================================================================//
         case 'fancy':
         case 'font':
