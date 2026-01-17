@@ -18,6 +18,7 @@ async function fetchSettings() {
     antibot: data.antibot,
     welcomegoodbye: data.welcomegoodbye,
     autobio: data.autobio,
+    autobioText: data.autobioText, // <--- ADDED THIS LINE ✅
     badword: data.badword,
     gptdm: data.gptdm, 
     anticall: data.anticall, 
