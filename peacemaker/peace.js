@@ -724,6 +724,7 @@ let cap = `
 │ ⬡ autorecording
 │ ⬡ alwaysonline
 │ ⬡ autobio
+│ ⬡ setautobio  <text>
 │ ⬡ mode
 │ ⬡ prefix
 │ ⬡ welcomegoodbye
