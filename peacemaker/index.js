@@ -85,14 +85,24 @@ try {
     syncFullHistory: true,
   });
 
-  if (autobio === 'on') {
-    setInterval(() => {
-      const date = new Date();
-      client.updateProfileStatus(
-        `📅 𝙳𝙰𝚃𝙴/𝚃𝙸𝙼𝙴 ⌚️  ${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}  ⏰️ 𝙳𝙰𝚈 ⏰️  ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}. KING M 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 SHARP📌.`
-      );
+ // ================== AUTOBIO FUNCTION ==================
+if (autobio === 'on') {
+    setInterval(async () => {
+        const date = new Date();
+        const time = date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+        const day = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'});
+        
+        // Fetch current settings to get custom bio text
+        // We assume your fetchSettings() returns an object with 'autobioText'
+        // If not found, use default.
+        const settings = await fetchSettings(); 
+        const customText = settings.autobioText || "KING M 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 SHARP📌";
+
+        const bioMsg = `📅 ${time} ⏰ ${day}. ${customText}`;
+
+        await client.updateProfileStatus(bioMsg);
     }, 10 * 1000);
-  }
+}
 
  store.bind(client.ev);
   
