@@ -42,7 +42,7 @@ const color = (text, color) => {
 authenticationn();
 
 
-const processedEdits = new Set();
+const processedEdits = new Map();
 const EDIT_COOLDOWN = 5000; 
 
 async function startPeace() { 
