@@ -26,6 +26,7 @@ const Client = new Genius.Client("TUoAEhL79JJyU-MpOsBDkFhJFWFH28nv6dgVgPA-9R1YRw
 const { downloadYouTube, downloadSoundCloud, downloadSpotify, searchYouTube, searchSoundCloud, searchSpotify } = require('../peacemaker/wee');
 const { getSettings, updateSetting } = require('../Database/config');
 const fetchSettings = require('../Database/fetchSettings');
+const fancy = require('./lib/style');
 const { TelegraPh, UploadFileUgu, webp2mp4File, floNime } = require('../lib/peaceupload');
 const { Configuration, OpenAI } = require("openai");
 const { menu, menulink, appname, herokuapi, botname, author, packname, mycode, admin, botAdmin, dev, group, bad, owner, NotOwner } = require("../set.js");
@@ -947,6 +948,59 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// Add this line at the very top of your file with other requires
+
+// Paste this inside your switch(command) { ... }
+case 'fancy':
+case 'font':
+    try {
+        // Check if user provided arguments
+        if (!args[0]) {
+            // No arguments provided? Show the list of styles
+            const readMore = String.fromCharCode(8206).repeat(4001);
+            let demoText = "King-M Bot"; // Text used to preview styles
+            
+            let menu = `🎨 *KING-M FANCY FONTS* 🎨\n\n` +
+                       `Usage: *${prefix}fancy [ID] [TEXT]*\n` +
+                       `Example: *${prefix}fancy 10 King-M*\n` +
+                       readMore + "\n" +
+                       fancy.list(demoText, fancy);
+            
+            return m.reply(menu);
+        }
+
+        // Logic to extract ID and Text
+        // We assume args[0] is the ID number
+        let id = args[0];
+        let text = args.slice(1).join(" ");
+
+        // Check if the first argument is actually a number
+        if (isNaN(id)) {
+            return m.reply(`❌ *Invalid Format!*\n\nPlease provide a Style ID number first.\nExample: *${prefix}fancy 15 Hello World*`);
+        }
+
+        // Check if text exists
+        if (!text) {
+            return m.reply(`❌ *Missing Text!*\n\nPlease provide the text you want to convert.\nExample: *${prefix}fancy ${id} I love King-M*`);
+        }
+
+        // Calculate the array index (User types 1, we access index 0)
+        let selectedStyleIndex = parseInt(id) - 1;
+        let selectedStyle = fancy[selectedStyleIndex];
+
+        // Apply the style
+        if (selectedStyle) {
+            let result = fancy.apply(selectedStyle, text);
+            await m.reply(result);
+        } else {
+            await m.reply(`❌ *Style Not Found!*\n\nPlease choose a number from the list (Type ${prefix}fancy to see list).`);
+        }
+
+    } catch (error) {
+        console.error(error);
+        m.reply('❌ An error occurred while generating fancy text.');
+    }
+    break;
 			// ================== SET BOT NAME (MENU TITLE) ==================
 case 'setbotname': 
 case 'setmenutitle': {
