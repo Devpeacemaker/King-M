@@ -771,6 +771,7 @@ let cap = `
 ┗▣
 
 ┏▣ 🧩 *CONVERTER HUB* 🧩
+│ ⬡ fancy
 │ ⬡ sticker
 │ ⬡ smeme
 │ ⬡ photo
