@@ -949,17 +949,18 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
-			// Add this line at the very top of your file with other requires
-
-// Paste this inside your switch(command) { ... }
-case 'fancy':
+			case 'fancy':
 case 'font':
     try {
-        // Check if user provided arguments
-        if (!args[0]) {
-            // No arguments provided? Show the list of styles
+        // Ensure args/text exists (Standard King-M definitions)
+        // If your bot uses 'q' or 'text' global variables, this ensures we have what we need.
+        let fancyText = args.slice(1).join(" ");
+        let fancyId = args[0];
+
+        // 1. No arguments provided? Show the list.
+        if (!fancyId) {
             const readMore = String.fromCharCode(8206).repeat(4001);
-            let demoText = "King-M Bot"; // Text used to preview styles
+            let demoText = "King-M Bot"; 
             
             let menu = `🎨 *KING-M FANCY FONTS* 🎨\n\n` +
                        `Usage: *${prefix}fancy [ID] [TEXT]*\n` +
@@ -967,39 +968,37 @@ case 'font':
                        readMore + "\n" +
                        fancy.list(demoText, fancy);
             
-            return m.reply(menu);
+            // USE CLIENT.SENDMESSAGE INSTEAD OF M.REPLY
+            client.sendMessage(from, { text: menu }, { quoted: m });
+            break; 
         }
 
-        // Logic to extract ID and Text
-        // We assume args[0] is the ID number
-        let id = args[0];
-        let text = args.slice(1).join(" ");
-
-        // Check if the first argument is actually a number
-        if (isNaN(id)) {
-            return m.reply(`❌ *Invalid Format!*\n\nPlease provide a Style ID number first.\nExample: *${prefix}fancy 15 Hello World*`);
+        // 2. Validate ID
+        if (isNaN(fancyId)) {
+            client.sendMessage(from, { text: `❌ *Invalid Format!*\n\nPlease provide a Style ID number first.\nExample: *${prefix}fancy 15 Hello World*` }, { quoted: m });
+            break;
         }
 
-        // Check if text exists
-        if (!text) {
-            return m.reply(`❌ *Missing Text!*\n\nPlease provide the text you want to convert.\nExample: *${prefix}fancy ${id} I love King-M*`);
+        // 3. Validate Text
+        if (!fancyText) {
+            client.sendMessage(from, { text: `❌ *Missing Text!*\n\nPlease provide the text to convert.\nExample: *${prefix}fancy ${fancyId} I love King-M*` }, { quoted: m });
+            break;
         }
 
-        // Calculate the array index (User types 1, we access index 0)
-        let selectedStyleIndex = parseInt(id) - 1;
+        // 4. Apply Style
+        let selectedStyleIndex = parseInt(fancyId) - 1;
         let selectedStyle = fancy[selectedStyleIndex];
 
-        // Apply the style
         if (selectedStyle) {
-            let result = fancy.apply(selectedStyle, text);
-            await m.reply(result);
+            let result = fancy.apply(selectedStyle, fancyText);
+            client.sendMessage(from, { text: result }, { quoted: m });
         } else {
-            await m.reply(`❌ *Style Not Found!*\n\nPlease choose a number from the list (Type ${prefix}fancy to see list).`);
+            client.sendMessage(from, { text: `❌ *Style Not Found!*\n\nPlease choose a number from the list.` }, { quoted: m });
         }
 
     } catch (error) {
-        console.error(error);
-        m.reply('❌ An error occurred while generating fancy text.');
+        console.error("Fancy Error:", error);
+        client.sendMessage(from, { text: '❌ An error occurred with the fonts.' }, { quoted: m });
     }
     break;
 			// ================== SET BOT NAME (MENU TITLE) ==================
