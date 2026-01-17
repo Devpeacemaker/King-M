@@ -1234,6 +1234,56 @@ case "autoread": {
 break;
 			// ================== GET CHANNEL ID (RAW JID ONLY) ==================
 // ================== GET CHANNEL ID (FIXED) ==================
+			// ================== PRESENCE SHORTCUTS ==================
+
+case 'autotyping': {
+    if (!Owner) throw NotOwner;
+    if (!text) return reply(`⌨️ *Auto-Typing Control*\n\nUsage: ${prefix}autotyping on/off`);
+    
+    if (text.toLowerCase() === 'on') {
+        await updateSetting("wapresence", "typing");
+        reply("✅ *Auto-Typing Enabled* (Bot will show 'typing...' status)");
+    } else if (text.toLowerCase() === 'off') {
+        await updateSetting("wapresence", "unavailable");
+        reply("✅ *Auto-Typing Disabled*");
+    } else {
+        reply("❌ Invalid option. Use *on* or *off*.");
+    }
+}
+break;
+
+case 'autorecording': {
+    if (!Owner) throw NotOwner;
+    if (!text) return reply(`🎙️ *Auto-Recording Control*\n\nUsage: ${prefix}autorecording on/off`);
+    
+    if (text.toLowerCase() === 'on') {
+        await updateSetting("wapresence", "recording");
+        reply("✅ *Auto-Recording Enabled* (Bot will show 'recording audio...' status)");
+    } else if (text.toLowerCase() === 'off') {
+        await updateSetting("wapresence", "unavailable");
+        reply("✅ *Auto-Recording Disabled*");
+    } else {
+        reply("❌ Invalid option. Use *on* or *off*.");
+    }
+}
+break;
+
+case 'alwaysonline': 
+case 'available': {
+    if (!Owner) throw NotOwner;
+    if (!text) return reply(`🟢 *Always Online Control*\n\nUsage: ${prefix}alwaysonline on/off`);
+    
+    if (text.toLowerCase() === 'on') {
+        await updateSetting("wapresence", "online");
+        reply("✅ *Always Online Enabled* (Bot will always show 'Online')");
+    } else if (text.toLowerCase() === 'off') {
+        await updateSetting("wapresence", "unavailable");
+        reply("✅ *Always Online Disabled* (Bot will hide presence)");
+    } else {
+        reply("❌ Invalid option. Use *on* or *off*.");
+    }
+}
+break;
 // ================== GET CHANNEL ID (SAFE VERSION) ==================
 
 case "mode": {
