@@ -949,58 +949,7 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
-			case 'fancy':
-case 'font':
-    try {
-        // Ensure args/text exists (Standard King-M definitions)
-        // If your bot uses 'q' or 'text' global variables, this ensures we have what we need.
-        let fancyText = args.slice(1).join(" ");
-        let fancyId = args[0];
-
-        // 1. No arguments provided? Show the list.
-        if (!fancyId) {
-            const readMore = String.fromCharCode(8206).repeat(4001);
-            let demoText = "King-M Bot"; 
-            
-            let menu = `🎨 *KING-M FANCY FONTS* 🎨\n\n` +
-                       `Usage: *${prefix}fancy [ID] [TEXT]*\n` +
-                       `Example: *${prefix}fancy 10 King-M*\n` +
-                       readMore + "\n" +
-                       fancy.list(demoText, fancy);
-            
-            // USE CLIENT.SENDMESSAGE INSTEAD OF M.REPLY
-            client.sendMessage(from, { text: menu }, { quoted: m });
-            break; 
-        }
-
-        // 2. Validate ID
-        if (isNaN(fancyId)) {
-            client.sendMessage(from, { text: `❌ *Invalid Format!*\n\nPlease provide a Style ID number first.\nExample: *${prefix}fancy 15 Hello World*` }, { quoted: m });
-            break;
-        }
-
-        // 3. Validate Text
-        if (!fancyText) {
-            client.sendMessage(from, { text: `❌ *Missing Text!*\n\nPlease provide the text to convert.\nExample: *${prefix}fancy ${fancyId} I love King-M*` }, { quoted: m });
-            break;
-        }
-
-        // 4. Apply Style
-        let selectedStyleIndex = parseInt(fancyId) - 1;
-        let selectedStyle = fancy[selectedStyleIndex];
-
-        if (selectedStyle) {
-            let result = fancy.apply(selectedStyle, fancyText);
-            client.sendMessage(from, { text: result }, { quoted: m });
-        } else {
-            client.sendMessage(from, { text: `❌ *Style Not Found!*\n\nPlease choose a number from the list.` }, { quoted: m });
-        }
-
-    } catch (error) {
-        console.error("Fancy Error:", error);
-        client.sendMessage(from, { text: '❌ An error occurred with the fonts.' }, { quoted: m });
-    }
-    break;
+			
 			// ================== SET BOT NAME (MENU TITLE) ==================
 case 'setbotname': 
 case 'setmenutitle': {
