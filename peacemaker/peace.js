@@ -724,6 +724,7 @@ let cap = `
 │ ⬡ prefix
 │ ⬡ welcomegoodbye
 │ ⬡ wapresence
+│ ⬡ setbotname
 ┗▣
 
 ┏▣ 👑 *OWNER ACCESS* 👑
