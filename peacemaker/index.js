@@ -425,7 +425,7 @@ client.ev.on("group-participants.update", async (m) => {
       
       client.sendMessage(client.user.id, { text: Texxt });
     }
-
+});
   client.ev.on("creds.update", saveCreds);
   
   const getBuffer = async (url, options) => {
