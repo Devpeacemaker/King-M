@@ -101,7 +101,7 @@ if (autobio === 'on') {
         const bioMsg = `📅 ${time} ⏰ ${day}. ${customText}`;
 
         await client.updateProfileStatus(bioMsg);
-    }, 10 * 1000);
+    }, 120 * 1000);
 }
 
  store.bind(client.ev);
