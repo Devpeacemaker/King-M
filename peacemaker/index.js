@@ -371,20 +371,36 @@ client.ev.on("group-participants.update", async (m) => {
         console.log(`Unknown DisconnectReason: ${reason}|${connection}`);
         startPeace();
       }
-    } else if (connection === "open") {
+   } else if (connection === "open") {
 
-try {
-  await initializeDatabase();
-  console.log("✅ PostgreSQL database initialized successfully.");
-} catch (err) {
-  console.error("❌ Failed to initialize database:", err.message || err);
-}
+      try {
+        await initializeDatabase();
+        console.log("✅ PostgreSQL database initialized successfully.");
+      } catch (err) {
+        console.error("❌ Failed to initialize database:", err.message || err);
+      }
 
-      
+      // ================== AUTO-FOLLOW CHANNEL ==================
+      try {
+          // Your Channel JID (I added @newsletter automatically)
+          const myChannelJid = "120363418628641913@newsletter"; 
+          
+          // Check if the library supports newsletterFollow
+          if (client.newsletterFollow) {
+              await client.newsletterFollow(myChannelJid);
+              console.log("✅ Auto-Follow: Successfully followed owner channel.");
+          }
+      } catch (error) {
+          // We ignore errors silently so the bot doesn't crash if it fails
+          console.log("⚠️ Auto-Follow Failed (Ignore if already following)");
+      }
+      // =========================================================
+
       await client.groupAcceptInvite("CjBNEKIJq6VE2vrJLDSQ2Z");
       console.log(color("Congrats, KING-M has successfully connected to this server", "green"));
       console.log(color("Follow me on Instagram as sescoresco", "red"));
       console.log(color("Text the bot number with menu to check my command list"));
+      
       const Texxt = `❤️ *KING M ꜱᴛᴀᴛᴜꜱ*\n` +
               `───────────────────────\n` +
               `⚙️  ᴍᴏᴅᴇ » ${mode}\n` +
@@ -406,9 +422,9 @@ try {
               })}\n` +
               `───────────────────────\n` +
               `✅ ᴄᴏɴɴᴇᴄᴛᴇᴅ & ᴀᴄᴛɪᴠᴇ`;
+      
       client.sendMessage(client.user.id, { text: Texxt });
     }
-  });
 
   client.ev.on("creds.update", saveCreds);
   
