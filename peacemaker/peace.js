@@ -51,6 +51,7 @@ const {
   antitag,
 antistatusmention,
 	menuTitle,
+	antisticker,
 	antigroupmention
 } = await fetchSettings(); 
 	  
