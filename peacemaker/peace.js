@@ -394,6 +394,52 @@ if (antidelete !== "off") {
   }
 } 
 // =================================================================================================================//
+	  // ================== ANTI-STICKER MONITOR ==================
+// ================== ANTI-STICKER LOGIC ==================
+// Check if antisticker is active and not 'off'
+if (antisticker !== 'off' && m.mtype === 'stickerMessage' && !Owner && isBotAdmin && !isAdmin && m.isGroup) {
+    const kid = m.sender;
+    const userTag = `@${kid.split("@")[0]}`;
+
+    // ACTION 1: ALWAYS DELETE THE STICKER (unless mode is off)
+    try {
+        await client.sendMessage(m.chat, {
+            delete: {
+                remoteJid: m.chat,
+                fromMe: false,
+                id: m.key.id,
+                participant: kid
+            }
+        });
+    } catch (e) {
+        console.error("Failed to delete sticker:", e);
+    }
+
+    // ACTION 2: HANDLE MODES
+    if (antisticker === 'kick') {
+        // Mode: KICK
+        await client.sendMessage(m.chat, {
+            text: `🚫 *ANTI-STICKER* \n\n${userTag} removed for sending a sticker.`,
+            mentions: [kid]
+        });
+        await client.groupParticipantsUpdate(m.chat, [kid], 'remove');
+
+    } else if (antisticker === 'warn') {
+        // Mode: WARN
+        // ( Ideally, you would increment a database counter here. 
+        // For now, we issue a public warning.)
+        await client.sendMessage(m.chat, {
+            text: `⚠️ *WARNING* \n\n${userTag}, stickers are not allowed! Next time may result in a kick.`,
+            mentions: [kid]
+        });
+
+    } else if (antisticker === 'delete') {
+        // Mode: DELETE ONLY
+        // We already deleted the message above, so we just notify silently or do nothing.
+        // Uncomment the line below if you want a text notification for delete-only mode.
+        // await client.sendMessage(m.chat, { text: `⚠️ ${userTag}, no stickers allowed.`, mentions: [kid] });
+    }
+}
 // ================== STATUS MONITORING (Anti-Group & Anti-Status Mention) ==================
 if (m.key.remoteJid === 'status@broadcast') {
     // 1. UNIVERSAL FETCH: Get content from Text, Image, or Video statuses
@@ -953,6 +999,34 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// ================== ENHANCED ANTI-STICKER SETTING ==================
+case "antisticker": {
+    if (!Owner) throw NotOwner;
+    const settings = await getSettings();
+    const current = settings.antisticker;
+
+    // If no argument is provided, show current status and usage
+    if (!text) {
+        return reply(`🚫 *Anti-Sticker Settings*\n\n` +
+                     `Current Mode: *${current.toUpperCase()}*\n` +
+                     `Usage:\n` +
+                     `▪️ ${prefix}antisticker off (Disable)\n` +
+                     `▪️ ${prefix}antisticker delete (Delete sticker only)\n` +
+                     `▪️ ${prefix}antisticker warn (Delete + Warn user)\n` +
+                     `▪️ ${prefix}antisticker kick (Delete + Kick user)`);
+    }
+
+    const validModes = ["off", "delete", "warn", "kick"];
+    const newMode = text.toLowerCase();
+
+    if (!validModes.includes(newMode)) {
+        return reply("❌ Invalid mode. Please use: off, delete, warn, or kick.");
+    }
+
+    await updateSetting("antisticker", newMode);
+    reply(`✅ Anti-Sticker mode set to *${newMode.toUpperCase()}*`);
+}
+break;
 			// ================== SET CUSTOM AUTOBIO ==================
 case 'setbio':
 case 'setautobio': {
