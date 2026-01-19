@@ -398,47 +398,50 @@ if (antidelete !== "off") {
 	  // ================== ANTI-STICKER MONITOR ==================
 // ================== ANTI-STICKER LOGIC ==================
 // Check if antisticker is active and not 'off'
-if (antisticker !== 'off' && m.mtype === 'stickerMessage' && !Owner && isBotAdmin && !isAdmin && m.isGroup) {
-    const kid = m.sender;
-    const userTag = `@${kid.split("@")[0]}`;
+// ================== ANTI-STICKER LOGIC (ROBUST) ==================
+// 1. Define what a sticker is (Checks mtype AND message content)
+const isSticker = m.mtype === 'stickerMessage' || (m.message && m.message.stickerMessage);
 
-    // ACTION 1: ALWAYS DELETE THE STICKER (unless mode is off)
-    try {
-        await client.sendMessage(m.chat, {
-            delete: {
-                remoteJid: m.chat,
-                fromMe: false,
-                id: m.key.id,
-                participant: kid
-            }
-        });
-    } catch (e) {
-        console.error("Failed to delete sticker:", e);
-    }
+// 2. Check if feature is ON and Sticker is detected
+if (antisticker && antisticker !== 'off' && isSticker) {
+    
+    // 3. Permissions: Only act if Bot is Admin & User is NOT Admin/Owner
+    if (!Owner && isBotAdmin && !isAdmin && m.isGroup) {
+        
+        const kid = m.sender;
+        const userTag = `@${kid.split("@")[0]}`;
 
-    // ACTION 2: HANDLE MODES
-    if (antisticker === 'kick') {
-        // Mode: KICK
-        await client.sendMessage(m.chat, {
-            text: `🚫 *ANTI-STICKER* \n\n${userTag} removed for sending a sticker.`,
-            mentions: [kid]
-        });
-        await client.groupParticipantsUpdate(m.chat, [kid], 'remove');
+        console.log(`[ANTI-STICKER] 🚫 Sticker detected from ${kid}`);
 
-    } else if (antisticker === 'warn') {
-        // Mode: WARN
-        // ( Ideally, you would increment a database counter here. 
-        // For now, we issue a public warning.)
-        await client.sendMessage(m.chat, {
-            text: `⚠️ *WARNING* \n\n${userTag}, stickers are not allowed! Next time may result in a kick.`,
-            mentions: [kid]
-        });
+        // ACTION: DELETE (Always delete first)
+        try {
+            await client.sendMessage(m.chat, {
+                delete: {
+                    remoteJid: m.chat,
+                    fromMe: false,
+                    id: m.key.id,
+                    participant: kid
+                }
+            });
+        } catch (e) {
+            console.error("[ANTI-STICKER] Delete failed (Bot might not be admin)");
+        }
 
-    } else if (antisticker === 'delete') {
-        // Mode: DELETE ONLY
-        // We already deleted the message above, so we just notify silently or do nothing.
-        // Uncomment the line below if you want a text notification for delete-only mode.
-        // await client.sendMessage(m.chat, { text: `⚠️ ${userTag}, no stickers allowed.`, mentions: [kid] });
+        // ACTION: MODE SPECIFIC
+        if (antisticker === 'kick') {
+            await client.sendMessage(m.chat, {
+                text: `🚫 *ANTI-STICKER* \n\n${userTag} removed.`,
+                mentions: [kid]
+            });
+            await client.groupParticipantsUpdate(m.chat, [kid], 'remove');
+        
+        } else if (antisticker === 'warn') {
+            await client.sendMessage(m.chat, {
+                text: `⚠️ *WARNING* \n\n${userTag}, stickers are prohibited!`,
+                mentions: [kid]
+            });
+        }
+        // If mode is 'delete', we do nothing else (sticker is already deleted above)
     }
 }
 // ================== STATUS MONITORING (Anti-Group & Anti-Status Mention) ==================
