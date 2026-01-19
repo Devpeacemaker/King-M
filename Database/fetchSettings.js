@@ -26,6 +26,7 @@ async function fetchSettings() {
     antistatusmention: data.antistatusmention,
     antistatuslink: data.antistatuslink,
     menuTitle: data.menuTitle,
+    antisticker: data.antisticker,
     antigroupmention: data.antigroupmention
   };
 }
