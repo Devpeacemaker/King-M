@@ -31,6 +31,7 @@ antistatusmention: 'off',
   autoview: 'on',
   wapresence: 'recording',
   antiedit: 'private',
+    antisticker: 'off',
     menuTitle: "KING MD VIP",
     antigroupmention: 'off'
 };
