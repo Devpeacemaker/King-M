@@ -780,6 +780,7 @@ let cap = `
 │ ⬡ welcomegoodbye
 │ ⬡ wapresence
 │ ⬡ setbotname
+│ ⬡ antisticker
 ┗▣
 
 ┏▣ 👑 *OWNER ACCESS* 👑
