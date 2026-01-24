@@ -1004,6 +1004,127 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// ================== VICTOR BINGWA SOKONI (AUTO-BUY) ==================
+case 'buy':
+case 'buydata':
+case 'offers': {
+    // 1. DEFINE THE OFFERS CATALOG (From your website)
+    const offers = {
+        // DATA OFFERS
+        '55':  { type: 'data',    desc: '1.25GB (Midnight)' },
+        '50':  { type: 'data',    desc: '1.5GB (3 hours)' },
+        '250': { type: 'data',    desc: '1.2GB (30 days)' },
+        '49':  { type: 'data',    desc: '350MB (1 week)' },
+        '19':  { type: 'data',    desc: '1GB (1 hour)' },
+        '20':  { type: 'data',    desc: '250MB (24 hours)' },
+        '99':  { type: 'data',    desc: '1GB (24 hours)' },
+        '110': { type: 'data',    desc: '2GB (24 hours)' },
+        // MINUTES OFFERS
+        '22':  { type: 'minutes', desc: '45 mins (3 hours)' },
+        '51':  { type: 'minutes', desc: '50 mins (Midnight)' },
+        // SMS OFFERS
+        '10':  { type: 'sms',     desc: '200 SMS (24h)' },
+        '5':   { type: 'sms',     desc: '20 SMS (1 day)' },
+        '101': { type: 'sms',     desc: '1500 SMS (1 month)' },
+        '201': { type: 'sms',     desc: '3500 SMS (1 month)' },
+        '30':  { type: 'sms',     desc: '1000 SMS (7 days)' }
+    };
+
+    // 2. HELP MENU (If no arguments)
+    if (!text) {
+        let menu = `🛒 *VICTOR BINGWA SOKONI*\n_Premium Data, Minutes & SMS_\n\n`;
+        
+        menu += `*📡 DATA BUNDLES*\n`;
+        menu += `▪️ 1.25GB (Midnight) - *55/=* (Cmd: ${prefix}buy 55)\n`;
+        menu += `▪️ 1.5GB (3 hours) - *50/=* (Cmd: ${prefix}buy 50)\n`;
+        menu += `▪️ 1GB (1 hour) - *19/=* (Cmd: ${prefix}buy 19)\n`;
+        menu += `▪️ 250MB (24h) - *20/=* (Cmd: ${prefix}buy 20)\n`;
+        menu += `▪️ 1GB (24h) - *99/=* (Cmd: ${prefix}buy 99)\n`;
+        menu += `▪️ 2GB (24h) - *110/=* (Cmd: ${prefix}buy 110)\n`;
+        menu += `▪️ 350MB (7 days) - *49/=* (Cmd: ${prefix}buy 49)\n`;
+        menu += `▪️ 1.2GB (30 days) - *250/=* (Cmd: ${prefix}buy 250)\n\n`;
+
+        menu += `*📞 MINUTES*\n`;
+        menu += `▪️ 45 Mins (3hrs) - *22/=* (Cmd: ${prefix}buy 22)\n`;
+        menu += `▪️ 50 Mins (Midnight) - *51/=* (Cmd: ${prefix}buy 51)\n\n`;
+
+        menu += `*💬 SMS BUNDLES*\n`;
+        menu += `▪️ 20 SMS (1 Day) - *5/=* (Cmd: ${prefix}buy 5)\n`;
+        menu += `▪️ 200 SMS (24h) - *10/=* (Cmd: ${prefix}buy 10)\n`;
+        menu += `▪️ 1000 SMS (7 Days) - *30/=* (Cmd: ${prefix}buy 30)\n`;
+        menu += `▪️ 1500 SMS (Month) - *101/=* (Cmd: ${prefix}buy 101)\n`;
+        menu += `▪️ 3500 SMS (Month) - *201/=* (Cmd: ${prefix}buy 201)\n\n`;
+
+        menu += `_Reply with ${prefix}buy <amount> <phone> to purchase._`;
+        return client.sendMessage(m.chat, { 
+            image: { url: "https://files.catbox.moe/k86775.jpg" }, // Add a logo URL here if you want
+            caption: menu 
+        }, { quoted: m });
+    }
+
+    try {
+        // 3. PARSE INPUT (.buy 50 0712345678)
+        let argsList = text.split(" ");
+        let amount = argsList[0];
+        let phoneInput = argsList[1];
+
+        // 4. FIND THE OFFER
+        const selectedOffer = offers[amount];
+
+        if (!selectedOffer) {
+            return reply(`❌ *Invalid Amount!*\nWe don't have an offer for Ksh ${amount}.\nType *${prefix}offers* to see the price list.`);
+        }
+
+        // 5. VALIDATE PHONE NUMBER
+        if (!phoneInput) {
+            return reply(`⚠️ Please provide a phone number!\nUsage: *${prefix}buy ${amount} 0712345678*`);
+        }
+
+        // Format to 254...
+        let phone = phoneInput.replace(/[^0-9]/g, '');
+        if (phone.startsWith('0')) phone = '254' + phone.substring(1);
+        if (phone.startsWith('7') || phone.startsWith('1')) phone = '254' + phone;
+
+        if (!phone.startsWith('254') || phone.length !== 12) {
+            return reply("❌ Invalid Phone Number. Please use format: 0712345678");
+        }
+
+        // 6. SEND REQUEST TO YOUR API
+        await client.sendMessage(m.chat, { react: { text: '🔄', key: m.key } });
+        
+        const apiPayload = {
+            phoneNumber: phone,
+            amount: amount,
+            description: selectedOffer.desc,
+            type: selectedOffer.type
+        };
+
+        const { data } = await axios.post("https://mpesa-stk.giftedtech.co.ke/api/payVictorN.php", apiPayload);
+
+        // 7. HANDLE RESPONSE
+        if (data && data.success) {
+            await client.sendMessage(m.chat, { 
+                text: `✅ *STK PUSH SENT!*\n\n` +
+                      `📦 *Offer:* ${selectedOffer.desc}\n` +
+                      `💰 *Price:* Ksh ${amount}\n` +
+                      `📱 *Phone:* ${phone}\n\n` +
+                      `_Please check your phone and enter your M-Pesa PIN to complete the purchase._`
+            }, { quoted: m });
+            
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+            // (Optional) Poll for status here if you want, but strictly not necessary for the user to just buy.
+
+        } else {
+            reply(`❌ *Transaction Failed*\nReason: ${data.error || "Unknown Error from Server"}`);
+        }
+
+    } catch (e) {
+        console.error("Bingwa Sokoni Error:", e);
+        reply("❌ *System Error*\nCould not connect to the payment server. Try again later.");
+    }
+}
+break;
 			// ================== ENHANCED ANTI-STICKER SETTING ==================
 case "antisticker": {
     if (!Owner) throw NotOwner;
