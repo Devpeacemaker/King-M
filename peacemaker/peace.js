@@ -1287,82 +1287,80 @@ case "antigroupmention": {
 }
 break;
 			//togstatus
-		case 'gstatus':
+		// ================== GROUP STATUS (GS) ==================
+case 'gstatus':
 case 'groupstatus':
 case 'gs': {
-    // 1. Basic Checks
-    const isGroup = m.chat.endsWith('@g.us');
-    if (!isGroup) return m.reply("❌ This command is for groups only.");
-    
-    if (!isBotAdmin) return m.reply("❌ I need to be Admin to post group statuses.");
+    // 1. Helper for fancy lines
+    const formatMsg = (txt) => `◈┈┈┈┈┈┈┈┈┈┈◈\n${txt}\n◈┈┈┈┈┈┈┈┈┈┈┈┈◈`;
 
-    // 2. Define Styling & Credit
-    const credit = `📢 *Group Status*\n👑 *Posted By: KING M*`;
-    const formatMsg = (text) => `◈━━━━━━━━━━━━━━━◈\n${text}\n◈━━━━━━━━━━━━━━━◈`;
+    // 2. Permissions & Checks
+    if (!m.isGroup) return reply(formatMsg(`This command can only be used in group chats.`));
+    if (!isBotAdmin) return reply(formatMsg(`I need to be *admin* to post a group status. Please make me admin first.`));
+    
+    // 3. Define the target (Quoted media or current message)
+    const quoted = m.quoted ? m.quoted : m;
+    const mime = (quoted.msg || quoted).mimetype || '';
+    
+    // 4. Prepare Caption
+    // Use user text if provided, otherwise use the default signature
+    const defaultCaption = `Group status Posted By KING-🄼🄳 ✅`;
+    const finalCaption = text || defaultCaption;
+
+    await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
     try {
-        const quoted = m.quoted ? m.quoted : m;
-        const mime = (quoted.msg || quoted).mimetype || '';
-        const captionText = text || ""; 
-
-        // --- SCENARIO A: IMAGE ---
+        // --- CASE A: IMAGE ---
         if (/image/.test(mime)) {
-            // Download the image
-            let buffer = await client.downloadMediaMessage(quoted);
-            
-            // FIX: Send directly as 'image', removing the broken 'groupStatusMessage' wrapper
+            const buffer = await client.downloadMediaMessage(quoted);
             await client.sendMessage(m.chat, {
-                image: buffer,
-                caption: `${credit}\n\n${captionText}`
+                groupStatusMessage: {
+                    image: buffer,
+                    caption: finalCaption
+                }
             });
-            
-            // Confirm success
-            m.reply(formatMsg("Image status posted successfully ✅"));
+            reply(formatMsg(`Image status has been posted successfully ✅`));
 
-        // --- SCENARIO B: VIDEO ---
+        // --- CASE B: VIDEO ---
         } else if (/video/.test(mime)) {
-            let buffer = await client.downloadMediaMessage(quoted);
-            
-            // FIX: Send directly as 'video'
+            const buffer = await client.downloadMediaMessage(quoted);
             await client.sendMessage(m.chat, {
-                video: buffer,
-                caption: `${credit}\n\n${captionText}`,
-                gifPlayback: false // Set to true if you want it to loop like a GIF
+                groupStatusMessage: {
+                    video: buffer,
+                    caption: finalCaption
+                }
             });
-            
-            m.reply(formatMsg("Video status posted successfully ✅"));
+            reply(formatMsg(`Video status has been posted successfully ✅`));
 
-        // --- SCENARIO C: AUDIO ---
+        // --- CASE C: AUDIO ---
         } else if (/audio/.test(mime)) {
-            let buffer = await client.downloadMediaMessage(quoted);
-            
-            // FIX: Send directly as 'audio'
+            const buffer = await client.downloadMediaMessage(quoted);
             await client.sendMessage(m.chat, {
-                audio: buffer,
-                mimetype: 'audio/mp4',
-                ptt: true // Sends as a Green Voice Note
+                groupStatusMessage: {
+                    audio: buffer,
+                    mimetype: 'audio/mp4'
+                }
             });
-            
-            m.reply(formatMsg("Audio status posted successfully ✅"));
+            reply(formatMsg(`Audio status has been posted successfully ✅`));
 
-        // --- SCENARIO D: TEXT ONLY ---
-        } else {
-            if (!captionText) {
-                return m.reply(formatMsg(`Please reply to media or type a message.\nExample: ${prefix}gs Hello World`));
-            }
-            
-            // FIX: Send directly as 'text'
+        // --- CASE D: TEXT ONLY ---
+        } else if (text) {
             await client.sendMessage(m.chat, {
-                text: `${formatMsg(captionText)}\n\n${credit}`
+                groupStatusMessage: { text: text }
             });
+            reply(formatMsg(`Text status has been posted successfully ✅`));
+
+        // --- CASE E: NO INPUT ---
+        } else {
+            reply(formatMsg(`Please reply to an image, video, audio, or include text.\nExample: ${prefix}gs Check this update!`));
         }
 
     } catch (error) {
-        console.error("GS Error:", error);
-        m.reply(formatMsg(`Error: ${error.message}`));
+        console.error("Group Status Error:", error);
+        reply(formatMsg(`An error occurred while posting status:\n${error.message}`));
     }
 }
-break; 
+break;
 // ================== ANTIDELETE COMMAND ==================
 case 'antidelete': {
   try {
