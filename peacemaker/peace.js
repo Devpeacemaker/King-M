@@ -4631,59 +4631,127 @@ try {
 
 //========================================================================================================================//		      
 // ================== FACEBOOK DOWNLOADER (BK9 API) ==================
+// ================== FACEBOOK DOWNLOADER (FINAL FIXED) ==================
 case 'fb':
 case 'facebook':
 case 'fbdl': {
-    // 1. Validation: Check for URL
-    if (!text) {
-        return reply(`⚠️ Please provide a Facebook video URL.\nUsage: *${prefix}fb <url>*`);
-    }
+    let tempFile = null;
 
-    // 2. Validation: Check if it's a valid FB Link
+    // 1. Validate Input
+    if (!text) return reply(`⚠️ Please provide a Facebook video URL.\nUsage: *${prefix}fb <url>*`);
+
+    // Clean URL
+    const url = text.trim(); 
+
+    // 2. Validate Pattern
     const fbPatterns = ['facebook.com', 'fb.watch', 'fb.com'];
-    if (!fbPatterns.some(pattern => text.includes(pattern))) {
-        return reply("❌ Invalid Facebook URL.");
+    if (!fbPatterns.some(pattern => url.includes(pattern))) {
+        return reply("❌ Invalid Facebook video URL.");
     }
 
     await client.sendMessage(m.chat, { react: { text: '⬇️', key: m.key } });
 
     try {
-        // 3. Call the New BK9 API
-        const apiUrl = `https://api.bk9.dev/download/fb?url=${encodeURIComponent(text.trim())}`;
+        // 3. Fetch Video Data (Using Keith API)
+        const apiUrl = `https://apiskeith.vercel.app/download/fbdown?url=${encodeURIComponent(url)}`;
         
+        // Using the global 'axios' variable
         const response = await axios.get(apiUrl, {
-            timeout: 20000, // 20 seconds timeout
+            timeout: 15000,
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
 
-        const data = response.data;
+        const apiResult = response.data;
 
-        // 4. Check API Success & Extract Data
-        // BK9 usually returns { status: true, BK9: { HD: 'url', SD: 'url', title: '...' } }
-        if (!data || !data.BK9) {
-            throw new Error('API returned invalid data');
+        // 4. Validate API Result
+        if (!apiResult || !apiResult.status || !apiResult.result || !apiResult.result.media) {
+            throw new Error('Invalid API response');
         }
 
-        const result = data.BK9;
+        // 5. Get Best Quality URL
+        const fbvid = apiResult.result.media.hd || apiResult.result.media.sd;
+        const title = apiResult.result.title || "Facebook Video";
+
+        if (!fbvid) throw new Error('Video not found in API response');
+
+        const caption = `${title}\n\nBy ${botName || 'KING-MD'}`;
+
+        // =========================================================
+        // 🧠 METHOD 1: Direct URL (Fastest)
+        // =========================================================
+        try {
+            console.log("Attempting Direct URL Send...");
+            await client.sendMessage(m.chat, { 
+                video: { url: fbvid }, 
+                mimetype: "video/mp4",
+                caption: caption
+            }, { quoted: m });
+            
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            return; // If success, stop here.
+
+        } catch (urlError) {
+            console.log("URL Send Failed. Switching to Download Method...");
+        }
+
+        // =========================================================
+        // 🧠 METHOD 2: Download & Upload (Fallback / Robust)
+        // =========================================================
         
-        // 5. Select Best Quality (HD -> SD)
-        const videoUrl = result.HD || result.SD;
-        const vidTitle = result.title || "Facebook Video";
+        // Define temp path dynamically
+        const tmpDir = path.resolve('./tmp'); 
+        if (!fs.existsSync(tmpDir)) {
+            fs.mkdirSync(tmpDir, { recursive: true });
+        }
+        
+        tempFile = path.join(tmpDir, `fb_${Date.now()}.mp4`);
 
-        if (!videoUrl) throw new Error('No video URL found');
+        // Download stream using global axios
+        const writer = fs.createWriteStream(tempFile);
+        const videoResponse = await axios({
+            method: 'GET',
+            url: fbvid,
+            responseType: 'stream',
+            timeout: 30000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://www.facebook.com/'
+            }
+        });
 
-        // 6. Send Video
+        videoResponse.data.pipe(writer);
+
+        // Wait for download to finish
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+
+        // Check file size
+        const stats = fs.statSync(tempFile);
+        if (stats.size === 0) throw new Error('Downloaded file is empty');
+
+        // Upload the file
         await client.sendMessage(m.chat, { 
-            video: { url: videoUrl }, 
-            caption: `🎬 *${vidTitle}*\n\nDownloaded by ${botName}`,
-            mimetype: "video/mp4"
+            video: fs.readFileSync(tempFile), 
+            mimetype: "video/mp4",
+            caption: caption
         }, { quoted: m });
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
     } catch (e) {
-        console.error("FB Downloader Error:", e);
-        reply("❌ Failed to download. The video might be private or the link is expired.");
+        console.error("Facebook Command Error:", e);
+        reply(`❌ Failed to process video.\nError: ${e.message || "Unknown"}`);
+    } finally {
+        // Cleanup: Delete temp file
+        if (tempFile && fs.existsSync(tempFile)) {
+            try {
+                fs.unlinkSync(tempFile);
+            } catch (err) {
+                console.error("Temp cleanup failed:", err);
+            }
+        }
     }
 }
 break;
