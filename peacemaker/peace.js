@@ -4630,44 +4630,63 @@ try {
 	break;
 
 //========================================================================================================================//		      
-	 case "facebook": case "fb": case "fbdl": {
-if (!text) {
-        return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶𝗱 𝗳𝗮𝗰𝗲𝗯𝗼𝗼𝗸 𝗹𝗶𝗻𝗸 !");
+// ================== FACEBOOK DOWNLOADER ==================
+case 'fb':
+case 'facebook':
+case 'fbdl': {
+    // 1. Validation: Check for URL
+    if (!text) {
+        return reply(`⚠️ Please provide a Facebook video URL.\nUsage: *${prefix}fb <url>*`);
     }
 
-    if (!text.includes("facebook.com")) {
-        return m.reply("That is not a facebook link.");
+    // 2. Validation: Check if it's a valid FB Link
+    const fbPatterns = ['facebook.com', 'fb.watch', 'fb.com'];
+    if (!fbPatterns.some(pattern => text.includes(pattern))) {
+        return reply("❌ Invalid Facebook URL.");
     }
 
-await client.sendMessage(m.chat, {
-                       react: { text: '✅️', key: m.key }
-                      });
+    await client.sendMessage(m.chat, { react: { text: '⬇️', key: m.key } });
+
     try {
-                let data = await fetchJson(`https://apiskeith.vercel.app/download/fbdown?url=${encodeURIComponent(url)}`);
+        // 3. Call the API
+        const apiUrl = `https://apiskeith.vercel.app/download/fbdown?url=${encodeURIComponent(text.trim())}`;
+        
+        const response = await axios.get(apiUrl, {
+            timeout: 15000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
 
+        const data = response.data;
 
-        if (!data || data.status !== 200 || !data.facebook || !data.facebook.sdVideo) {
-            return m.reply("𝗦𝗼𝗿𝗿𝘆 𝘁𝗵𝗲 𝗔𝗣𝗜 𝗱𝗶𝗱𝗻'𝘁 𝗿𝗲𝘀𝗽𝗼𝗻𝗱 𝗰𝗼𝗿𝗿𝗲𝗰𝘁𝗹𝘆. 𝗣𝗹𝗲𝗮𝘀𝗲 𝘁𝗿𝘆 𝗔𝗴𝗮𝗶𝗻 𝗹𝗮𝘁𝗲𝗿!");
+        // 4. Check API Success
+        if (!data || !data.status || !data.result || !data.result.media) {
+            throw new Error('API returned invalid data');
         }
 
-        const fbvid = data.facebook.sdVideo;
+        // 5. Select Best Quality
+        const videoUrl = data.result.media.hd || data.result.media.sd;
+        const vidTitle = data.result.title || "Facebook Video";
 
-        if (!fbvid) {
-            return m.reply("Wrong facebook data. Please ensure the video exists.");
-        }
+        if (!videoUrl) throw new Error('No video URL found');
 
-        await client.sendMessage(
-            m.chat,
-            {
-                video: { url: fbvid },
-                caption: "𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝙳  𝙱𝚈 KING M",
-                gifPlayback: false,
-            },
-            { quoted: m }
-        );
+        // 6. Send Video
+        await client.sendMessage(m.chat, { 
+            video: { url: videoUrl }, 
+            caption: `🎬 *${vidTitle}*\n\nDownloaded by ${botName}`,
+            mimetype: "video/mp4"
+        }, { quoted: m });
+
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
     } catch (e) {
-        console.error("Error occurred:", e);
-        m.reply("An error occurred. API might be down. Error: " + e.message);
+        console.error("FB Downloader Error:", e);
+        
+        // Error Handling
+        if (e.message.includes('404') || e.message.includes('Invalid')) {
+            reply("❌ Video not found. It might be private or deleted.");
+        } else {
+            reply("❌ Failed to download. Please try again later.");
+        }
     }
 }
 break;
