@@ -4246,7 +4246,7 @@ break;
 //========================================================================================================================//		      
   case "system": 
   
-              client.sendMessage(m.chat, { image: { url: 'https://files.catbox.moe/yusei5.jpg' }, caption:`*𝙱𝙾𝚃 𝙽𝙰𝙼𝙴: 𝙿𝙴𝙰𝙲𝙴-𝙷𝚄𝙱*\n\n*𝚂𝙿𝙴𝙴𝙳: ${Rspeed.toFixed(4)} 𝙼𝚜*\n\n*𝚁𝚄𝙽𝚃𝙸𝙼𝙴: ${runtime(process.uptime())}*\n\n*𝙿𝙻𝙰𝚃𝙵𝙾𝚁𝙼: 𝙷𝚎𝚛𝚘𝚔𝚞*\n\n*𝙷𝙾𝚂𝚃𝙽𝙰𝙼𝙴: 𝙿𝚎𝚊𝚌𝚎*\n\n*𝙻𝙸𝙱𝚁𝙰𝚁𝚈: Baileys*\n\n𝙳𝙴𝚅𝙴𝙻𝙾𝙿𝙴𝚁: 𝙿𝚎𝚊𝚌𝚎𝚖𝚊𝚔𝚎𝚛`}); 
+              client.sendMessage(m.chat, { image: { url: '' }, caption:`*𝙱𝙾𝚃 𝙽𝙰𝙼𝙴: KING M*\n\n*𝚂𝙿𝙴𝙴𝙳: ${Rspeed.toFixed(4)} 𝙼𝚜*\n\n*𝚁𝚄𝙽𝚃𝙸𝙼𝙴: ${runtime(process.uptime())}*\n\n*𝙿𝙻𝙰𝚃𝙵𝙾𝚁𝙼: 𝙷𝚎𝚛𝚘𝚔𝚞*\n\n*𝙷𝙾𝚂𝚃𝙽𝙰𝙼𝙴: 𝙿𝚎𝚊𝚌𝚎*\n\n*𝙻𝙸𝙱𝚁𝙰𝚁𝚈: Baileys*\n\n𝙳𝙴𝚅𝙴𝙻𝙾𝙿𝙴𝚁: 𝙿𝚎𝚊𝚌𝚎𝚖𝚊𝚔𝚎𝚛`}); 
  break;
 
 //========================================================================================================================//		      
@@ -4533,46 +4533,65 @@ if (users == "254752818245@s.whatsapp.net") return m.reply("It's an Owner Number
   break;
 
 //========================================================================================================================//		      
-    case "instagram": case "igdl": case "ig": {
-		      
-const { igdl } = require("ruhend-scraper");
+ case "instagram": case "igdl": case "ig": {
+    const { igdl } = require("ruhend-scraper");
+    const axios = require("axios"); // Ensure axios is installed
 
-  if (!text) {
-    return m.reply("Please provide an Instagram link for the video.");
-  }
+    if (!text) {
+        return m.reply("Please provide an Instagram link for the video.");
+    }
 
-  if (!text.includes('https://www.instagram.com/')) {
-    return m.reply("That is not a valid Instagram link.");
-  }
+    if (!text.includes('https://www.instagram.com/')) {
+        return m.reply("That is not a valid Instagram link.");
+    }
 
-await client.sendMessage(m.chat, {
-      react: { text: '✅️', key: m.key }
+    await client.sendMessage(m.chat, {
+        react: { text: '⏳', key: m.key }
     });
 
+    try {
+        // --- Primary Method: ruhend-scraper ---
+        const downloadData = await igdl(text);
+        
+        if (!downloadData || !downloadData.data || downloadData.data.length === 0) {
+            throw new Error("Primary scraper failed, trying backup...");
+        }
 
-  try {
-    
-    const downloadData = await igdl(text);
-   
-    if (!downloadData || !downloadData.data || downloadData.data.length === 0) {
-      return m.reply("No video found at the provided link.");
+        const videoData = downloadData.data;
+        for (let i = 0; i < Math.min(20, videoData.length); i++) {
+            await client.sendMessage(m.chat, {
+                video: { url: videoData[i].url },
+                mimetype: "video/mp4",
+                caption: "KING M"
+            }, { quoted: m });
+        }
+
+    } catch (error) {
+        console.log("Switching to Backup API...");
+
+        // --- Backup Method: bk9.dev API ---
+        try {
+            const response = await axios.get(`https://api.bk9.dev/download/instagram?url=${encodeURIComponent(text)}`);
+            const res = response.data;
+
+            if (res.status && res.data && res.data.url) {
+                await client.sendMessage(m.chat, {
+                    video: { url: res.data.url },
+                    mimetype: "video/mp4",
+                    caption: "KING M (Backup)"
+                }, { quoted: m });
+            } else {
+                return m.reply("Failed to download video from both sources.");
+            }
+        } catch (backupError) {
+            console.error(backupError);
+            return m.reply("An error occurred while processing the request on both servers.");
+        }
     }
 
-    const videoData = downloadData.data;
-    for (let i = 0; i < Math.min(20, videoData.length); i++) {
-      const video = videoData[i];
-      const videoUrl = video.url;
-
-      await client.sendMessage(m.chat, {
-        video: { url: videoUrl },
-        mimetype: "video/mp4",
-        caption: "KING M"
-      },{ quoted: m });
-    }
-  } catch (error) {
-    console.error(error);
-    return m.reply("An error occurred while processing the request.");
-  }
+    await client.sendMessage(m.chat, {
+        react: { text: '✅️', key: m.key }
+    });
 }
 break;
 
@@ -4589,7 +4608,7 @@ await client.sendMessage(m.chat, {
     });
 		      
 try {
-    const response = await axios.get(`https://www.dark-yasiya-api.site/download/twitter?url=${q}`);
+    const response = await axios.get(`https://api.bk9.dev/download/twitter-2?url=${q}`);
     const data = response.data;
 
     if (!data || !data.status || !data.result) {
@@ -4624,7 +4643,7 @@ await client.sendMessage(m.chat, {
                        react: { text: '✅️', key: m.key }
                       });
     try {
-                let data = await fetchJson(`https://api.dreaded.site/api/facebook?url=${text}`);
+                let data = await fetchJson(`https://apiskeith.vercel.app/download/fbdown?url=${encodeURIComponent(url)}`);
 
 
         if (!data || data.status !== 200 || !data.facebook || !data.facebook.sdVideo) {
@@ -5571,7 +5590,7 @@ break;
 
     await client.sendMessage(client.user.id, {
       video: { url: videoPath },
-      caption: `✨ *Peace Core is alive!* ✨\n\n${videoCaption}`
+      caption: `✨ *KING M is alive!* ✨\n\n${videoCaption}`
     }, { quoted: m });
   }
 }
@@ -5655,7 +5674,7 @@ if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶�
     let link = search.all[0].url;
 
     const apis = [
-      `https://xploader-api.vercel.app/ytmp3?url=${link}`,
+      `https://apiskeith.vercel.app/download/ytmp3?url=${link}`,
       `https://apis.davidcyriltech.my.id/youtube/mp3?url=${link}`,
       `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${link}`,
       `https://api.dreaded.site/api/ytdl/audio?url=${link}`
@@ -5734,7 +5753,7 @@ if (!text) return m.reply("𝗣𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝘃𝗮𝗹𝗶�
     }
     let link = search.all[0].url; 
 
-    const apiUrl = `https://apis-keith.vercel.app/download/dlmp4?url=${link}`;
+    const apiUrl = `https://apiskeith.vercel.app/download/dlmp3?url=${link}`;
 
     let response = await fetch(apiUrl);
     let data = await response.json();
