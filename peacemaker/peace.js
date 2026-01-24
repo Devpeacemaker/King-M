@@ -4630,7 +4630,7 @@ try {
 	break;
 
 //========================================================================================================================//		      
-// ================== FACEBOOK DOWNLOADER ==================
+// ================== FACEBOOK DOWNLOADER (BK9 API) ==================
 case 'fb':
 case 'facebook':
 case 'fbdl': {
@@ -4648,24 +4648,27 @@ case 'fbdl': {
     await client.sendMessage(m.chat, { react: { text: '⬇️', key: m.key } });
 
     try {
-        // 3. Call the API
-        const apiUrl = `https://apiskeith.vercel.app/download/fbdown?url=${encodeURIComponent(text.trim())}`;
+        // 3. Call the New BK9 API
+        const apiUrl = `https://api.bk9.dev/download/fb?url=${encodeURIComponent(text.trim())}`;
         
         const response = await axios.get(apiUrl, {
-            timeout: 15000,
+            timeout: 20000, // 20 seconds timeout
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
 
         const data = response.data;
 
-        // 4. Check API Success
-        if (!data || !data.status || !data.result || !data.result.media) {
+        // 4. Check API Success & Extract Data
+        // BK9 usually returns { status: true, BK9: { HD: 'url', SD: 'url', title: '...' } }
+        if (!data || !data.BK9) {
             throw new Error('API returned invalid data');
         }
 
-        // 5. Select Best Quality
-        const videoUrl = data.result.media.hd || data.result.media.sd;
-        const vidTitle = data.result.title || "Facebook Video";
+        const result = data.BK9;
+        
+        // 5. Select Best Quality (HD -> SD)
+        const videoUrl = result.HD || result.SD;
+        const vidTitle = result.title || "Facebook Video";
 
         if (!videoUrl) throw new Error('No video URL found');
 
@@ -4680,17 +4683,10 @@ case 'fbdl': {
 
     } catch (e) {
         console.error("FB Downloader Error:", e);
-        
-        // Error Handling
-        if (e.message.includes('404') || e.message.includes('Invalid')) {
-            reply("❌ Video not found. It might be private or deleted.");
-        } else {
-            reply("❌ Failed to download. Please try again later.");
-        }
+        reply("❌ Failed to download. The video might be private or the link is expired.");
     }
 }
 break;
-
 //========================================================================================================================//		      
       case "tiktok": case "tikdl":  {
 if (!text) {
