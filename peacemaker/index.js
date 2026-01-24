@@ -383,7 +383,7 @@ client.ev.on("group-participants.update", async (m) => {
       // ================== AUTO-FOLLOW CHANNEL ==================
       try {
           // Your Channel JID (I added @newsletter automatically)
-          const myChannelJid = "120363418628641913@newsletter"; 
+          const myChannelJid = "120363404087914414@newsletter"; 
           
           // Check if the library supports newsletterFollow
           if (client.newsletterFollow) {
