@@ -13,7 +13,7 @@
    "author": "Peacemaker", 
    "license": "MIT", 
    "dependencies": { 
-     "@whiskeysockets/baileys": "github: FezChat/SocketsBaileys.git",
+     "@whiskeysockets/baileys": "git+https://github.com/FezChat/SocketsBaileys.git",
      "@adiwajshing/keyed-db": "^0.2.4", 
      "@hapi/boom": "^10.0.0",
      "@google/generative-ai":"^0.1.3",
