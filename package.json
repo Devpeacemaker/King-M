@@ -13,7 +13,7 @@
    "author": "Peacemaker", 
    "license": "MIT", 
    "dependencies": { 
-     "@whiskeysockets/baileys": "git+https://github.com/McrayNick/Baileys.git",
+     "@whiskeysockets/baileys": "^7.0.0-rc.9",
      "@adiwajshing/keyed-db": "^0.2.4", 
      "@hapi/boom": "^10.0.0",
      "@google/generative-ai":"^0.1.3",
