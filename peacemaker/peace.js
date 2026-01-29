@@ -49,7 +49,6 @@ const {
   badword,
   antibot,
   antitag,
-antistatusmention,
 	menuTitle,
 	antisticker,
 	antigroupmention
