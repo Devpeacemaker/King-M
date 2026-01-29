@@ -1254,7 +1254,7 @@ case 'agm': {
     if (!isAdmin) return reply("❌ Only Admins can use this command.");
     
     // 2. Import Database Functions (Ensure these are required at top of file)
-    const { updateSetting, getSettings } = require('./Database/config'); 
+    const { updateSetting, getSettings } = require('../Database/config'); 
 
     // 3. Parse Input
     const args = text ? text.split(" ") : [];
