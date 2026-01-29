@@ -1246,57 +1246,35 @@ case "antilinkall": {
 }
 break;		   //Status mention
 // ================== ANTI-GROUP MENTION COMMAND ==================
+// ================== ANTI-GROUP MENTION (DB INTEGRATED) ==================
 case 'antigm':
 case 'antigroupmention':
 case 'agm': {
-    const fs = require('fs');
-
     // 1. Permissions
     if (!m.isGroup) return reply("❌ This command is for groups only.");
     if (!isAdmin) return reply("❌ Only Admins can use this command.");
-    if (!isBotAdmin) return reply("❌ I need to be Admin to delete/kick!");
+    
+    // 2. Import Database Functions (Ensure these are required at top of file)
+    const { updateSetting, getSettings } = require('./Database/config'); 
 
-    // 2. Parse Input
+    // 3. Parse Input
     const args = text ? text.split(" ") : [];
     const subCmd = args[0] ? args[0].toLowerCase() : 'help';
 
-    // 3. Load/Create Database
-    let antigmData = {};
-    if (fs.existsSync('./antigm.json')) {
-        antigmData = JSON.parse(fs.readFileSync('./antigm.json'));
-    }
-
-    // 4. Handle Sub-commands
     if (subCmd === 'on' || subCmd === 'enable') {
-        antigmData[m.chat] = { enabled: true, action: 'delete' }; // Default to delete
-        fs.writeFileSync('./antigm.json', JSON.stringify(antigmData, null, 2));
-        reply(`✅ *Anti-Group Mention Enabled!*\n\nI will delete messages saying this group was mentioned in a status.`);
+        await updateSetting('antigroupmention', 'on');
+        reply(`✅ *Anti-Group Mention Enabled!*\nI will delete status updates that tag this group.`);
         
-    } else if (subCmd === 'kick') {
-        antigmData[m.chat] = { enabled: true, action: 'kick' };
-        fs.writeFileSync('./antigm.json', JSON.stringify(antigmData, null, 2));
-        reply(`✅ *Anti-Group Mention Set to KICK!*\n\nAnyone mentioning this group in status will be removed.`);
-
     } else if (subCmd === 'off' || subCmd === 'disable') {
-        antigmData[m.chat] = { enabled: false, action: 'delete' };
-        fs.writeFileSync('./antigm.json', JSON.stringify(antigmData, null, 2));
+        await updateSetting('antigroupmention', 'off');
         reply(`❌ *Anti-Group Mention Disabled.*`);
 
     } else {
-        // Help Menu
-        let status = antigmData[m.chat] && antigmData[m.chat].enabled ? "✅ ON" : "❌ OFF";
-        let mode = antigmData[m.chat] ? antigmData[m.chat].action : "N/A";
-
-        let msg = `🛡️ *ANTI-GROUP MENTION*\n` +
-                  `_Prevent users from tagging this group in their statuses._\n\n` +
-                  `*Current Status:* ${status}\n` +
-                  `*Current Mode:* ${mode}\n\n` +
-                  `*Commands:*\n` +
-                  `▪️ *${prefix}antigm on* - Enable (Delete mode)\n` +
-                  `▪️ *${prefix}antigm kick* - Enable (Kick mode)\n` +
-                  `▪️ *${prefix}antigm off* - Disable`;
+        // Check current status
+        const settings = await getSettings();
+        const status = settings.antigroupmention === 'on' ? "✅ ON" : "❌ OFF";
         
-        reply(msg);
+        reply(`🛡️ *ANTI-GROUP MENTION*\n\n*Status:* ${status}\n\n*Usage:*\n${prefix}antigm on\n${prefix}antigm off`);
     }
 }
 break;
