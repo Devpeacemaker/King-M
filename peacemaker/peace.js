@@ -1312,7 +1312,7 @@ case 'gs': {
 
     // 2. Permissions & Checks
     if (!m.isGroup) return reply(formatMsg(`This command can only be used in group chats.`));
-    if (!isBotAdmin) return reply(formatMsg(`I need to be *admin* to post a group status. Please make me admin first.`));
+   
     
     // 3. Define the target (Quoted media or current message)
     const quoted = m.quoted ? m.quoted : m;
