@@ -446,54 +446,65 @@ if (antisticker && antisticker !== 'off' && isSticker) {
 // ================== STATUS MONITORING (Anti-Group & Anti-Status Mention) ==================
 // ================== ANTI-GROUP MENTION MONITOR ==================
 // This detects when someone mentions the group in their status
-try {
-    const isGroupMsg = m.chat.endsWith('@g.us');
-    
-    // Check if it is a Status Mention Message
-    // (WhatsApp sends a special message to the group when mentioned in a status)
-    const isStatusMention = m.message && (
-        m.message.groupStatusMentionMessage || 
-        (m.message.extendedTextMessage && m.message.extendedTextMessage.text && m.message.extendedTextMessage.text.includes(m.chat.split('@')[0]))
-    );
+// ================== ANTI-GROUP MENTION MONITOR ==================
+// This runs on every message to catch status mentions
+(async () => {
+    try {
+        // 1. Basic Checks: Must be a Group
+        if (!m.isGroup) return;
 
-    if (isGroupMsg && isStatusMention) {
-        // 1. Load Settings
-        const fs = require('fs');
-        let antigmData = {};
-        if (fs.existsSync('./antigm.json')) {
-            antigmData = JSON.parse(fs.readFileSync('./antigm.json'));
-        }
+        // 2. Check if it is a Status Mention
+        // (WhatsApp sends a special message type or text context when a group is tagged in a status)
+        const isStatusMention = m.message?.groupStatusMentionMessage || 
+            (m.message?.extendedTextMessage?.contextInfo?.isForwarded === false && 
+             m.message?.extendedTextMessage?.text?.includes(m.chat.split('@')[0]));
 
-        const chatSettings = antigmData[m.chat];
-        
-        // 2. Check if Enabled
-        if (chatSettings && chatSettings.enabled) {
+        if (isStatusMention) {
+            // 3. Check Database for this specific group
+            const { getSettings } = require('../Database/config');
+            const settings = await getSettings();
             
-            // Check if Sender is Admin (Admins are immune)
-            const groupMetadata = await client.groupMetadata(m.chat);
-            const participants = groupMetadata.participants;
-            const isAdmin = participants.find(p => p.id === m.sender)?.admin;
+            // We look for a key like "antigm-12345@g.us"
+            const groupKey = `antigm-${m.chat}`;
+            const action = settings[groupKey]; // Will be 'delete', 'kick', or undefined
 
-            if (!isAdmin) {
-                const action = chatSettings.action || 'delete';
+            // If feature is active (action exists and isn't 'off')
+            if (action && action !== 'off') {
                 
-                // ACTION: DELETE
-                if (action === 'delete' || action === 'kick') {
-                    await client.sendMessage(m.chat, { delete: m.key });
-                    await client.sendMessage(m.chat, { text: `⚠️ @${m.sender.split('@')[0]} mentioned this group in a status.\n_Status mentions are not allowed._`, mentions: [m.sender] });
-                }
+                // 4. Check if Sender is Admin (Admins are usually exempt)
+                const groupMetadata = await client.groupMetadata(m.chat);
+                const participants = groupMetadata.participants;
+                const senderIsAdmin = participants.find(p => p.id === m.sender)?.admin;
 
-                // ACTION: KICK
-                if (action === 'kick') {
-                    await client.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
-                    await client.sendMessage(m.chat, { text: `🚫 @${m.sender.split('@')[0]} has been removed for mentioning the group in status.`, mentions: [m.sender] });
+                if (!senderIsAdmin) {
+                    const botId = client.user.id.split(':')[0] + "@s.whatsapp.net";
+                    const botIsAdmin = participants.find(p => p.id === botId)?.admin;
+
+                    // --- ACTION: DELETE ---
+                    if ((action === 'delete' || action === 'kick') && botIsAdmin) {
+                        await client.sendMessage(m.chat, { delete: m.key });
+                        await client.sendMessage(m.chat, { 
+                            text: `⚠️ @${m.sender.split('@')[0]}, do not mention this group in your status!`, 
+                            mentions: [m.sender] 
+                        });
+                    }
+
+                    // --- ACTION: KICK ---
+                    if (action === 'kick' && botIsAdmin) {
+                        await client.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
+                        await client.sendMessage(m.chat, { 
+                            text: `🚫 @${m.sender.split('@')[0]} has been removed for mentioning the group in status.`, 
+                            mentions: [m.sender] 
+                        });
+                    }
                 }
             }
         }
+    } catch (e) {
+        console.error("Anti-GM Monitor Error:", e);
     }
-} catch (e) {
-    console.error("Anti-GM Monitor Error:", e);
-}
+})();
+// ================================================================
 // ================================================================
  // Corrected sendContact function using available client methods
 client.sendContact = async (chatId, numbers, text = '', options = {}) => {
@@ -1247,34 +1258,47 @@ case "antilinkall": {
 break;		   //Status mention
 // ================== ANTI-GROUP MENTION COMMAND ==================
 // ================== ANTI-GROUP MENTION (DB INTEGRATED) ==================
+// ================== ANTI-GROUP MENTION COMMAND ==================
 case 'antigm':
 case 'antigroupmention':
 case 'agm': {
-    // 1. Permissions
+    // 1. Require Database
+    const { updateSetting, getSettings } = require('../Database/config');
+
+    // 2. Permissions
     if (!m.isGroup) return reply("❌ This command is for groups only.");
     if (!isAdmin) return reply("❌ Only Admins can use this command.");
-    
-    // 2. Import Database Functions (Ensure these are required at top of file)
-    const { updateSetting, getSettings } = require('../Database/config'); 
+    if (!isBotAdmin) return reply("❌ I need to be Admin to delete/kick!");
 
     // 3. Parse Input
     const args = text ? text.split(" ") : [];
     const subCmd = args[0] ? args[0].toLowerCase() : 'help';
+    const groupKey = `antigm-${m.chat}`; // Unique key for this group
 
-    if (subCmd === 'on' || subCmd === 'enable') {
-        await updateSetting('antigroupmention', 'on');
-        reply(`✅ *Anti-Group Mention Enabled!*\nI will delete status updates that tag this group.`);
+    // 4. Handle Options
+    if (subCmd === 'on' || subCmd === 'enable' || subCmd === 'delete') {
+        await updateSetting(groupKey, 'delete');
+        reply(`✅ *Anti-Group Mention Enabled!*\n\nMode: *Delete*\nI will delete messages if someone tags this group in their status.`);
         
+    } else if (subCmd === 'kick') {
+        await updateSetting(groupKey, 'kick');
+        reply(`✅ *Anti-Group Mention Enabled!*\n\nMode: *Kick*\nI will REMOVE anyone who tags this group in their status.`);
+
     } else if (subCmd === 'off' || subCmd === 'disable') {
-        await updateSetting('antigroupmention', 'off');
+        await updateSetting(groupKey, 'off');
         reply(`❌ *Anti-Group Mention Disabled.*`);
 
     } else {
-        // Check current status
+        // Status Check
         const settings = await getSettings();
-        const status = settings.antigroupmention === 'on' ? "✅ ON" : "❌ OFF";
+        const currentAction = settings[groupKey] || 'off';
         
-        reply(`🛡️ *ANTI-GROUP MENTION*\n\n*Status:* ${status}\n\n*Usage:*\n${prefix}antigm on\n${prefix}antigm off`);
+        reply(`🛡️ *ANTI-GROUP MENTION*\n\n` +
+              `*Current Status:* ${currentAction.toUpperCase()}\n\n` +
+              `*Usage:*\n` +
+              `▪️ *${prefix}agm on* (Deletes status updates)\n` +
+              `▪️ *${prefix}agm kick* (Kicks the user)\n` +
+              `▪️ *${prefix}agm off* (Disables feature)`);
     }
 }
 break;
