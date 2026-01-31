@@ -853,6 +853,7 @@ let cap = `
 
 ┏▣ 👥 *GROUP MANAGER* 👥
 │ ⬡ approve
+│ ⬡ gstatus
 │ ⬡ reject
 │ ⬡ promote
 │ ⬡ demote
