@@ -1304,76 +1304,91 @@ case 'agm': {
 break;
 			//togstatus
 		// ================== GROUP STATUS (GS) ==================
-case 'gstatus':
+// ================== GROUP STATUS (GS) - REBUILT ==================
+case 'togroupstatus':
 case 'groupstatus':
+case 'gstatus':
+case 'togcstatus':
 case 'gs': {
-    // 1. Helper for fancy lines
-    const formatMsg = (txt) => `◈┈┈┈┈┈┈┈┈┈┈◈\n${txt}\n◈┈┈┈┈┈┈┈┈┈┈┈┈◈`;
+    if (!m.isGroup) return reply("❌ This command is for groups only.");
+    if (!Owner) return reply("❌ This command is restricted to the Bot Owner.");
 
-    // 2. Permissions & Checks
-    if (!m.isGroup) return reply(formatMsg(`This command can only be used in group chats.`));
-   
-    
-    // 3. Define the target (Quoted media or current message)
-    const quoted = m.quoted ? m.quoted : m;
-    const mime = (quoted.msg || quoted).mimetype || '';
-    
-    // 4. Prepare Caption
-    // Use user text if provided, otherwise use the default signature
-    const defaultCaption = `Group status Posted By KING-🄼🄳 ✅`;
-    const finalCaption = text || defaultCaption;
+    if (!text && !m.quoted) {
+        return reply(
+            `📌 *Usage:*\n` +
+            `• ${prefix}gs <text>\n` +
+            `• Reply to media with ${prefix}gs <caption>\n` +
+            `• Reply to media with ${prefix}gs to forward it`
+        );
+    }
+
+    let tempFilePath = null;
+    const tempDir = path.join(__dirname, '../tmp');
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
     await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
     try {
-        // --- CASE A: IMAGE ---
-        if (/image/.test(mime)) {
-            const buffer = await client.downloadMediaMessage(quoted);
-            await client.sendMessage(m.chat, {
-                groupStatusMessage: {
-                    image: buffer,
-                    caption: finalCaption
-                }
-            });
-            reply(formatMsg(`Image status has been posted successfully ✅`));
+        let payload = { groupStatusMessage: {} };
 
-        // --- CASE B: VIDEO ---
-        } else if (/video/.test(mime)) {
-            const buffer = await client.downloadMediaMessage(quoted);
-            await client.sendMessage(m.chat, {
-                groupStatusMessage: {
-                    video: buffer,
-                    caption: finalCaption
-                }
-            });
-            reply(formatMsg(`Video status has been posted successfully ✅`));
+        if (m.quoted) {
+            const mime = (m.quoted.msg || m.quoted).mimetype || "";
+            const q = text || ""; // Use command text as caption if available
 
-        // --- CASE C: AUDIO ---
-        } else if (/audio/.test(mime)) {
-            const buffer = await client.downloadMediaMessage(quoted);
-            await client.sendMessage(m.chat, {
-                groupStatusMessage: {
-                    audio: buffer,
-                    mimetype: 'audio/mp4'
-                }
-            });
-            reply(formatMsg(`Audio status has been posted successfully ✅`));
+            if (/image/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.jpg`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.image = { url: tempFilePath };
+                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
 
-        // --- CASE D: TEXT ONLY ---
-        } else if (text) {
-            await client.sendMessage(m.chat, {
-                groupStatusMessage: { text: text }
-            });
-            reply(formatMsg(`Text status has been posted successfully ✅`));
+            } else if (/video/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp4`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.video = { url: tempFilePath };
+                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
 
-        // --- CASE E: NO INPUT ---
+            } else if (/audio/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp3`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.audio = { url: tempFilePath };
+
+            } else if (/webp/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.webp`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.sticker = { url: tempFilePath };
+
+            } else if (m.quoted.text || m.quoted.conversation) {
+                payload.groupStatusMessage.text = m.quoted.text || m.quoted.conversation;
+
+            } else {
+                // Document Fallback
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                const ext = mime.split('/')[1] || "bin";
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.${ext}`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.document = { url: tempFilePath };
+            }
         } else {
-            reply(formatMsg(`Please reply to an image, video, audio, or include text.\nExample: ${prefix}gs Check this update!`));
+            // Text only input
+            payload.groupStatusMessage.text = text;
         }
+
+        // Send the constructed status to the group
+        await client.sendMessage(m.chat, payload, { quoted: m });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
     } catch (error) {
         console.error("Group Status Error:", error);
-        reply(formatMsg(`An error occurred while posting status:\n${error.message}`));
+        reply(`❌ Error sending group status: ${error.message}`);
+    } finally {
+        // Cleanup: Remove temporary file
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            try { fs.unlinkSync(tempFilePath); } catch (e) {}
+        }
     }
 }
 break;
