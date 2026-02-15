@@ -1358,7 +1358,7 @@ case 'togstatus':
 case 'gs': {
     // 1. Checks
     if (!m.isGroup) return reply('❌ This command is for groups only.');
-    if (!isAdmin) return reply('❌ Only Admins can post Group Status.');
+   
 
     // 2. Import Required Functions Properly
     const { 
