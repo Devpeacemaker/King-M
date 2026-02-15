@@ -1351,15 +1351,13 @@ break;
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (GS) - REBUILT ==================
 // ================== GROUP STATUS (FIXED & RELIABLE) ==================
-// ================== GROUP STATUS (FIXED DOWNLOADER) ==================
-// ================== GROUP STATUS (FIXED MEDIA KEY ERROR) ==================
+// ================== GROUP STATUS (PERMANENT FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
-case 'bg': {
+case 'gs': {
     // 1. Checks
     if (!m.isGroup) return reply('❌ This command is for groups only.');
-    if (!isAdmin) return reply('❌ Only Admins can post Group Status.');
 
     const { 
         generateWAMessageFromContent, 
@@ -1370,7 +1368,9 @@ case 'bg': {
     const crypto = require('crypto');
 
     try {
-        // 2. Helper to download media
+        await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+
+        // 2. Helper to download media safely
         const downloadMedia = async (message) => {
             let type = Object.keys(message)[0];
             let msg = message[type];
@@ -1395,37 +1395,46 @@ case 'bg': {
         const quotedMsg = m.quoted ? m.quoted : null;
         const mime = (quotedMsg && quotedMsg.mimetype) ? quotedMsg.mimetype : '';
         const textStatus = text || (quotedMsg && quotedMsg.text) || '';
+        const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
-        // A. Handle Media (Image/Video/Audio/Sticker)
-        if (quotedMsg && /image|video|audio|sticker/.test(mime)) {
+        // ============================================================
+        // A. HANDLE MEDIA (Image, Video, Audio, Sticker)
+        // ============================================================
+        if (quotedMsg && /image|video|audio|webp/.test(mime)) {
             const mediaBuffer = await downloadMedia(quotedMsg.message || quotedMsg);
             
             if (/image/.test(mime)) {
-                statusContent = { image: mediaBuffer, caption: text || quotedMsg.caption || '' };
+                // IMAGE
+                statusContent = { image: mediaBuffer, caption: caption };
             } else if (/video/.test(mime)) {
-                statusContent = { video: mediaBuffer, caption: text || quotedMsg.caption || '' };
+                // VIDEO
+                statusContent = { video: mediaBuffer, caption: caption };
             } else if (/audio/.test(mime)) {
+                // AUDIO (Send as Voice Note)
                 statusContent = { audio: mediaBuffer, mimetype: mime, ptt: true };
             } else if (/webp/.test(mime)) {
-                statusContent = { sticker: mediaBuffer };
+                // STICKER (Trick: Send as Image to ensure it shows in status ring)
+                statusContent = { image: mediaBuffer, caption: caption };
             }
         } 
-        // B. Handle Text Only
+        // ============================================================
+        // B. HANDLE TEXT ONLY
+        // ============================================================
         else if (textStatus) {
             statusContent = { 
                 text: textStatus, 
-                backgroundArgb: 0xFFFFFFFF, 
-                textArgb: 0xFF000000 
+                backgroundArgb: 0xFFFFFFFF, // White background
+                textArgb: 0xFF000000 // Black text
             };
         } 
         else {
-            return reply(`⚠️ *Invalid Usage*\n\nReply to an Image, Video, or Audio to post a Group Status.\n\n*Example:* ${prefix}gstatus (replying to image)`);
+            return reply(`⚠️ *Invalid Usage*\n\nReply to an Image, Video, Audio, or Sticker to post a Group Status.\n\n*Example:* ${prefix}gstatus (replying to image)`);
         }
 
-        // 3. Upload to WhatsApp Servers (FIXED BINDING)
-        // We use .bind(client) to ensure the uploader has access to the socket
+        // ============================================================
+        // 3. UPLOAD TO WHATSAPP (THE CRITICAL FIX 🛠️)
+        // ============================================================
+        // We MUST use .bind(client) or the upload will fail with "Empty Media Key"
         const messagePayload = await generateWAMessageContent(
             statusContent, 
             { upload: client.waUploadToServer.bind(client) } 
@@ -1451,9 +1460,8 @@ case 'bg': {
         await client.relayMessage(m.chat, msgNode.message, { messageId: msgNode.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // 6. Success Message with Channel Link
+        // 6. Success Message
         const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
-        
         await client.sendMessage(m.chat, { text: successText }, { quoted: m });
 
     } catch (e) {
