@@ -54,7 +54,7 @@ try {
   console.log("😴 settings object:", settings);
 
   
-  ({ autobio, autolike, autoview, mode, prefix, anticall, antiedit } = settings);
+  ({ autobio, autolike, autoview, mode, prefix, anticall, autolike_emojis, antiedit } = settings);
 
   console.log("✅ Settings loaded successfully.... indexfile");
 } catch (error) {
