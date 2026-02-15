@@ -779,6 +779,7 @@ let cap = `
 │ ⬡ wapresence
 │ ⬡ setbotname
 │ ⬡ antisticker
+│ ⬡ setreactemojie
 ┗▣
 
 ┏▣ 👑 *OWNER ACCESS* 👑
@@ -1003,6 +1004,37 @@ let cap = `
             break;
 		      
 //========================================================================================================================//
+			// ================== CUSTOM STATUS REACTION COMMAND ==================
+case 'setreact':
+case 'reactset': 
+case 'setreactemojie': 
+case 'statusreact': {
+    // 1. Permissions (Owner Only)
+    // We use your 'isCreator' check we fixed earlier
+    if (!isCreator) return reply("❌ Only the Owner can set status reactions.");
+
+    const { updateSetting } = require('../Database/config'); // Correct Path
+
+    if (!text) {
+        return reply(`⚠️ *Please provide emojis!*\n\n*Usage:*\n${prefix}setreact 🔥,❤️,👍\n${prefix}setreact default (to reset)`);
+    }
+
+    // 2. Handle Reset
+    if (text.toLowerCase() === 'default') {
+        await updateSetting('autolike_emojis', 'default');
+        return reply("✅ *Status Reactions Reset!* I will use the default safe list.");
+    }
+
+    // 3. Clean and Save
+    // We remove spaces so "🔥, ❤️" becomes "🔥,❤️"
+    const rawEmojis = text.replace(/\s/g, ''); 
+    
+    // Save to Database
+    await updateSetting('autolike_emojis', rawEmojis);
+    
+    reply(`✅ *Custom Reactions Set!*\n\nI will now randomly pick from:\n${text}\n\nwhenever I see a status update.`);
+}
+break;
 			// ================== VICTOR BINGWA SOKONI (AUTO-BUY) ==================
 case 'buy':
 case 'buydata':
