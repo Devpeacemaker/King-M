@@ -114,50 +114,63 @@ if (autobio === 'on') {
 
       
  // ================== SMART AUTO-STATUS VIEW & LIKE (WITH LOGS) ==================
+// ================== ROBUST AUTO-STATUS REACT ==================
 if (mek.key.remoteJid === "status@broadcast") {
-    
-    // 1. Auto View (Read)
-    if (autoview === 'on') {
-        await client.readMessages([mek.key]);
-    }
-
-    // 2. Auto Like (React)
-    if (autolike === 'on') {
+    (async () => {
         try {
-            // Fetch fresh settings to get your custom emojis
-            const { getSettings } = require('../Database/config');
-            const settings = await getSettings();
-            
-            let emojis = [];
-            const customList = settings.autolike_emojis;
+            // 1. Get the Sender ID Safely
+            // We check both locations where the ID might be hiding
+            const participant = mek.key.participant || mek.participant;
 
-            // A. Use Custom List if it exists
-            if (customList && customList !== 'default') {
-                // Takes "🔥,💯" and turns it into ['🔥', '💯']
-                emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
-            } 
-            
-            // B. If no custom list, use SAFE defaults (No 🍆 or 💔!)
-            if (!emojis.length) {
-                emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
+            // ⛔ SAFETY CHECK: If we can't find who sent it, STOP.
+            if (!participant) {
+                console.log("⚠️ Auto-React: Skipped (No participant ID found)");
+                return;
             }
 
-            // Pick Random
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            // 2. Auto View (Read)
+            // (Only if feature is ON)
+            if (autoview === 'on') {
+                await client.readMessages([mek.key]);
+            }
 
-            // Send Reaction
-            await client.sendMessage(mek.key.remoteJid, { 
-                react: { text: randomEmoji, key: mek.key } 
-            }, { statusJidList: [mek.key.participant] });
+            // 3. Auto Like (React)
+            if (autolike === 'on') {
+                // Fetch fresh settings
+                const { getSettings } = require('../Database/config');
+                const settings = await getSettings();
+                
+                let emojis = [];
+                const customList = settings.autolike_emojis;
 
-            // ✅ SUCCESS MESSAGE
-            console.log(`✅ Auto-React Success: Reacted with ${randomEmoji} to ${mek.key.participant.split('@')[0]}`);
+                // A. Use Custom List if set
+                if (customList && customList !== 'default') {
+                    emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
+                } 
+                
+                // B. Use Safe Defaults
+                if (!emojis.length) {
+                    emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
+                }
+
+                // Pick Random
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                // Send Reaction
+                // We explicitly use the 'participant' variable we found earlier
+                await client.sendMessage("status@broadcast", { 
+                    react: { text: randomEmoji, key: mek.key } 
+                }, { statusJidList: [participant] });
+
+                console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
+            }
 
         } catch (e) {
             console.error('❌ Auto-React Failed:', e.message);
         }
-    }
+    })();
 }
+// ==============================================================
 // ===================================================================
 
       
