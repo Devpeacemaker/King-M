@@ -18,7 +18,7 @@ async function fetchSettings() {
     antibot: data.antibot,
     welcomegoodbye: data.welcomegoodbye,
     autobio: data.autobio,
-    autobioText: data.autobioText, // <--- ADDED THIS LINE ✅
+    autobioText: data.autobioText,
     badword: data.badword,
     gptdm: data.gptdm, 
     anticall: data.anticall, 
@@ -27,7 +27,10 @@ async function fetchSettings() {
     antistatuslink: data.antistatuslink,
     menuTitle: data.menuTitle,
     antisticker: data.antisticker,
-    antigroupmention: data.antigroupmention
+    antigroupmention: data.antigroupmention,
+    
+    // 👇 ADD THIS LINE SO THE BOT CAN READ YOUR CUSTOM EMOJIS
+    autolike_emojis: data.autolike_emojis 
   };
 }
 
