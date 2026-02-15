@@ -1351,58 +1351,65 @@ break;
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (GS) - REBUILT ==================
 // ================== GROUP STATUS (FIXED & RELIABLE) ==================
+// ================== GROUP STATUS (FIXED DOWNLOADER) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
 case 'gs': {
     // 1. Checks
     if (!m.isGroup) return reply('❌ This command is for groups only.');
+    if (!isAdmin) return reply('❌ Only Admins can post Group Status.');
 
-    const { generateWAMessageFromContent, generateWAMessageContent, proto } = require('@whiskeysockets/baileys');
- 
-    // 2. Helper to download media safely
-    const downloadMedia = async (msg) => {
-        const type = Object.keys(msg)[0];
-        const stream = await client.downloadContentFromMessage(msg[type], type.replace('Message', ''));
-        let buffer = Buffer.from([]);
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk]);
-        }
-        return buffer;
-    };
+    // 2. Import Required Functions Properly
+    const { 
+        generateWAMessageFromContent, 
+        generateWAMessageContent, 
+        downloadContentFromMessage, // <--- Imported directly here
+        proto 
+    } = require('@whiskeysockets/baileys');
+    
+    const crypto = require('crypto');
 
     try {
+        // 3. Helper to download media safely
+        const downloadMedia = async (msg) => {
+            const type = Object.keys(msg)[0];
+            // FIX: Use the standalone function, NOT client.download...
+            const stream = await downloadContentFromMessage(msg[type], type.replace('Message', ''));
+            let buffer = Buffer.from([]);
+            for await (const chunk of stream) {
+                buffer = Buffer.concat([buffer, chunk]);
+            }
+            return buffer;
+        };
+
         let statusContent = null;
-        let mime = (m.quoted && m.quoted.mimetype) ? m.quoted.mimetype : '';
-        let textStatus = text || (m.quoted && m.quoted.text) || '';
+        // Determine mime type safely
+        const quotedMsg = m.quoted ? m.quoted : null;
+        const mime = (quotedMsg && quotedMsg.mimetype) ? quotedMsg.mimetype : '';
+        const textStatus = text || (quotedMsg && quotedMsg.text) || '';
+
+        await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
         // A. Handle Media (Image/Video/Audio)
-        if (m.quoted && /image|video|audio/.test(mime)) {
-            await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+        if (quotedMsg && /image|video|audio/.test(mime)) {
             
-            const mediaBuffer = await downloadMedia(m.quoted.message || m.quoted);
-            let mediaType = '';
-
-            if (/image/.test(mime)) mediaType = 'image';
-            else if (/video/.test(mime)) mediaType = 'video';
-            else if (/audio/.test(mime)) mediaType = 'audio';
-
-            // Prepare content for upload
-            // We use the caption from your command (text) or the original caption
-            statusContent = { 
-                [mediaType]: mediaBuffer, 
-                caption: text || m.quoted.caption || '' 
-            };
+            const mediaBuffer = await downloadMedia(quotedMsg.message || quotedMsg);
             
-            // For audio, ensure it's treated as a PTT for better visibility
-            if (mediaType === 'audio') {
-                statusContent = { audio: mediaBuffer, ptt: true };
+            // Prepare content object
+            if (/image/.test(mime)) {
+                statusContent = { image: mediaBuffer, caption: text || quotedMsg.caption || '' };
+            } else if (/video/.test(mime)) {
+                statusContent = { video: mediaBuffer, caption: text || quotedMsg.caption || '' };
+            } else if (/audio/.test(mime)) {
+                // Audio status (Voice Note style)
+                statusContent = { audio: mediaBuffer, ptt: true, mimetype: mime };
             }
 
         } 
         // B. Handle Text Only
         else if (textStatus) {
-            // Text status needs specific background colors to look real
+            // Text status needs specific background colors
             statusContent = { 
                 text: textStatus, 
                 backgroundArgb: 0xFFFFFFFF, // White background
@@ -1410,18 +1417,17 @@ case 'gs': {
             };
         } 
         else {
-            return reply(`⚠️ *Invalid Usage*\n\nReply to an Image, Video, Audio, or type text to post a Group Status.\n\n*Example:* ${prefix}gstatus (replying to image)`);
+            return reply(`⚠️ *Invalid Usage*\n\nReply to an Image, Video, or Audio to post a Group Status.\n\n*Example:* ${prefix}gstatus (replying to image)`);
         }
 
-        // 3. THE FIX: Upload to WhatsApp Servers
-        // This generates the correct 'url', 'directPath', and 'mediaKey'
+        // 4. Upload to WhatsApp Servers
+        // This generates the correct 'url' and 'directPath'
         const messagePayload = await generateWAMessageContent(
             statusContent, 
-            { upload: client.waUploadToServer } // <--- CRITICAL FIX
+            { upload: client.waUploadToServer } 
         );
 
-        // 4. Wrap in Group Status Container
-        // Must include a random messageSecret
+        // 5. Wrap in Group Status Container
         const msgNode = generateWAMessageFromContent(
             m.chat,
             {
@@ -1437,7 +1443,7 @@ case 'gs': {
             { userJid: client.user.id, quoted: m }
         );
 
-        // 5. Send (Relay)
+        // 6. Send (Relay)
         await client.relayMessage(m.chat, msgNode.message, { messageId: msgNode.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
