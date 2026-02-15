@@ -1006,34 +1006,46 @@ let cap = `
 		      
 //========================================================================================================================//
 			// ================== CUSTOM STATUS REACTION COMMAND ==================
+// ================== CUSTOM STATUS REACTION COMMAND (ERROR FIXED) ==================
 case 'setreact':
-case 'reactset': 
-case 'setreactemojie': 
-case 'statusreact': {
-    // 1. Permissions (Owner Only)
-    // We use your 'isCreator' check we fixed earlier
-    if (!isCreator) return reply("❌ Only the Owner can set status reactions.");
+case 'setreactemoji': 
+case 'reactset': {
+    try {
+        // 1. FIX: Manually check Owner permissions inside the command
+        // This fixes "isCreator is not defined" because we define it right here.
+        const { owner } = require('../set'); // Load owner list from set.js
+        const senderNum = m.sender.split('@')[0];
+        const botNum = client.user.id.split(':')[0];
+        
+        // true if sender is in owner list OR sender is the bot itself
+        const isOwner = owner.includes(senderNum) || senderNum === botNum;
 
-    const { updateSetting } = require('../Database/config'); // Correct Path
+        if (!isOwner) return reply("❌ Only the Bot Owner can use this command.");
 
-    if (!text) {
-        return reply(`⚠️ *Please provide emojis!*\n\n*Usage:*\n${prefix}setreact 🔥,❤️,👍\n${prefix}setreact default (to reset)`);
+        // 2. Load Database
+        const { updateSetting } = require('../Database/config');
+
+        // 3. Validation
+        if (!text) {
+            return reply(`⚠️ *Please provide emojis!*\n\n*Usage:*\n${prefix}setreact 🔥,❤️,👍\n${prefix}setreact default (to reset)`);
+        }
+
+        // 4. Handle Reset
+        if (text.toLowerCase() === 'default') {
+            await updateSetting('autolike_emojis', 'default');
+            return reply("✅ *Status Reactions Reset!* I will use the default safe list.");
+        }
+
+        // 5. Save Custom Emojis
+        const rawEmojis = text.replace(/\s/g, ''); // Remove spaces
+        await updateSetting('autolike_emojis', rawEmojis);
+        
+        reply(`✅ *Custom Reactions Set!*\n\nI will now use these for status updates:\n${rawEmojis}`);
+
+    } catch (e) {
+        console.error("SetReact Error:", e);
+        reply("❌ Error: " + e.message);
     }
-
-    // 2. Handle Reset
-    if (text.toLowerCase() === 'default') {
-        await updateSetting('autolike_emojis', 'default');
-        return reply("✅ *Status Reactions Reset!* I will use the default safe list.");
-    }
-
-    // 3. Clean and Save
-    // We remove spaces so "🔥, ❤️" becomes "🔥,❤️"
-    const rawEmojis = text.replace(/\s/g, ''); 
-    
-    // Save to Database
-    await updateSetting('autolike_emojis', rawEmojis);
-    
-    reply(`✅ *Custom Reactions Set!*\n\nI will now randomly pick from:\n${text}\n\nwhenever I see a status update.`);
 }
 break;
 			// ================== VICTOR BINGWA SOKONI (AUTO-BUY) ==================
