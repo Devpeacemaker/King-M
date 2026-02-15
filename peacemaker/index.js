@@ -113,18 +113,52 @@ if (autobio === 'on') {
       mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
       
- if (autoview === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
-        client.readMessages([mek.key]);
-      }
+ // ================== SMART AUTO-STATUS VIEW & LIKE (WITH LOGS) ==================
+if (mek.key.remoteJid === "status@broadcast") {
+    
+    // 1. Auto View (Read)
+    if (autoview === 'on') {
+        await client.readMessages([mek.key]);
+    }
+
+    // 2. Auto Like (React)
+    if (autolike === 'on') {
+        try {
+            // Fetch fresh settings to get your custom emojis
+            const { getSettings } = require('../Database/config');
+            const settings = await getSettings();
             
- if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
-        const nickk = await client.decodeJid(client.user.id);
-        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
-        await sleep(messageDelay);
-   console.log('Reaction sent successfully✅️');
-          }
+            let emojis = [];
+            const customList = settings.autolike_emojis;
+
+            // A. Use Custom List if it exists
+            if (customList && customList !== 'default') {
+                // Takes "🔥,💯" and turns it into ['🔥', '💯']
+                emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
+            } 
+            
+            // B. If no custom list, use SAFE defaults (No 🍆 or 💔!)
+            if (!emojis.length) {
+                emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
+            }
+
+            // Pick Random
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+            // Send Reaction
+            await client.sendMessage(mek.key.remoteJid, { 
+                react: { text: randomEmoji, key: mek.key } 
+            }, { statusJidList: [mek.key.participant] });
+
+            // ✅ SUCCESS MESSAGE
+            console.log(`✅ Auto-React Success: Reacted with ${randomEmoji} to ${mek.key.participant.split('@')[0]}`);
+
+        } catch (e) {
+            console.error('❌ Auto-React Failed:', e.message);
+        }
+    }
+}
+// ===================================================================
 
       
 if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
