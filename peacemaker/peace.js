@@ -51,6 +51,7 @@ const {
   antitag,
 	menuTitle,
 	antisticker,
+	autolike_emojis,
 	antigroupmention
 } = await fetchSettings(); 
 	  
