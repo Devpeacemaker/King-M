@@ -1349,21 +1349,17 @@ case 'agm': {
 break;
 			//togstatus
 		// ================== GROUP STATUS (GS) ==================
-// ================== GROUP STATUS (GS) - REBUILT ==================
-// ================== GROUP STATUS (FIXED & RELIABLE) ==================
-// ================== GROUP STATUS (PERMANENT FIX) ==================
-// ================== GROUP STATUS (NUCLEAR FIX ☢️) ==================
+// ================== GROUP STATUS (SELF-SEND METHOD) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
-case 'gs': {
+case 'bg': {
     // 1. Checks
     if (!m.isGroup) return reply('❌ This command is for groups only.');
     if (!isAdmin) return reply('❌ Only Admins can post Group Status.');
 
     const { 
         generateWAMessageFromContent, 
-        prepareWAMessageMedia, 
         downloadContentFromMessage, 
         proto 
     } = require('@whiskeysockets/baileys');
@@ -1376,7 +1372,7 @@ case 'gs': {
         const downloadMedia = async (message) => {
             let type = Object.keys(message)[0];
             let msg = message[type];
-            // Handle ViewOnce/Buttons wrapping
+            // Handle wrapper types
             if (type === 'viewOnceMessageV2') {
                 msg = message.viewOnceMessageV2.message;
                 type = Object.keys(msg)[0];
@@ -1384,7 +1380,6 @@ case 'gs': {
                 msg = message.buttonsMessage.imageMessage || message.buttonsMessage.videoMessage;
                 type = Object.keys(msg)[0];
             }
-            
             const stream = await downloadContentFromMessage(msg, type.replace('Message', ''));
             let buffer = Buffer.from([]);
             for await (const chunk of stream) {
@@ -1398,67 +1393,36 @@ case 'gs': {
         const textStatus = text || (quotedMsg && quotedMsg.text) || '';
         const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        let messageContent = null;
+        let msgContent = null;
 
         // ============================================================
-        // A. HANDLE MEDIA (FORCE PREPARATION)
+        // A. HANDLE MEDIA (The "Self-Send" Trick)
         // ============================================================
         if (quotedMsg && /image|video|audio|webp/.test(mime)) {
             const mediaBuffer = await downloadMedia(quotedMsg.message || quotedMsg);
             
-            if (mediaBuffer.length === 0) {
-                return reply("❌ Error: Downloaded media is empty.");
-            }
-
-            let mediaType = '';
-            let imageOpt = {};
-            
+            // 1. Send to SELF first to generate keys/url
+            let uploadMsg;
             if (/image/.test(mime) || /webp/.test(mime)) {
-                mediaType = 'image';
-                imageOpt = { image: mediaBuffer };
+                // Send as image
+                uploadMsg = await client.sendMessage(client.user.id, { image: mediaBuffer, caption: caption });
+                // Extract the fully formed message object
+                msgContent = { imageMessage: uploadMsg.message.imageMessage };
             } else if (/video/.test(mime)) {
-                mediaType = 'video';
-                imageOpt = { video: mediaBuffer };
+                // Send as video
+                uploadMsg = await client.sendMessage(client.user.id, { video: mediaBuffer, caption: caption });
+                msgContent = { videoMessage: uploadMsg.message.videoMessage };
             } else if (/audio/.test(mime)) {
-                mediaType = 'audio';
-                imageOpt = { audio: mediaBuffer };
-            }
-
-            // 🛠️ THE FIX: Use prepareWAMessageMedia
-            // This explicitly handles the upload and key generation
-            const preparedMedia = await prepareWAMessageMedia(imageOpt, { 
-                upload: client.waUploadToServer.bind(client) 
-            });
-
-            // Map the prepared media to the correct status object
-            if (mediaType === 'image') {
-                messageContent = { 
-                    imageMessage: { 
-                        ...preparedMedia.imageMessage, 
-                        caption: caption 
-                    } 
-                };
-            } else if (mediaType === 'video') {
-                messageContent = { 
-                    videoMessage: { 
-                        ...preparedMedia.videoMessage, 
-                        caption: caption 
-                    } 
-                };
-            } else if (mediaType === 'audio') {
-                messageContent = { 
-                    audioMessage: { 
-                        ...preparedMedia.audioMessage, 
-                        ptt: true // Force Voice Note style
-                    } 
-                };
+                // Send as PTT
+                uploadMsg = await client.sendMessage(client.user.id, { audio: mediaBuffer, ptt: true });
+                msgContent = { audioMessage: uploadMsg.message.audioMessage };
             }
         } 
         // ============================================================
         // B. HANDLE TEXT ONLY
         // ============================================================
         else if (textStatus) {
-            messageContent = { 
+            msgContent = { 
                 extendedTextMessage: { 
                     text: textStatus, 
                     backgroundArgb: 0xFFFFFFFF, 
@@ -1470,13 +1434,17 @@ case 'gs': {
             return reply(`⚠️ *Invalid Usage*\nReply to media or type text.`);
         }
 
-        // 3. Wrap in Group Status Container with Secret
-        const msgNode = generateWAMessageFromContent(
+        // ============================================================
+        // 3. CONSTRUCT & RELAY
+        // ============================================================
+        
+        // Wrap the valid content into the Group Status Container
+        const statusMsg = generateWAMessageFromContent(
             m.chat,
             {
                 groupStatusMessageV2: {
                     message: {
-                        ...messageContent, // Inject the manually prepared message
+                        ...msgContent, // Inject the valid media object we just created
                         messageContextInfo: {
                             messageSecret: crypto.randomBytes(32)
                         }
@@ -1486,11 +1454,11 @@ case 'gs': {
             { userJid: client.user.id, quoted: m }
         );
 
-        // 4. Send (Relay)
-        await client.relayMessage(m.chat, msgNode.message, { messageId: msgNode.key.id });
+        // Send it
+        await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // 5. Success Message
+        // Success Message
         const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
         await client.sendMessage(m.chat, { text: successText }, { quoted: m });
 
