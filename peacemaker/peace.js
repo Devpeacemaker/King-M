@@ -1350,90 +1350,100 @@ break;
 			//togstatus
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (GS) - REBUILT ==================
-case 'togroupstatus':
-case 'groupstatus':
+// ================== GROUP STATUS (FIXED & RELIABLE) ==================
 case 'gstatus':
-case 'togcstatus':
+case 'groupstatus':
+case 'togstatus':
 case 'gs': {
-    if (!m.isGroup) return reply("❌ This command is for groups only.");
-    if (!Owner) return reply("❌ This command is restricted to the Bot Owner.");
+    // 1. Checks
+    if (!m.isGroup) return reply('❌ This command is for groups only.');
 
-    if (!text && !m.quoted) {
-        return reply(
-            `📌 *Usage:*\n` +
-            `• ${prefix}gs <text>\n` +
-            `• Reply to media with ${prefix}gs <caption>\n` +
-            `• Reply to media with ${prefix}gs to forward it`
-        );
-    }
-
-    let tempFilePath = null;
-    const tempDir = path.join(__dirname, '../tmp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-
-    await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+    const { generateWAMessageFromContent, generateWAMessageContent, proto } = require('@whiskeysockets/baileys');
+ 
+    // 2. Helper to download media safely
+    const downloadMedia = async (msg) => {
+        const type = Object.keys(msg)[0];
+        const stream = await client.downloadContentFromMessage(msg[type], type.replace('Message', ''));
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        return buffer;
+    };
 
     try {
-        let payload = { groupStatusMessage: {} };
+        let statusContent = null;
+        let mime = (m.quoted && m.quoted.mimetype) ? m.quoted.mimetype : '';
+        let textStatus = text || (m.quoted && m.quoted.text) || '';
 
-        if (m.quoted) {
-            const mime = (m.quoted.msg || m.quoted).mimetype || "";
-            const q = text || ""; // Use command text as caption if available
+        // A. Handle Media (Image/Video/Audio)
+        if (m.quoted && /image|video|audio/.test(mime)) {
+            await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+            
+            const mediaBuffer = await downloadMedia(m.quoted.message || m.quoted);
+            let mediaType = '';
 
-            if (/image/.test(mime)) {
-                const buffer = await client.downloadMediaMessage(m.quoted);
-                tempFilePath = path.join(tempDir, `status_${Date.now()}.jpg`);
-                fs.writeFileSync(tempFilePath, buffer);
-                payload.groupStatusMessage.image = { url: tempFilePath };
-                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
+            if (/image/.test(mime)) mediaType = 'image';
+            else if (/video/.test(mime)) mediaType = 'video';
+            else if (/audio/.test(mime)) mediaType = 'audio';
 
-            } else if (/video/.test(mime)) {
-                const buffer = await client.downloadMediaMessage(m.quoted);
-                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp4`);
-                fs.writeFileSync(tempFilePath, buffer);
-                payload.groupStatusMessage.video = { url: tempFilePath };
-                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
-
-            } else if (/audio/.test(mime)) {
-                const buffer = await client.downloadMediaMessage(m.quoted);
-                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp3`);
-                fs.writeFileSync(tempFilePath, buffer);
-                payload.groupStatusMessage.audio = { url: tempFilePath };
-
-            } else if (/webp/.test(mime)) {
-                const buffer = await client.downloadMediaMessage(m.quoted);
-                tempFilePath = path.join(tempDir, `status_${Date.now()}.webp`);
-                fs.writeFileSync(tempFilePath, buffer);
-                payload.groupStatusMessage.sticker = { url: tempFilePath };
-
-            } else if (m.quoted.text || m.quoted.conversation) {
-                payload.groupStatusMessage.text = m.quoted.text || m.quoted.conversation;
-
-            } else {
-                // Document Fallback
-                const buffer = await client.downloadMediaMessage(m.quoted);
-                const ext = mime.split('/')[1] || "bin";
-                tempFilePath = path.join(tempDir, `status_${Date.now()}.${ext}`);
-                fs.writeFileSync(tempFilePath, buffer);
-                payload.groupStatusMessage.document = { url: tempFilePath };
+            // Prepare content for upload
+            // We use the caption from your command (text) or the original caption
+            statusContent = { 
+                [mediaType]: mediaBuffer, 
+                caption: text || m.quoted.caption || '' 
+            };
+            
+            // For audio, ensure it's treated as a PTT for better visibility
+            if (mediaType === 'audio') {
+                statusContent = { audio: mediaBuffer, ptt: true };
             }
-        } else {
-            // Text only input
-            payload.groupStatusMessage.text = text;
+
+        } 
+        // B. Handle Text Only
+        else if (textStatus) {
+            // Text status needs specific background colors to look real
+            statusContent = { 
+                text: textStatus, 
+                backgroundArgb: 0xFFFFFFFF, // White background
+                textArgb: 0xFF000000 // Black text
+            };
+        } 
+        else {
+            return reply(`⚠️ *Invalid Usage*\n\nReply to an Image, Video, Audio, or type text to post a Group Status.\n\n*Example:* ${prefix}gstatus (replying to image)`);
         }
 
-        // Send the constructed status to the group
-        await client.sendMessage(m.chat, payload, { quoted: m });
+        // 3. THE FIX: Upload to WhatsApp Servers
+        // This generates the correct 'url', 'directPath', and 'mediaKey'
+        const messagePayload = await generateWAMessageContent(
+            statusContent, 
+            { upload: client.waUploadToServer } // <--- CRITICAL FIX
+        );
+
+        // 4. Wrap in Group Status Container
+        // Must include a random messageSecret
+        const msgNode = generateWAMessageFromContent(
+            m.chat,
+            {
+                groupStatusMessageV2: {
+                    message: {
+                        ...messagePayload,
+                        messageContextInfo: {
+                            messageSecret: crypto.randomBytes(32)
+                        }
+                    }
+                }
+            },
+            { userJid: client.user.id, quoted: m }
+        );
+
+        // 5. Send (Relay)
+        await client.relayMessage(m.chat, msgNode.message, { messageId: msgNode.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-    } catch (error) {
-        console.error("Group Status Error:", error);
-        reply(`❌ Error sending group status: ${error.message}`);
-    } finally {
-        // Cleanup: Remove temporary file
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        }
+        
+    } catch (e) {
+        console.error("GStatus Error:", e);
+        reply("❌ Failed to post status. Error: " + e.message);
     }
 }
 break;
