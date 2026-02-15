@@ -1,4 +1,5 @@
-const { getSettings } = require('../Database/config');
+// ✅ CORRECT PATH (Since both files are in the Database folder)
+const { getSettings } = require('./config'); 
 
 async function fetchSettings() {
   const data = await getSettings();
@@ -29,7 +30,7 @@ async function fetchSettings() {
     antisticker: data.antisticker,
     antigroupmention: data.antigroupmention,
     
-    // 👇 ADD THIS LINE SO THE BOT CAN READ YOUR CUSTOM EMOJIS
+    // ✅ THIS IS PERFECT
     autolike_emojis: data.autolike_emojis 
   };
 }
