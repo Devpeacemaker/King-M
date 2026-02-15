@@ -137,7 +137,7 @@ if (mek.key.remoteJid === "status@broadcast") {
             // 3. Auto Like (React)
             if (autolike === 'on') {
                 // Fetch fresh settings
-                const { getSettings } = require('../Database/config');
+                const { getSettings } = require('./Database/config');
                 const settings = await getSettings();
                 
                 let emojis = [];
