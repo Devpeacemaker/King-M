@@ -1350,29 +1350,28 @@ break;
 			//togstatus
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (SELF-SEND METHOD) ==================
+// ================== GROUP STATUS (EPHEMERAL FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
 case 'bg': {
-    // 1. Checks
-    if (!m.isGroup) return reply('❌ This command is for groups only.');
-    if (!isAdmin) return reply('❌ Only Admins can post Group Status.');
+    // 1. Basic Checks
+    if (!m.isGroup) return reply('❌ Groups only.');
+    if (!isAdmin) return reply('❌ Admins only.');
 
     const { 
         generateWAMessageFromContent, 
-        downloadContentFromMessage, 
-        proto 
+        downloadContentFromMessage 
     } = require('@whiskeysockets/baileys');
     const crypto = require('crypto');
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
-        // 2. Helper to download media safely
+        // 2. Download Helper
         const downloadMedia = async (message) => {
             let type = Object.keys(message)[0];
             let msg = message[type];
-            // Handle wrapper types
             if (type === 'viewOnceMessageV2') {
                 msg = message.viewOnceMessageV2.message;
                 type = Object.keys(msg)[0];
@@ -1393,36 +1392,48 @@ case 'bg': {
         const textStatus = text || (quotedMsg && quotedMsg.text) || '';
         const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        let msgContent = null;
+        let finalMediaObject = null;
 
         // ============================================================
-        // A. HANDLE MEDIA (The "Self-Send" Trick)
+        // A. HANDLE MEDIA (The Unwrapper Fix)
         // ============================================================
         if (quotedMsg && /image|video|audio|webp/.test(mime)) {
             const mediaBuffer = await downloadMedia(quotedMsg.message || quotedMsg);
             
-            // 1. Send to SELF first to generate keys/url
+            // 1. Send to SELF to generate keys
             let uploadMsg;
             if (/image/.test(mime) || /webp/.test(mime)) {
-                // Send as image
                 uploadMsg = await client.sendMessage(client.user.id, { image: mediaBuffer, caption: caption });
-                // Extract the fully formed message object
-                msgContent = { imageMessage: uploadMsg.message.imageMessage };
             } else if (/video/.test(mime)) {
-                // Send as video
                 uploadMsg = await client.sendMessage(client.user.id, { video: mediaBuffer, caption: caption });
-                msgContent = { videoMessage: uploadMsg.message.videoMessage };
             } else if (/audio/.test(mime)) {
-                // Send as PTT
                 uploadMsg = await client.sendMessage(client.user.id, { audio: mediaBuffer, ptt: true });
-                msgContent = { audioMessage: uploadMsg.message.audioMessage };
+            }
+
+            // 2. 🛠️ UNWRAP THE MESSAGE (The Fix)
+            // If the bot sent it as Ephemeral, the media is hidden inside.
+            let rawMsg = uploadMsg.message;
+            if (rawMsg.ephemeralMessage) {
+                rawMsg = rawMsg.ephemeralMessage.message;
+            }
+            if (rawMsg.viewOnceMessageV2) {
+                rawMsg = rawMsg.viewOnceMessageV2.message;
+            }
+
+            // 3. Extract the clean media object (which now definitely has the key)
+            if (rawMsg.imageMessage) {
+                finalMediaObject = { imageMessage: rawMsg.imageMessage };
+            } else if (rawMsg.videoMessage) {
+                finalMediaObject = { videoMessage: rawMsg.videoMessage };
+            } else if (rawMsg.audioMessage) {
+                finalMediaObject = { audioMessage: rawMsg.audioMessage };
             }
         } 
         // ============================================================
         // B. HANDLE TEXT ONLY
         // ============================================================
         else if (textStatus) {
-            msgContent = { 
+            finalMediaObject = { 
                 extendedTextMessage: { 
                     text: textStatus, 
                     backgroundArgb: 0xFFFFFFFF, 
@@ -1431,20 +1442,16 @@ case 'bg': {
             };
         } 
         else {
-            return reply(`⚠️ *Invalid Usage*\nReply to media or type text.`);
+            return reply(`⚠️ Reply to Media or type Text.`);
         }
 
-        // ============================================================
-        // 3. CONSTRUCT & RELAY
-        // ============================================================
-        
-        // Wrap the valid content into the Group Status Container
+        // 4. Construct & Send
         const statusMsg = generateWAMessageFromContent(
             m.chat,
             {
                 groupStatusMessageV2: {
                     message: {
-                        ...msgContent, // Inject the valid media object we just created
+                        ...finalMediaObject,
                         messageContextInfo: {
                             messageSecret: crypto.randomBytes(32)
                         }
@@ -1454,17 +1461,16 @@ case 'bg': {
             { userJid: client.user.id, quoted: m }
         );
 
-        // Send it
         await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // Success Message
+        // Success
         const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
         await client.sendMessage(m.chat, { text: successText }, { quoted: m });
 
     } catch (e) {
         console.error("GStatus Error:", e);
-        reply("❌ Failed: " + e.message);
+        reply("❌ Error: " + e.message);
     }
 }
 break;
