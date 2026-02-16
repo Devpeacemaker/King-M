@@ -1351,6 +1351,7 @@ break;
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (SELF-SEND METHOD) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
+// ================== GROUP STATUS (EPHEMERAL FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
@@ -1374,6 +1375,9 @@ case 'bg': {
             let msg = message[type];
             if (type === 'viewOnceMessageV2') {
                 msg = message.viewOnceMessageV2.message;
+                type = Object.keys(msg)[0];
+            } else if (type === 'ephemeralMessage') {
+                msg = message.ephemeralMessage.message;
                 type = Object.keys(msg)[0];
             } else if (type === 'buttonsMessage') {
                 msg = message.buttonsMessage.imageMessage || message.buttonsMessage.videoMessage;
@@ -1410,23 +1414,66 @@ case 'bg': {
                 uploadMsg = await client.sendMessage(client.user.id, { audio: mediaBuffer, ptt: true });
             }
 
-            // 2. 🛠️ UNWRAP THE MESSAGE (The Fix)
-            // If the bot sent it as Ephemeral, the media is hidden inside.
+            // 2. 🛠️ IMPROVED UNWRAPPING - Handle all possible nesting
             let rawMsg = uploadMsg.message;
-            if (rawMsg.ephemeralMessage) {
-                rawMsg = rawMsg.ephemeralMessage.message;
-            }
-            if (rawMsg.viewOnceMessageV2) {
-                rawMsg = rawMsg.viewOnceMessageV2.message;
+            
+            // Keep unwrapping until we get to the actual media message
+            while (rawMsg.ephemeralMessage || rawMsg.viewOnceMessageV2) {
+                if (rawMsg.ephemeralMessage) {
+                    rawMsg = rawMsg.ephemeralMessage.message;
+                }
+                if (rawMsg.viewOnceMessageV2) {
+                    rawMsg = rawMsg.viewOnceMessageV2.message;
+                }
             }
 
-            // 3. Extract the clean media object (which now definitely has the key)
+            // 3. Extract the clean media object with all required fields
             if (rawMsg.imageMessage) {
-                finalMediaObject = { imageMessage: rawMsg.imageMessage };
+                finalMediaObject = { 
+                    imageMessage: {
+                        ...rawMsg.imageMessage,
+                        // Ensure required fields are present
+                        mimetype: rawMsg.imageMessage.mimetype,
+                        fileLength: rawMsg.imageMessage.fileLength,
+                        height: rawMsg.imageMessage.height,
+                        width: rawMsg.imageMessage.width,
+                        mediaKey: rawMsg.imageMessage.mediaKey,
+                        directPath: rawMsg.imageMessage.directPath,
+                        url: rawMsg.imageMessage.url
+                    } 
+                };
             } else if (rawMsg.videoMessage) {
-                finalMediaObject = { videoMessage: rawMsg.videoMessage };
+                finalMediaObject = { 
+                    videoMessage: {
+                        ...rawMsg.videoMessage,
+                        mimetype: rawMsg.videoMessage.mimetype,
+                        fileLength: rawMsg.videoMessage.fileLength,
+                        height: rawMsg.videoMessage.height,
+                        width: rawMsg.videoMessage.width,
+                        mediaKey: rawMsg.videoMessage.mediaKey,
+                        directPath: rawMsg.videoMessage.directPath,
+                        url: rawMsg.videoMessage.url
+                    } 
+                };
             } else if (rawMsg.audioMessage) {
-                finalMediaObject = { audioMessage: rawMsg.audioMessage };
+                finalMediaObject = { 
+                    audioMessage: {
+                        ...rawMsg.audioMessage,
+                        mimetype: rawMsg.audioMessage.mimetype,
+                        fileLength: rawMsg.audioMessage.fileLength,
+                        mediaKey: rawMsg.audioMessage.mediaKey,
+                        directPath: rawMsg.audioMessage.directPath,
+                        url: rawMsg.audioMessage.url,
+                        ptt: rawMsg.audioMessage.ptt || false
+                    } 
+                };
+            }
+            
+            // Debug log
+            console.log("Extracted media object keys:", Object.keys(rawMsg));
+            if (finalMediaObject) {
+                const mediaType = Object.keys(finalMediaObject)[0];
+                console.log("Final media object fields:", Object.keys(finalMediaObject[mediaType]));
             }
         } 
         // ============================================================
@@ -1437,12 +1484,24 @@ case 'bg': {
                 extendedTextMessage: { 
                     text: textStatus, 
                     backgroundArgb: 0xFFFFFFFF, 
-                    textArgb: 0xFF000000 
+                    textArgb: 0xFF000000,
+                    font: 0 // Add font property
                 } 
             };
         } 
         else {
             return reply(`⚠️ Reply to Media or type Text.`);
+        }
+
+        // Verify we have mediaKey before sending
+        if (finalMediaObject) {
+            const mediaType = Object.keys(finalMediaObject)[0];
+            const mediaContent = finalMediaObject[mediaType];
+            
+            if (mediaType !== 'extendedTextMessage' && !mediaContent.mediaKey) {
+                console.error("Missing mediaKey in:", mediaContent);
+                return reply("❌ Failed: Media key not generated. Try again.");
+            }
         }
 
         // 4. Construct & Send
