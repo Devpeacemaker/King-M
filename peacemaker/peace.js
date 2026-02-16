@@ -1349,177 +1349,90 @@ case 'agm': {
 break;
 			//togstatus
 		// ================== GROUP STATUS (GS) ==================
-// ================== GROUP STATUS (SELF-SEND METHOD) ==================
-// ================== GROUP STATUS (EPHEMERAL FIX) ==================
-// ================== GROUP STATUS (EPHEMERAL FIX) ==================
-case 'gstatus':
+// ================== GROUP STATUS (GS) - REBUILT ==================
+case 'togroupstatus':
 case 'groupstatus':
-case 'togstatus':
-case 'bg': {
-    // 1. Basic Checks
-    if (!m.isGroup) return reply('❌ Groups only.');
-    if (!isAdmin) return reply('❌ Admins only.');
+case 'togcstatus':
+case 'gs': {
+    if (!m.isGroup) return reply("❌ This command is for groups only.");
+    if (!Owner) return reply("❌ This command is restricted to the Bot Owner.");
 
-    const { 
-        generateWAMessageFromContent
-    } = require('@whiskeysockets/baileys');
-    const crypto = require('crypto');
+    if (!text && !m.quoted) {
+        return reply(
+            `📌 *Usage:*\n` +
+            `• ${prefix}gs <text>\n` +
+            `• Reply to media with ${prefix}gs <caption>\n` +
+            `• Reply to media with ${prefix}gs to forward it`
+        );
+    }
+
+    let tempFilePath = null;
+    const tempDir = path.join(__dirname, '../tmp');
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+    await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
     try {
-        await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+        let payload = { groupStatusMessage: {} };
 
-        const quotedMsg = m.quoted ? m.quoted : null;
-        const textStatus = text || (quotedMsg && quotedMsg.text) || '';
-        const caption = text || (quotedMsg && quotedMsg.caption) || '';
+        if (m.quoted) {
+            const mime = (m.quoted.msg || m.quoted).mimetype || "";
+            const q = text || ""; // Use command text as caption if available
 
-        // Debug logs
-        console.log("Quoted message exists:", !!quotedMsg);
-        if (quotedMsg) {
-            console.log("Quoted message keys:", Object.keys(quotedMsg));
-            console.log("Message object keys:", quotedMsg.message ? Object.keys(quotedMsg.message) : 'no message');
-        }
+            if (/image/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.jpg`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.image = { url: tempFilePath };
+                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
 
-        // ============================================================
-        // Get the media message from quoted message
-        // ============================================================
-        let mediaMessage = null;
-        
-        if (quotedMsg && quotedMsg.message) {
-            // Get the message - handle different wrapper types
-            let msg = quotedMsg.message;
-            
-            // Unwrap if it's ephemeral or view once
-            if (msg.ephemeralMessage) {
-                msg = msg.ephemeralMessage.message;
+            } else if (/video/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp4`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.video = { url: tempFilePath };
+                payload.groupStatusMessage.caption = q || m.quoted.caption || "Group Status Update";
+
+            } else if (/audio/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.mp3`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.audio = { url: tempFilePath };
+
+            } else if (/webp/.test(mime)) {
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.webp`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.sticker = { url: tempFilePath };
+
+            } else if (m.quoted.text || m.quoted.conversation) {
+                payload.groupStatusMessage.text = m.quoted.text || m.quoted.conversation;
+
+            } else {
+                // Document Fallback
+                const buffer = await client.downloadMediaMessage(m.quoted);
+                const ext = mime.split('/')[1] || "bin";
+                tempFilePath = path.join(tempDir, `status_${Date.now()}.${ext}`);
+                fs.writeFileSync(tempFilePath, buffer);
+                payload.groupStatusMessage.document = { url: tempFilePath };
             }
-            if (msg.viewOnceMessageV2) {
-                msg = msg.viewOnceMessageV2.message;
-            }
-            
-            // Get the actual message type
-            const msgType = Object.keys(msg)[0];
-            console.log("Message type after unwrapping:", msgType);
-            
-            // Handle different message types
-            if (msgType === 'imageMessage' && msg.imageMessage) {
-                mediaMessage = { 
-                    imageMessage: {
-                        ...msg.imageMessage,
-                        caption: caption || msg.imageMessage.caption || ''
-                    } 
-                };
-                console.log("Image message found, has mediaKey:", !!msg.imageMessage.mediaKey);
-            } 
-            else if (msgType === 'videoMessage' && msg.videoMessage) {
-                mediaMessage = { 
-                    videoMessage: {
-                        ...msg.videoMessage,
-                        caption: caption || msg.videoMessage.caption || ''
-                    } 
-                };
-                console.log("Video message found, has mediaKey:", !!msg.videoMessage.mediaKey);
-            } 
-            else if (msgType === 'audioMessage' && msg.audioMessage) {
-                mediaMessage = { 
-                    audioMessage: {
-                        ...msg.audioMessage
-                    } 
-                };
-                console.log("Audio message found, has mediaKey:", !!msg.audioMessage.mediaKey);
-            } 
-            else if (msgType === 'stickerMessage' && msg.stickerMessage) {
-                mediaMessage = { 
-                    stickerMessage: {
-                        ...msg.stickerMessage
-                    } 
-                };
-                console.log("Sticker message found, has mediaKey:", !!msg.stickerMessage.mediaKey);
-            } 
-            else if (msgType === 'documentMessage' && msg.documentMessage) {
-                mediaMessage = { 
-                    documentMessage: {
-                        ...msg.documentMessage,
-                        caption: caption || msg.documentMessage.caption || ''
-                    } 
-                };
-                console.log("Document message found, has mediaKey:", !!msg.documentMessage.mediaKey);
-            } 
-            else if (msgType === 'extendedTextMessage' && msg.extendedTextMessage) {
-                mediaMessage = { 
-                    extendedTextMessage: {
-                        text: textStatus || msg.extendedTextMessage.text,
-                        backgroundArgb: 0xFFFFFFFF, 
-                        textArgb: 0xFF000000,
-                        font: 0
-                    } 
-                };
-            } 
-            else if (msgType === 'conversation' && msg.conversation) {
-                mediaMessage = { 
-                    extendedTextMessage: {
-                        text: textStatus || msg.conversation,
-                        backgroundArgb: 0xFFFFFFFF, 
-                        textArgb: 0xFF000000,
-                        font: 0
-                    } 
-                };
-            }
-        }
-        
-        // If no quoted media, use text
-        if (!mediaMessage && textStatus) {
-            mediaMessage = { 
-                extendedTextMessage: { 
-                    text: textStatus, 
-                    backgroundArgb: 0xFFFFFFFF, 
-                    textArgb: 0xFF000000,
-                    font: 0
-                } 
-            };
+        } else {
+            // Text only input
+            payload.groupStatusMessage.text = text;
         }
 
-        if (!mediaMessage) {
-            return reply(`⚠️ Reply to a message with image/video/audio/sticker or provide text.`);
-        }
-
-        // Verify media key exists for media types
-        const mediaType = Object.keys(mediaMessage)[0];
-        if (mediaType !== 'extendedTextMessage') {
-            const mediaContent = mediaMessage[mediaType];
-            if (!mediaContent.mediaKey) {
-                console.error(`Missing mediaKey in ${mediaType}:`, mediaContent);
-                return reply(`❌ Error: Media key missing. Try forwarding the media to your bot first.`);
-            }
-        }
-
-        console.log("Successfully created media message of type:", mediaType);
-
-        // 4. Construct & Send
-        const statusMsg = generateWAMessageFromContent(
-            m.chat,
-            {
-                groupStatusMessageV2: {
-                    message: {
-                        ...mediaMessage,
-                        messageContextInfo: {
-                            messageSecret: crypto.randomBytes(32)
-                        }
-                    }
-                }
-            },
-            { userJid: client.user.id, quoted: m }
-        );
-
-        await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
+        // Send the constructed status to the group
+        await client.sendMessage(m.chat, payload, { quoted: m });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // Success
-        const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
-        await client.sendMessage(m.chat, { text: successText }, { quoted: m });
-
-    } catch (e) {
-        console.error("GStatus Error:", e);
-        reply("❌ Error: " + e.message);
+    } catch (error) {
+        console.error("Group Status Error:", error);
+        reply(`❌ Error sending group status: ${error.message}`);
+    } finally {
+        // Cleanup: Remove temporary file
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            try { fs.unlinkSync(tempFilePath); } catch (e) {}
+        }
     }
 }
 break;
