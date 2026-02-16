@@ -1352,6 +1352,7 @@ break;
 // ================== GROUP STATUS (SELF-SEND METHOD) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
+// ================== GROUP STATUS (DIRECT APPROACH) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
@@ -1361,148 +1362,99 @@ case 'bg': {
     if (!isAdmin) return reply('❌ Admins only.');
 
     const { 
-        generateWAMessageFromContent, 
-        downloadContentFromMessage 
+        generateWAMessageFromContent
     } = require('@whiskeysockets/baileys');
     const crypto = require('crypto');
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
-        // 2. Download Helper
-        const downloadMedia = async (message) => {
-            let type = Object.keys(message)[0];
-            let msg = message[type];
-            if (type === 'viewOnceMessageV2') {
-                msg = message.viewOnceMessageV2.message;
-                type = Object.keys(msg)[0];
-            } else if (type === 'ephemeralMessage') {
-                msg = message.ephemeralMessage.message;
-                type = Object.keys(msg)[0];
-            } else if (type === 'buttonsMessage') {
-                msg = message.buttonsMessage.imageMessage || message.buttonsMessage.videoMessage;
-                type = Object.keys(msg)[0];
-            }
-            const stream = await downloadContentFromMessage(msg, type.replace('Message', ''));
-            let buffer = Buffer.from([]);
-            for await (const chunk of stream) {
-                buffer = Buffer.concat([buffer, chunk]);
-            }
-            return buffer;
-        };
-
         const quotedMsg = m.quoted ? m.quoted : null;
-        const mime = (quotedMsg && quotedMsg.mimetype) ? quotedMsg.mimetype : '';
         const textStatus = text || (quotedMsg && quotedMsg.text) || '';
         const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        let finalMediaObject = null;
-
         // ============================================================
-        // A. HANDLE MEDIA (The Unwrapper Fix)
+        // Get the media message from quoted message
         // ============================================================
-        if (quotedMsg && /image|video|audio|webp/.test(mime)) {
-            const mediaBuffer = await downloadMedia(quotedMsg.message || quotedMsg);
+        let mediaMessage = null;
+        
+        if (quotedMsg && quotedMsg.message) {
+            // Get the actual message type
+            const msgType = Object.keys(quotedMsg.message)[0];
             
-            // 1. Send to SELF to generate keys
-            let uploadMsg;
-            if (/image/.test(mime) || /webp/.test(mime)) {
-                uploadMsg = await client.sendMessage(client.user.id, { image: mediaBuffer, caption: caption });
-            } else if (/video/.test(mime)) {
-                uploadMsg = await client.sendMessage(client.user.id, { video: mediaBuffer, caption: caption });
-            } else if (/audio/.test(mime)) {
-                uploadMsg = await client.sendMessage(client.user.id, { audio: mediaBuffer, ptt: true });
-            }
-
-            // 2. 🛠️ IMPROVED UNWRAPPING - Handle all possible nesting
-            let rawMsg = uploadMsg.message;
-            
-            // Keep unwrapping until we get to the actual media message
-            while (rawMsg.ephemeralMessage || rawMsg.viewOnceMessageV2) {
-                if (rawMsg.ephemeralMessage) {
-                    rawMsg = rawMsg.ephemeralMessage.message;
-                }
-                if (rawMsg.viewOnceMessageV2) {
-                    rawMsg = rawMsg.viewOnceMessageV2.message;
-                }
-            }
-
-            // 3. Extract the clean media object with all required fields
-            if (rawMsg.imageMessage) {
-                finalMediaObject = { 
+            // Handle different message types
+            if (msgType === 'imageMessage') {
+                mediaMessage = { 
                     imageMessage: {
-                        ...rawMsg.imageMessage,
-                        // Ensure required fields are present
-                        mimetype: rawMsg.imageMessage.mimetype,
-                        fileLength: rawMsg.imageMessage.fileLength,
-                        height: rawMsg.imageMessage.height,
-                        width: rawMsg.imageMessage.width,
-                        mediaKey: rawMsg.imageMessage.mediaKey,
-                        directPath: rawMsg.imageMessage.directPath,
-                        url: rawMsg.imageMessage.url
+                        ...quotedMsg.message.imageMessage,
+                        caption: caption || quotedMsg.message.imageMessage.caption || ''
                     } 
                 };
-            } else if (rawMsg.videoMessage) {
-                finalMediaObject = { 
+            } else if (msgType === 'videoMessage') {
+                mediaMessage = { 
                     videoMessage: {
-                        ...rawMsg.videoMessage,
-                        mimetype: rawMsg.videoMessage.mimetype,
-                        fileLength: rawMsg.videoMessage.fileLength,
-                        height: rawMsg.videoMessage.height,
-                        width: rawMsg.videoMessage.width,
-                        mediaKey: rawMsg.videoMessage.mediaKey,
-                        directPath: rawMsg.videoMessage.directPath,
-                        url: rawMsg.videoMessage.url
+                        ...quotedMsg.message.videoMessage,
+                        caption: caption || quotedMsg.message.videoMessage.caption || ''
                     } 
                 };
-            } else if (rawMsg.audioMessage) {
-                finalMediaObject = { 
+            } else if (msgType === 'audioMessage') {
+                mediaMessage = { 
                     audioMessage: {
-                        ...rawMsg.audioMessage,
-                        mimetype: rawMsg.audioMessage.mimetype,
-                        fileLength: rawMsg.audioMessage.fileLength,
-                        mediaKey: rawMsg.audioMessage.mediaKey,
-                        directPath: rawMsg.audioMessage.directPath,
-                        url: rawMsg.audioMessage.url,
-                        ptt: rawMsg.audioMessage.ptt || false
+                        ...quotedMsg.message.audioMessage
+                    } 
+                };
+            } else if (msgType === 'stickerMessage') {
+                mediaMessage = { 
+                    stickerMessage: {
+                        ...quotedMsg.message.stickerMessage
+                    } 
+                };
+            } else if (msgType === 'documentMessage') {
+                mediaMessage = { 
+                    documentMessage: {
+                        ...quotedMsg.message.documentMessage,
+                        caption: caption || quotedMsg.message.documentMessage.caption || ''
+                    } 
+                };
+            } else if (msgType === 'extendedTextMessage') {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || quotedMsg.message.extendedTextMessage.text,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
+                    } 
+                };
+            } else if (msgType === 'conversation') {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || quotedMsg.message.conversation,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
                     } 
                 };
             }
-            
-            // Debug log
-            console.log("Extracted media object keys:", Object.keys(rawMsg));
-            if (finalMediaObject) {
-                const mediaType = Object.keys(finalMediaObject)[0];
-                console.log("Final media object fields:", Object.keys(finalMediaObject[mediaType]));
-            }
-        } 
-        // ============================================================
-        // B. HANDLE TEXT ONLY
-        // ============================================================
-        else if (textStatus) {
-            finalMediaObject = { 
+        }
+        
+        // If no quoted media, use text
+        if (!mediaMessage && textStatus) {
+            mediaMessage = { 
                 extendedTextMessage: { 
                     text: textStatus, 
                     backgroundArgb: 0xFFFFFFFF, 
                     textArgb: 0xFF000000,
-                    font: 0 // Add font property
+                    font: 0
                 } 
             };
-        } 
-        else {
-            return reply(`⚠️ Reply to Media or type Text.`);
         }
 
-        // Verify we have mediaKey before sending
-        if (finalMediaObject) {
-            const mediaType = Object.keys(finalMediaObject)[0];
-            const mediaContent = finalMediaObject[mediaType];
-            
-            if (mediaType !== 'extendedTextMessage' && !mediaContent.mediaKey) {
-                console.error("Missing mediaKey in:", mediaContent);
-                return reply("❌ Failed: Media key not generated. Try again.");
-            }
+        if (!mediaMessage) {
+            return reply(`⚠️ Reply to a message or provide text.`);
         }
+
+        // Debug
+        console.log("Media message type:", Object.keys(mediaMessage)[0]);
 
         // 4. Construct & Send
         const statusMsg = generateWAMessageFromContent(
@@ -1510,7 +1462,7 @@ case 'bg': {
             {
                 groupStatusMessageV2: {
                     message: {
-                        ...finalMediaObject,
+                        ...mediaMessage,
                         messageContextInfo: {
                             messageSecret: crypto.randomBytes(32)
                         }
