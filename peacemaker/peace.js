@@ -1354,245 +1354,70 @@ break;
 // ================== GROUP STATUS (DEBUG VERSION) ==================
 // ================== GROUP STATUS (REUPLOAD METHOD) ==================
 // ================== GROUP STATUS (COMPLETE FIX) ==================
+// ================== GROUP STATUS (WORKING VERSION) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
 case 'bg': {
-    // 1. Basic Checks
     if (!m.isGroup) return reply('❌ Groups only.');
     if (!isAdmin) return reply('❌ Admins only.');
 
-    const { 
-        generateWAMessageFromContent,
-        downloadContentFromMessage,
-        proto
-    } = require('@whiskeysockets/baileys');
+    const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
     const crypto = require('crypto');
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
-        const quotedMsg = m.quoted ? m.quoted : null;
-        const textStatus = text || (quotedMsg && quotedMsg.text) || '';
-        const caption = text || (quotedMsg && quotedMsg.caption) || '';
+        const quotedMsg = m.quoted;
+        const textStatus = text || (quotedMsg?.text) || '';
 
-        // Helper function to download media
-        const downloadAndReuploadMedia = async (quotedMsg) => {
-            try {
-                // Get the raw message
-                let rawMsg = quotedMsg.message || quotedMsg;
-                
-                // Unwrap all wrappers
-                while (rawMsg.ephemeralMessage || rawMsg.viewOnceMessageV2) {
-                    if (rawMsg.ephemeralMessage) {
-                        rawMsg = rawMsg.ephemeralMessage.message;
-                    }
-                    if (rawMsg.viewOnceMessageV2) {
-                        rawMsg = rawMsg.viewOnceMessageV2.message;
-                    }
-                }
+        let mediaMessage = {};
 
-                // Find media type
-                let mediaType = null;
-                let mediaContent = null;
-                
-                if (rawMsg.imageMessage) {
-                    mediaType = 'image';
-                    mediaContent = rawMsg.imageMessage;
-                } else if (rawMsg.videoMessage) {
-                    mediaType = 'video';
-                    mediaContent = rawMsg.videoMessage;
-                } else if (rawMsg.audioMessage) {
-                    mediaType = 'audio';
-                    mediaContent = rawMsg.audioMessage;
-                } else if (rawMsg.stickerMessage) {
-                    mediaType = 'sticker';
-                    mediaContent = rawMsg.stickerMessage;
-                } else {
-                    throw new Error('No media found in message');
-                }
-
-                console.log(`Found ${mediaType}, downloading...`);
-
-                // Download the media
-                const stream = await downloadContentFromMessage(mediaContent, mediaType);
-                let buffer = Buffer.from([]);
-                for await (const chunk of stream) {
-                    buffer = Buffer.concat([buffer, chunk]);
-                }
-
-                console.log(`Downloaded ${buffer.length} bytes`);
-
-                // Upload to self to get fresh keys
-                let uploadResult;
-                
-                if (mediaType === 'image') {
-                    uploadResult = await client.sendMessage(client.user.id, { 
-                        image: buffer,
-                        caption: caption
-                    });
-                } else if (mediaType === 'video') {
-                    uploadResult = await client.sendMessage(client.user.id, { 
-                        video: buffer,
-                        caption: caption
-                    });
-                } else if (mediaType === 'audio') {
-                    uploadResult = await client.sendMessage(client.user.id, { 
-                        audio: buffer,
-                        ptt: mediaContent.ptt || false
-                    });
-                } else if (mediaType === 'sticker') {
-                    uploadResult = await client.sendMessage(client.user.id, { 
-                        sticker: buffer
-                    });
-                }
-
-                // Extract the fresh media message
-                let freshMsg = uploadResult.message;
-                
-                // Unwrap if needed
-                while (freshMsg.ephemeralMessage || freshMsg.viewOnceMessageV2) {
-                    if (freshMsg.ephemeralMessage) freshMsg = freshMsg.ephemeralMessage.message;
-                    if (freshMsg.viewOnceMessageV2) freshMsg = freshMsg.viewOnceMessageV2.message;
-                }
-
-                // Return the appropriate media object
-                if (freshMsg.imageMessage) {
-                    return { 
-                        imageMessage: {
-                            ...freshMsg.imageMessage,
-                            caption: caption || freshMsg.imageMessage.caption
-                        }
-                    };
-                } else if (freshMsg.videoMessage) {
-                    return { 
-                        videoMessage: {
-                            ...freshMsg.videoMessage,
-                            caption: caption || freshMsg.videoMessage.caption
-                        }
-                    };
-                } else if (freshMsg.audioMessage) {
-                    return { 
-                        audioMessage: {
-                            ...freshMsg.audioMessage
-                        }
-                    };
-                } else if (freshMsg.stickerMessage) {
-                    return { 
-                        stickerMessage: {
-                            ...freshMsg.stickerMessage
-                        }
-                    };
-                } else {
-                    throw new Error('Failed to get fresh media message');
-                }
-
-            } catch (e) {
-                console.error('Download/reupload error:', e);
-                throw e;
-            }
-        };
-
-        // ============================================================
-        // CREATE THE STATUS MESSAGE
-        // ============================================================
-        let finalMessage = null;
-
-        // Case 1: Has quoted message with media
-        if (quotedMsg && (quotedMsg.mimetype || (quotedMsg.message && 
-            (quotedMsg.message.imageMessage || 
-             quotedMsg.message.videoMessage || 
-             quotedMsg.message.audioMessage || 
-             quotedMsg.message.stickerMessage)))) {
-            
-            try {
-                console.log("Processing media message...");
-                finalMessage = await downloadAndReuploadMedia(quotedMsg);
-                console.log("Media processed successfully");
-            } catch (e) {
-                console.error("Media processing failed:", e);
-                // Fallback to text if available
-                if (textStatus) {
-                    finalMessage = {
-                        extendedTextMessage: {
-                            text: textStatus,
-                            backgroundArgb: 0xFFFFFFFF,
-                            textArgb: 0xFF000000,
-                            font: 4,
-                            previewType: 0
-                        }
-                    };
-                } else {
-                    return reply(`❌ Media error: ${e.message}`);
-                }
-            }
-        }
-        // Case 2: Text only
-        else if (textStatus) {
-            console.log("Creating text status...");
-            finalMessage = {
+        // TEXT STATUS
+        if (textStatus) {
+            mediaMessage = {
                 extendedTextMessage: {
                     text: textStatus,
                     backgroundArgb: 0xFFFFFFFF,
-                    textArgb: 0xFF000000,
-                    font: 4,
-                    previewType: 0,
-                    inviteLinkGroupType: 0
+                    textArgb: 0xFF000000
                 }
             };
         }
-        // Case 3: No valid input
-        else {
-            return reply(`⚠️ Reply to an image/video/audio/sticker or type some text.`);
-        }
-
-        // Verify we have a message
-        if (!finalMessage) {
-            return reply("❌ Failed to create status message.");
-        }
-
-        // Construct the status message
-        const statusMsg = generateWAMessageFromContent(
-            m.chat,
-            {
-                groupStatusMessageV2: {
-                    message: {
-                        ...finalMessage,
-                        messageContextInfo: {
-                            messageSecret: crypto.randomBytes(32)
-                        }
-                    }
-                }
-            },
-            { 
-                userJid: client.user.id, 
-                quoted: m,
-                upload: client.waUploadToServer 
+        // MEDIA STATUS - Use quoted message directly
+        else if (quotedMsg?.message) {
+            const msg = quotedMsg.message;
+            
+            if (msg.imageMessage) {
+                mediaMessage = { imageMessage: msg.imageMessage };
+            } else if (msg.videoMessage) {
+                mediaMessage = { videoMessage: msg.videoMessage };
+            } else if (msg.audioMessage) {
+                mediaMessage = { audioMessage: msg.audioMessage };
+            } else if (msg.stickerMessage) {
+                mediaMessage = { stickerMessage: msg.stickerMessage };
+            } else {
+                return reply('❌ Reply to image/video/audio/sticker');
             }
-        );
+        } else {
+            return reply('❌ Provide text or reply to media');
+        }
 
-        // Send the status
-        await client.relayMessage(m.chat, statusMsg.message, { 
-            messageId: statusMsg.key.id 
-        });
+        // Send status
+        const statusMsg = generateWAMessageFromContent(m.chat, {
+            groupStatusMessageV2: {
+                message: {
+                    ...mediaMessage,
+                    messageContextInfo: { messageSecret: crypto.randomBytes(32) }
+                }
+            }
+        }, { userJid: client.user.id });
 
-        // Success reaction
+        await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-        // Success message
-        const successText = `✅ *Status Posted Successfully!*\n\n` +
-                           `📌 Type: ${finalMessage.imageMessage ? 'Image' : 
-                                       finalMessage.videoMessage ? 'Video' :
-                                       finalMessage.audioMessage ? 'Audio' :
-                                       finalMessage.stickerMessage ? 'Sticker' : 'Text'}\n` +
-                           `👑 *By:* KING M\n` +
-                           `📢 *Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
-        
-        await client.sendMessage(m.chat, { text: successText }, { quoted: m });
+        await client.sendMessage(m.chat, { text: '✅ Status posted!' });
 
     } catch (e) {
-        console.error("GStatus Error:", e);
-        reply("❌ Error: " + e.message);
+        reply('❌ Error: ' + e.message);
     }
 }
 break;
