@@ -1355,6 +1355,7 @@ break;
 // ================== GROUP STATUS (DIRECT APPROACH) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
+// ================== GROUP STATUS (EPHEMERAL FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
@@ -1375,197 +1376,152 @@ case 'bg': {
         const textStatus = text || (quotedMsg && quotedMsg.text) || '';
         const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        // DEBUG: Log the entire quoted message structure
-        if (quotedMsg) {
-            console.log("======= QUOTED MESSAGE DEBUG =======");
-            console.log("quotedMsg keys:", Object.keys(quotedMsg));
-            console.log("quotedMsg.message exists:", !!quotedMsg.message);
-            if (quotedMsg.message) {
-                console.log("quotedMsg.message keys:", Object.keys(quotedMsg.message));
-                // Log the first level message type
-                const firstLevelType = Object.keys(quotedMsg.message)[0];
-                console.log("First level message type:", firstLevelType);
-                
-                // If it's ephemeral, log the inner message
-                if (firstLevelType === 'ephemeralMessage') {
-                    const innerMsg = quotedMsg.message.ephemeralMessage.message;
-                    console.log("Inner message keys:", Object.keys(innerMsg));
-                    console.log("Inner message type:", Object.keys(innerMsg)[0]);
-                }
-                
-                // Log mimetype if available
-                if (quotedMsg.mimetype) {
-                    console.log("mimetype:", quotedMsg.mimetype);
-                }
-            }
-            console.log("====================================");
-        }
-
         // ============================================================
         // Get the media message from quoted message
         // ============================================================
         let mediaMessage = null;
         
         if (quotedMsg) {
-            // Try different ways to access the media
+            // Try to get the message object
+            let msgObj = quotedMsg.message || quotedMsg;
             
-            // Method 1: Direct from quotedMsg.message
-            if (quotedMsg.message) {
-                let msg = quotedMsg.message;
-                
-                // Handle ephemeral messages
-                if (msg.ephemeralMessage) {
-                    msg = msg.ephemeralMessage.message;
-                }
-                
-                // Handle view once messages
-                if (msg.viewOnceMessageV2) {
-                    msg = msg.viewOnceMessageV2.message;
-                }
-                
-                // Check for media types directly
-                if (msg.imageMessage) {
-                    console.log("Found imageMessage directly");
-                    mediaMessage = { 
-                        imageMessage: {
-                            ...msg.imageMessage,
-                            caption: caption || msg.imageMessage.caption || ''
-                        } 
-                    };
-                } 
-                else if (msg.videoMessage) {
-                    console.log("Found videoMessage directly");
-                    mediaMessage = { 
-                        videoMessage: {
-                            ...msg.videoMessage,
-                            caption: caption || msg.videoMessage.caption || ''
-                        } 
-                    };
-                } 
-                else if (msg.audioMessage) {
-                    console.log("Found audioMessage directly");
-                    mediaMessage = { 
-                        audioMessage: {
-                            ...msg.audioMessage
-                        } 
-                    };
-                } 
-                else if (msg.stickerMessage) {
-                    console.log("Found stickerMessage directly");
-                    mediaMessage = { 
-                        stickerMessage: {
-                            ...msg.stickerMessage
-                        } 
-                    };
-                }
-                else if (msg.documentMessage) {
-                    console.log("Found documentMessage directly");
-                    mediaMessage = { 
-                        documentMessage: {
-                            ...msg.documentMessage,
-                            caption: caption || msg.documentMessage.caption || ''
-                        } 
-                    };
-                }
-                else if (msg.extendedTextMessage) {
-                    console.log("Found extendedTextMessage");
-                    mediaMessage = { 
-                        extendedTextMessage: {
-                            text: textStatus || msg.extendedTextMessage.text,
-                            backgroundArgb: 0xFFFFFFFF, 
-                            textArgb: 0xFF000000,
-                            font: 0
-                        } 
-                    };
-                }
-                else if (msg.conversation) {
-                    console.log("Found conversation");
-                    mediaMessage = { 
-                        extendedTextMessage: {
-                            text: textStatus || msg.conversation,
-                            backgroundArgb: 0xFFFFFFFF, 
-                            textArgb: 0xFF000000,
-                            font: 0
-                        } 
-                    };
-                }
-                else {
-                    // If we didn't find direct media, try to get from the first key
-                    const msgType = Object.keys(msg)[0];
-                    console.log("Trying to get media from msgType:", msgType);
-                    
-                    if (msg[msgType] && (msgType.includes('Message') || msgType.includes('message'))) {
-                        // Check if this is a media message
-                        const mediaTypes = ['image', 'video', 'audio', 'sticker', 'document'];
-                        for (const type of mediaTypes) {
-                            if (msgType.toLowerCase().includes(type)) {
-                                console.log(`Found ${type} via msgType`);
-                                const mediaObj = {};
-                                mediaObj[`${type}Message`] = {
-                                    ...msg[msgType],
-                                    caption: caption || msg[msgType].caption || ''
-                                };
-                                mediaMessage = mediaObj;
-                                break;
-                            }
-                        }
-                    }
-                }
+            // Handle ephemeral messages
+            if (msgObj.ephemeralMessage) {
+                msgObj = msgObj.ephemeralMessage.message;
             }
             
-            // Method 2: Try using quotedMsg directly if it has mimetype
-            if (!mediaMessage && quotedMsg.mimetype) {
-                console.log("Trying via mimetype:", quotedMsg.mimetype);
-                if (quotedMsg.mimetype.includes('image')) {
-                    mediaMessage = { 
-                        imageMessage: {
-                            mimetype: quotedMsg.mimetype,
-                            fileLength: quotedMsg.fileLength,
-                            height: quotedMsg.height,
-                            width: quotedMsg.width,
-                            mediaKey: quotedMsg.mediaKey,
-                            directPath: quotedMsg.directPath,
-                            url: quotedMsg.url,
-                            caption: caption
-                        } 
-                    };
-                } else if (quotedMsg.mimetype.includes('video')) {
-                    mediaMessage = { 
-                        videoMessage: {
-                            mimetype: quotedMsg.mimetype,
-                            fileLength: quotedMsg.fileLength,
-                            height: quotedMsg.height,
-                            width: quotedMsg.width,
-                            mediaKey: quotedMsg.mediaKey,
-                            directPath: quotedMsg.directPath,
-                            url: quotedMsg.url,
-                            caption: caption
-                        } 
-                    };
-                } else if (quotedMsg.mimetype.includes('audio')) {
-                    mediaMessage = { 
-                        audioMessage: {
-                            mimetype: quotedMsg.mimetype,
-                            fileLength: quotedMsg.fileLength,
-                            mediaKey: quotedMsg.mediaKey,
-                            directPath: quotedMsg.directPath,
-                            url: quotedMsg.url,
-                            ptt: quotedMsg.ptt || false
-                        } 
-                    };
-                }
+            // Handle view once messages
+            if (msgObj.viewOnceMessageV2) {
+                msgObj = msgObj.viewOnceMessageV2.message;
             }
             
-            // Method 3: Try using the raw message from database if available
-            if (!mediaMessage && quotedMsg.msg) {
-                console.log("Trying via quotedMsg.msg");
-                if (quotedMsg.msg.imageMessage) {
-                    mediaMessage = { imageMessage: quotedMsg.msg.imageMessage };
-                } else if (quotedMsg.msg.videoMessage) {
-                    mediaMessage = { videoMessage: quotedMsg.msg.videoMessage };
-                } else if (quotedMsg.msg.audioMessage) {
-                    mediaMessage = { audioMessage: quotedMsg.msg.audioMessage };
-                }
+            // Check for media types and copy ALL properties
+            if (msgObj.imageMessage) {
+                console.log("Found imageMessage, copying all properties");
+                mediaMessage = { 
+                    imageMessage: {
+                        url: msgObj.imageMessage.url,
+                        mimetype: msgObj.imageMessage.mimetype,
+                        caption: caption || msgObj.imageMessage.caption || '',
+                        fileSha256: msgObj.imageMessage.fileSha256,
+                        fileLength: msgObj.imageMessage.fileLength,
+                        height: msgObj.imageMessage.height,
+                        width: msgObj.imageMessage.width,
+                        mediaKey: msgObj.imageMessage.mediaKey,
+                        fileEncSha256: msgObj.imageMessage.fileEncSha256,
+                        directPath: msgObj.imageMessage.directPath,
+                        mediaKeyTimestamp: msgObj.imageMessage.mediaKeyTimestamp,
+                        jpegThumbnail: msgObj.imageMessage.jpegThumbnail,
+                        thumbnailDirectPath: msgObj.imageMessage.thumbnailDirectPath,
+                        thumbnailSha256: msgObj.imageMessage.thumbnailSha256,
+                        thumbnailEncSha256: msgObj.imageMessage.thumbnailEncSha256,
+                        staticUrl: msgObj.imageMessage.staticUrl,
+                        ...(caption ? { caption: caption } : {})
+                    } 
+                };
+            } 
+            else if (msgObj.videoMessage) {
+                console.log("Found videoMessage, copying all properties");
+                mediaMessage = { 
+                    videoMessage: {
+                        url: msgObj.videoMessage.url,
+                        mimetype: msgObj.videoMessage.mimetype,
+                        caption: caption || msgObj.videoMessage.caption || '',
+                        fileSha256: msgObj.videoMessage.fileSha256,
+                        fileLength: msgObj.videoMessage.fileLength,
+                        height: msgObj.videoMessage.height,
+                        width: msgObj.videoMessage.width,
+                        mediaKey: msgObj.videoMessage.mediaKey,
+                        fileEncSha256: msgObj.videoMessage.fileEncSha256,
+                        directPath: msgObj.videoMessage.directPath,
+                        mediaKeyTimestamp: msgObj.videoMessage.mediaKeyTimestamp,
+                        jpegThumbnail: msgObj.videoMessage.jpegThumbnail,
+                        thumbnailDirectPath: msgObj.videoMessage.thumbnailDirectPath,
+                        thumbnailSha256: msgObj.videoMessage.thumbnailSha256,
+                        thumbnailEncSha256: msgObj.videoMessage.thumbnailEncSha256,
+                        staticUrl: msgObj.videoMessage.staticUrl,
+                        seconds: msgObj.videoMessage.seconds,
+                        gifPlayback: msgObj.videoMessage.gifPlayback || false,
+                        ...(caption ? { caption: caption } : {})
+                    } 
+                };
+            } 
+            else if (msgObj.audioMessage) {
+                console.log("Found audioMessage, copying all properties");
+                mediaMessage = { 
+                    audioMessage: {
+                        url: msgObj.audioMessage.url,
+                        mimetype: msgObj.audioMessage.mimetype,
+                        fileSha256: msgObj.audioMessage.fileSha256,
+                        fileLength: msgObj.audioMessage.fileLength,
+                        mediaKey: msgObj.audioMessage.mediaKey,
+                        fileEncSha256: msgObj.audioMessage.fileEncSha256,
+                        directPath: msgObj.audioMessage.directPath,
+                        mediaKeyTimestamp: msgObj.audioMessage.mediaKeyTimestamp,
+                        seconds: msgObj.audioMessage.seconds,
+                        ptt: msgObj.audioMessage.ptt || false,
+                        streamingSidecar: msgObj.audioMessage.streamingSidecar
+                    } 
+                };
+            } 
+            else if (msgObj.stickerMessage) {
+                console.log("Found stickerMessage, copying all properties");
+                mediaMessage = { 
+                    stickerMessage: {
+                        url: msgObj.stickerMessage.url,
+                        mimetype: msgObj.stickerMessage.mimetype,
+                        fileSha256: msgObj.stickerMessage.fileSha256,
+                        fileLength: msgObj.stickerMessage.fileLength,
+                        mediaKey: msgObj.stickerMessage.mediaKey,
+                        fileEncSha256: msgObj.stickerMessage.fileEncSha256,
+                        directPath: msgObj.stickerMessage.directPath,
+                        mediaKeyTimestamp: msgObj.stickerMessage.mediaKeyTimestamp,
+                        height: msgObj.stickerMessage.height,
+                        width: msgObj.stickerMessage.width,
+                        isAnimated: msgObj.stickerMessage.isAnimated || false,
+                        stickerSentTs: msgObj.stickerMessage.stickerSentTs,
+                        avatar: msgObj.stickerMessage.avatar || false
+                    } 
+                };
+            }
+            else if (msgObj.documentMessage) {
+                console.log("Found documentMessage, copying all properties");
+                mediaMessage = { 
+                    documentMessage: {
+                        url: msgObj.documentMessage.url,
+                        mimetype: msgObj.documentMessage.mimetype,
+                        title: msgObj.documentMessage.title,
+                        fileSha256: msgObj.documentMessage.fileSha256,
+                        fileLength: msgObj.documentMessage.fileLength,
+                        mediaKey: msgObj.documentMessage.mediaKey,
+                        fileEncSha256: msgObj.documentMessage.fileEncSha256,
+                        directPath: msgObj.documentMessage.directPath,
+                        mediaKeyTimestamp: msgObj.documentMessage.mediaKeyTimestamp,
+                        pageCount: msgObj.documentMessage.pageCount,
+                        fileName: msgObj.documentMessage.fileName,
+                        ...(caption ? { caption: caption } : {})
+                    } 
+                };
+            }
+            else if (msgObj.extendedTextMessage) {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || msgObj.extendedTextMessage.text,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
+                    } 
+                };
+            }
+            else if (msgObj.conversation) {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || msgObj.conversation,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
+                    } 
+                };
             }
         }
         
@@ -1583,27 +1539,24 @@ case 'bg': {
         }
 
         if (!mediaMessage) {
-            console.log("No media message could be extracted");
-            console.log("quotedMsg available:", !!quotedMsg);
-            if (quotedMsg) {
-                console.log("quotedMsg type:", typeof quotedMsg);
-                console.log("quotedMsg stringified:", JSON.stringify(quotedMsg, null, 2).substring(0, 500));
-            }
             return reply(`⚠️ Could not extract media. Make sure you're replying to a valid message with image/video/audio/sticker.`);
         }
 
-        // Verify media key exists for media types
+        // Verify we have required fields
         const mediaType = Object.keys(mediaMessage)[0];
         console.log("Final media message type:", mediaType);
         
         if (mediaType !== 'extendedTextMessage') {
             const mediaContent = mediaMessage[mediaType];
-            console.log(`${mediaType} fields:`, Object.keys(mediaContent));
+            console.log(`${mediaType} fields present:`, Object.keys(mediaContent));
+            console.log("Has url:", !!mediaContent.url);
             console.log("Has mediaKey:", !!mediaContent.mediaKey);
+            console.log("Has directPath:", !!mediaContent.directPath);
             
-            if (!mediaContent.mediaKey) {
-                console.error(`Missing mediaKey in ${mediaType}`);
-                return reply(`❌ Error: Media key missing. Try forwarding the media to your bot first.`);
+            // Ensure all critical fields are present
+            if (!mediaContent.url || !mediaContent.mediaKey || !mediaContent.directPath) {
+                console.error("Missing critical fields in media message");
+                return reply(`❌ Error: Media data incomplete. Try forwarding the media to your bot first.`);
             }
         }
 
