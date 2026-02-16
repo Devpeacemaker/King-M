@@ -1351,73 +1351,175 @@ break;
 		// ================== GROUP STATUS (GS) ==================
 // ================== GROUP STATUS (SELF-SEND METHOD) ==================
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
-// ================== GROUP STATUS (DEBUG VERSION) ==================
-// ================== GROUP STATUS (REUPLOAD METHOD) ==================
-// ================== GROUP STATUS (COMPLETE FIX) ==================
-// ================== GROUP STATUS (WORKING VERSION) ==================
+// ================== GROUP STATUS (EPHEMERAL FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
 case 'bg': {
+    // 1. Basic Checks
     if (!m.isGroup) return reply('❌ Groups only.');
     if (!isAdmin) return reply('❌ Admins only.');
 
-    const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
+    const { 
+        generateWAMessageFromContent
+    } = require('@whiskeysockets/baileys');
     const crypto = require('crypto');
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
-        const quotedMsg = m.quoted;
-        const textStatus = text || (quotedMsg?.text) || '';
+        const quotedMsg = m.quoted ? m.quoted : null;
+        const textStatus = text || (quotedMsg && quotedMsg.text) || '';
+        const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
-        let mediaMessage = {};
+        // Debug logs
+        console.log("Quoted message exists:", !!quotedMsg);
+        if (quotedMsg) {
+            console.log("Quoted message keys:", Object.keys(quotedMsg));
+            console.log("Message object keys:", quotedMsg.message ? Object.keys(quotedMsg.message) : 'no message');
+        }
 
-        // TEXT STATUS
-        if (textStatus) {
-            mediaMessage = {
-                extendedTextMessage: {
-                    text: textStatus,
-                    backgroundArgb: 0xFFFFFFFF,
-                    textArgb: 0xFF000000
-                }
+        // ============================================================
+        // Get the media message from quoted message
+        // ============================================================
+        let mediaMessage = null;
+        
+        if (quotedMsg && quotedMsg.message) {
+            // Get the message - handle different wrapper types
+            let msg = quotedMsg.message;
+            
+            // Unwrap if it's ephemeral or view once
+            if (msg.ephemeralMessage) {
+                msg = msg.ephemeralMessage.message;
+            }
+            if (msg.viewOnceMessageV2) {
+                msg = msg.viewOnceMessageV2.message;
+            }
+            
+            // Get the actual message type
+            const msgType = Object.keys(msg)[0];
+            console.log("Message type after unwrapping:", msgType);
+            
+            // Handle different message types
+            if (msgType === 'imageMessage' && msg.imageMessage) {
+                mediaMessage = { 
+                    imageMessage: {
+                        ...msg.imageMessage,
+                        caption: caption || msg.imageMessage.caption || ''
+                    } 
+                };
+                console.log("Image message found, has mediaKey:", !!msg.imageMessage.mediaKey);
+            } 
+            else if (msgType === 'videoMessage' && msg.videoMessage) {
+                mediaMessage = { 
+                    videoMessage: {
+                        ...msg.videoMessage,
+                        caption: caption || msg.videoMessage.caption || ''
+                    } 
+                };
+                console.log("Video message found, has mediaKey:", !!msg.videoMessage.mediaKey);
+            } 
+            else if (msgType === 'audioMessage' && msg.audioMessage) {
+                mediaMessage = { 
+                    audioMessage: {
+                        ...msg.audioMessage
+                    } 
+                };
+                console.log("Audio message found, has mediaKey:", !!msg.audioMessage.mediaKey);
+            } 
+            else if (msgType === 'stickerMessage' && msg.stickerMessage) {
+                mediaMessage = { 
+                    stickerMessage: {
+                        ...msg.stickerMessage
+                    } 
+                };
+                console.log("Sticker message found, has mediaKey:", !!msg.stickerMessage.mediaKey);
+            } 
+            else if (msgType === 'documentMessage' && msg.documentMessage) {
+                mediaMessage = { 
+                    documentMessage: {
+                        ...msg.documentMessage,
+                        caption: caption || msg.documentMessage.caption || ''
+                    } 
+                };
+                console.log("Document message found, has mediaKey:", !!msg.documentMessage.mediaKey);
+            } 
+            else if (msgType === 'extendedTextMessage' && msg.extendedTextMessage) {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || msg.extendedTextMessage.text,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
+                    } 
+                };
+            } 
+            else if (msgType === 'conversation' && msg.conversation) {
+                mediaMessage = { 
+                    extendedTextMessage: {
+                        text: textStatus || msg.conversation,
+                        backgroundArgb: 0xFFFFFFFF, 
+                        textArgb: 0xFF000000,
+                        font: 0
+                    } 
+                };
+            }
+        }
+        
+        // If no quoted media, use text
+        if (!mediaMessage && textStatus) {
+            mediaMessage = { 
+                extendedTextMessage: { 
+                    text: textStatus, 
+                    backgroundArgb: 0xFFFFFFFF, 
+                    textArgb: 0xFF000000,
+                    font: 0
+                } 
             };
         }
-        // MEDIA STATUS - Use quoted message directly
-        else if (quotedMsg?.message) {
-            const msg = quotedMsg.message;
-            
-            if (msg.imageMessage) {
-                mediaMessage = { imageMessage: msg.imageMessage };
-            } else if (msg.videoMessage) {
-                mediaMessage = { videoMessage: msg.videoMessage };
-            } else if (msg.audioMessage) {
-                mediaMessage = { audioMessage: msg.audioMessage };
-            } else if (msg.stickerMessage) {
-                mediaMessage = { stickerMessage: msg.stickerMessage };
-            } else {
-                return reply('❌ Reply to image/video/audio/sticker');
-            }
-        } else {
-            return reply('❌ Provide text or reply to media');
+
+        if (!mediaMessage) {
+            return reply(`⚠️ Reply to a message with image/video/audio/sticker or provide text.`);
         }
 
-        // Send status
-        const statusMsg = generateWAMessageFromContent(m.chat, {
-            groupStatusMessageV2: {
-                message: {
-                    ...mediaMessage,
-                    messageContextInfo: { messageSecret: crypto.randomBytes(32) }
-                }
+        // Verify media key exists for media types
+        const mediaType = Object.keys(mediaMessage)[0];
+        if (mediaType !== 'extendedTextMessage') {
+            const mediaContent = mediaMessage[mediaType];
+            if (!mediaContent.mediaKey) {
+                console.error(`Missing mediaKey in ${mediaType}:`, mediaContent);
+                return reply(`❌ Error: Media key missing. Try forwarding the media to your bot first.`);
             }
-        }, { userJid: client.user.id });
+        }
+
+        console.log("Successfully created media message of type:", mediaType);
+
+        // 4. Construct & Send
+        const statusMsg = generateWAMessageFromContent(
+            m.chat,
+            {
+                groupStatusMessageV2: {
+                    message: {
+                        ...mediaMessage,
+                        messageContextInfo: {
+                            messageSecret: crypto.randomBytes(32)
+                        }
+                    }
+                }
+            },
+            { userJid: client.user.id, quoted: m }
+        );
 
         await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        await client.sendMessage(m.chat, { text: '✅ Status posted!' });
+
+        // Success
+        const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
+        await client.sendMessage(m.chat, { text: successText }, { quoted: m });
 
     } catch (e) {
-        reply('❌ Error: ' + e.message);
+        console.error("GStatus Error:", e);
+        reply("❌ Error: " + e.message);
     }
 }
 break;
