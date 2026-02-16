@@ -1353,6 +1353,7 @@ break;
 // ================== GROUP STATUS (EPHEMERAL FIX) ==================
 // ================== GROUP STATUS (DEBUG VERSION) ==================
 // ================== GROUP STATUS (REUPLOAD METHOD) ==================
+// ================== GROUP STATUS (COMPLETE FIX) ==================
 case 'gstatus':
 case 'groupstatus':
 case 'togstatus':
@@ -1363,7 +1364,8 @@ case 'bg': {
 
     const { 
         generateWAMessageFromContent,
-        downloadContentFromMessage
+        downloadContentFromMessage,
+        proto
     } = require('@whiskeysockets/baileys');
     const crypto = require('crypto');
 
@@ -1375,161 +1377,217 @@ case 'bg': {
         const caption = text || (quotedMsg && quotedMsg.caption) || '';
 
         // Helper function to download media
-        const downloadMedia = async (message) => {
+        const downloadAndReuploadMedia = async (quotedMsg) => {
             try {
-                // Get the message object
-                let msg = message.message || message;
+                // Get the raw message
+                let rawMsg = quotedMsg.message || quotedMsg;
                 
-                // Unwrap if needed
-                if (msg.ephemeralMessage) msg = msg.ephemeralMessage.message;
-                if (msg.viewOnceMessageV2) msg = msg.viewOnceMessageV2.message;
-                
-                // Find the media message
-                let mediaMsg = null;
-                let mediaType = null;
-                
-                if (msg.imageMessage) {
-                    mediaMsg = msg.imageMessage;
-                    mediaType = 'image';
-                } else if (msg.videoMessage) {
-                    mediaMsg = msg.videoMessage;
-                    mediaType = 'video';
-                } else if (msg.audioMessage) {
-                    mediaMsg = msg.audioMessage;
-                    mediaType = 'audio';
-                } else if (msg.stickerMessage) {
-                    mediaMsg = msg.stickerMessage;
-                    mediaType = 'sticker';
-                } else {
-                    throw new Error('No media found');
+                // Unwrap all wrappers
+                while (rawMsg.ephemeralMessage || rawMsg.viewOnceMessageV2) {
+                    if (rawMsg.ephemeralMessage) {
+                        rawMsg = rawMsg.ephemeralMessage.message;
+                    }
+                    if (rawMsg.viewOnceMessageV2) {
+                        rawMsg = rawMsg.viewOnceMessageV2.message;
+                    }
                 }
+
+                // Find media type
+                let mediaType = null;
+                let mediaContent = null;
                 
-                console.log(`Downloading ${mediaType}...`);
-                const stream = await downloadContentFromMessage(mediaMsg, mediaType);
+                if (rawMsg.imageMessage) {
+                    mediaType = 'image';
+                    mediaContent = rawMsg.imageMessage;
+                } else if (rawMsg.videoMessage) {
+                    mediaType = 'video';
+                    mediaContent = rawMsg.videoMessage;
+                } else if (rawMsg.audioMessage) {
+                    mediaType = 'audio';
+                    mediaContent = rawMsg.audioMessage;
+                } else if (rawMsg.stickerMessage) {
+                    mediaType = 'sticker';
+                    mediaContent = rawMsg.stickerMessage;
+                } else {
+                    throw new Error('No media found in message');
+                }
+
+                console.log(`Found ${mediaType}, downloading...`);
+
+                // Download the media
+                const stream = await downloadContentFromMessage(mediaContent, mediaType);
                 let buffer = Buffer.from([]);
                 for await (const chunk of stream) {
                     buffer = Buffer.concat([buffer, chunk]);
                 }
-                return { buffer, mediaType, mimetype: mediaMsg.mimetype };
-            } catch (e) {
-                console.error('Download error:', e);
-                throw e;
-            }
-        };
 
-        let finalMediaObject = null;
+                console.log(`Downloaded ${buffer.length} bytes`);
 
-        // ============================================================
-        // HANDLE MEDIA - Download and Reupload
-        // ============================================================
-        if (quotedMsg) {
-            try {
-                // Try to download the media
-                const { buffer, mediaType, mimetype } = await downloadMedia(quotedMsg);
-                
-                console.log(`Downloaded ${mediaType}, size: ${buffer.length} bytes`);
-                
                 // Upload to self to get fresh keys
-                let uploadMsg;
+                let uploadResult;
                 
-                if (mediaType === 'image' || mediaType === 'sticker') {
-                    uploadMsg = await client.sendMessage(client.user.id, { 
-                        image: buffer, 
-                        caption: caption,
-                        mimetype: mimetype 
+                if (mediaType === 'image') {
+                    uploadResult = await client.sendMessage(client.user.id, { 
+                        image: buffer,
+                        caption: caption
                     });
                 } else if (mediaType === 'video') {
-                    uploadMsg = await client.sendMessage(client.user.id, { 
-                        video: buffer, 
-                        caption: caption 
+                    uploadResult = await client.sendMessage(client.user.id, { 
+                        video: buffer,
+                        caption: caption
                     });
                 } else if (mediaType === 'audio') {
-                    uploadMsg = await client.sendMessage(client.user.id, { 
-                        audio: buffer, 
-                        ptt: true // or false based on original
+                    uploadResult = await client.sendMessage(client.user.id, { 
+                        audio: buffer,
+                        ptt: mediaContent.ptt || false
+                    });
+                } else if (mediaType === 'sticker') {
+                    uploadResult = await client.sendMessage(client.user.id, { 
+                        sticker: buffer
                     });
                 }
-                
+
                 // Extract the fresh media message
-                let freshMsg = uploadMsg.message;
+                let freshMsg = uploadResult.message;
                 
                 // Unwrap if needed
                 while (freshMsg.ephemeralMessage || freshMsg.viewOnceMessageV2) {
                     if (freshMsg.ephemeralMessage) freshMsg = freshMsg.ephemeralMessage.message;
                     if (freshMsg.viewOnceMessageV2) freshMsg = freshMsg.viewOnceMessageV2.message;
                 }
-                
-                // Get the media object with fresh keys
+
+                // Return the appropriate media object
                 if (freshMsg.imageMessage) {
-                    finalMediaObject = { imageMessage: freshMsg.imageMessage };
-                    console.log("✅ Created fresh imageMessage with new keys");
+                    return { 
+                        imageMessage: {
+                            ...freshMsg.imageMessage,
+                            caption: caption || freshMsg.imageMessage.caption
+                        }
+                    };
                 } else if (freshMsg.videoMessage) {
-                    finalMediaObject = { videoMessage: freshMsg.videoMessage };
-                    console.log("✅ Created fresh videoMessage with new keys");
+                    return { 
+                        videoMessage: {
+                            ...freshMsg.videoMessage,
+                            caption: caption || freshMsg.videoMessage.caption
+                        }
+                    };
                 } else if (freshMsg.audioMessage) {
-                    finalMediaObject = { audioMessage: freshMsg.audioMessage };
-                    console.log("✅ Created fresh audioMessage with new keys");
-                }
-                
-            } catch (e) {
-                console.error("Media processing error:", e);
-                // Fall back to text if media processing fails
-                if (textStatus) {
-                    finalMediaObject = { 
-                        extendedTextMessage: { 
-                            text: textStatus, 
-                            backgroundArgb: 0xFFFFFFFF, 
-                            textArgb: 0xFF000000,
-                            font: 0
-                        } 
+                    return { 
+                        audioMessage: {
+                            ...freshMsg.audioMessage
+                        }
+                    };
+                } else if (freshMsg.stickerMessage) {
+                    return { 
+                        stickerMessage: {
+                            ...freshMsg.stickerMessage
+                        }
                     };
                 } else {
-                    return reply(`❌ Could not process media: ${e.message}`);
+                    throw new Error('Failed to get fresh media message');
+                }
+
+            } catch (e) {
+                console.error('Download/reupload error:', e);
+                throw e;
+            }
+        };
+
+        // ============================================================
+        // CREATE THE STATUS MESSAGE
+        // ============================================================
+        let finalMessage = null;
+
+        // Case 1: Has quoted message with media
+        if (quotedMsg && (quotedMsg.mimetype || (quotedMsg.message && 
+            (quotedMsg.message.imageMessage || 
+             quotedMsg.message.videoMessage || 
+             quotedMsg.message.audioMessage || 
+             quotedMsg.message.stickerMessage)))) {
+            
+            try {
+                console.log("Processing media message...");
+                finalMessage = await downloadAndReuploadMedia(quotedMsg);
+                console.log("Media processed successfully");
+            } catch (e) {
+                console.error("Media processing failed:", e);
+                // Fallback to text if available
+                if (textStatus) {
+                    finalMessage = {
+                        extendedTextMessage: {
+                            text: textStatus,
+                            backgroundArgb: 0xFFFFFFFF,
+                            textArgb: 0xFF000000,
+                            font: 4,
+                            previewType: 0
+                        }
+                    };
+                } else {
+                    return reply(`❌ Media error: ${e.message}`);
                 }
             }
-        } 
-        // ============================================================
-        // HANDLE TEXT ONLY
-        // ============================================================
+        }
+        // Case 2: Text only
         else if (textStatus) {
-            finalMediaObject = { 
-                extendedTextMessage: { 
-                    text: textStatus, 
-                    backgroundArgb: 0xFFFFFFFF, 
+            console.log("Creating text status...");
+            finalMessage = {
+                extendedTextMessage: {
+                    text: textStatus,
+                    backgroundArgb: 0xFFFFFFFF,
                     textArgb: 0xFF000000,
-                    font: 0
-                } 
+                    font: 4,
+                    previewType: 0,
+                    inviteLinkGroupType: 0
+                }
             };
-        } 
+        }
+        // Case 3: No valid input
         else {
-            return reply(`⚠️ Reply to Media or type Text.`);
+            return reply(`⚠️ Reply to an image/video/audio/sticker or type some text.`);
         }
 
-        if (!finalMediaObject) {
+        // Verify we have a message
+        if (!finalMessage) {
             return reply("❌ Failed to create status message.");
         }
 
-        // 4. Construct & Send
+        // Construct the status message
         const statusMsg = generateWAMessageFromContent(
             m.chat,
             {
                 groupStatusMessageV2: {
                     message: {
-                        ...finalMediaObject,
+                        ...finalMessage,
                         messageContextInfo: {
                             messageSecret: crypto.randomBytes(32)
                         }
                     }
                 }
             },
-            { userJid: client.user.id, quoted: m }
+            { 
+                userJid: client.user.id, 
+                quoted: m,
+                upload: client.waUploadToServer 
+            }
         );
 
-        await client.relayMessage(m.chat, statusMsg.message, { messageId: statusMsg.key.id });
+        // Send the status
+        await client.relayMessage(m.chat, statusMsg.message, { 
+            messageId: statusMsg.key.id 
+        });
+
+        // Success reaction
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // Success
-        const successText = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
+        // Success message
+        const successText = `✅ *Status Posted Successfully!*\n\n` +
+                           `📌 Type: ${finalMessage.imageMessage ? 'Image' : 
+                                       finalMessage.videoMessage ? 'Video' :
+                                       finalMessage.audioMessage ? 'Audio' :
+                                       finalMessage.stickerMessage ? 'Sticker' : 'Text'}\n` +
+                           `👑 *By:* KING M\n` +
+                           `📢 *Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
+        
         await client.sendMessage(m.chat, { text: successText }, { quoted: m });
 
     } catch (e) {
