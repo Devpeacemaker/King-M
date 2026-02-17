@@ -107,65 +107,60 @@ async function startPeace() {
 
             // ================== ROBUST AUTO-STATUS REACT ==================
          
+// ================== AUTO-REACT (WITH LOGS & CUSTOM EMOJIS) ==================
 if (mek.key.remoteJid === "status@broadcast") {
-    // 1. Stop immediately if both features are off
-    if (autoview !== 'on' && autolike !== 'on') return;
-
-    (async () => {
-        try {
-            // 2. Get the Sender ID Safely
-            const participant = mek.key.participant || mek.participant;
-            if (!participant) return;
-
-            // 3. Auto View (Always works, no session needed)
-            if (autoview === 'on') {
-                await client.readMessages([mek.key]);
-            }
-
-            // 4. Auto Like (The tricky part)
-            if (autolike === 'on') {
-                // ❌ REMOVED: const { getSettings } = require('./Database/config');
-                // ✅ FIXED: We now use the 'getSettings' imported at the top of the file!
-                
-                const settings = await getSettings();
-                
-                // Get Emojis (Custom or Default)
-                let emojis = [];
-                const customList = settings.autolike_emojis;
-                if (customList && customList !== 'default') {
-                    emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
-                } 
-                if (!emojis.length) {
-                    emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
-                }
-
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-                // 5. Handshake (Force Session)
-                try {
-                    await client.sendPresenceUpdate('available', participant);
-                } catch (err) {} 
-
-                await sleep(500);
-
-                // 6. Send Reaction
-                await client.sendMessage("status@broadcast", { 
-                    react: { text: randomEmoji, key: mek.key } 
-                }, { statusJidList: [participant] });
-
-                console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
-            }
-
-        } catch (e) {
-            if (e.message.includes('No sessions')) {
-                console.log(`⚠️ Auto-React Skipped: No session for ${mek.key.participant?.split('@')[0]}`);
-            } else {
-                console.error('❌ Auto-React Failed:', e.message);
-            }
+    try {
+        // 1. Auto View (Always works)
+        if (autoview === 'on') {
+            await client.readMessages([mek.key]);
         }
-    })();
-    
-    return; // Stop execution here
+
+        // 2. Auto Like (With Custom Emojis)
+        if (autolike === 'on') {
+            // 👇 Import settings to get your custom emojis
+            const { getSettings } = require('../Database/config');
+            const settings = await getSettings();
+
+            // ✅ Step 1: Default Safe List
+            let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
+
+            // ✅ Step 2: Check for Custom Emojis from 'setreact' command
+            if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
+                // Split by comma and remove empty spaces
+                const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
+                if (custom.length > 0) {
+                    emojis = custom; // Overwrite default with custom list
+                    console.log(`✅ Using Custom Emojis: ${emojis.join(' ')}`);
+                }
+            }
+
+            // Pick a random emoji
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const participant = mek.key.participant || mek.participant;
+
+            if (!participant) {
+                console.log("⚠️ Auto-React Skipped: No participant ID found.");
+                return;
+            }
+
+            // ⚡ Handshake: Tells WhatsApp "I am here" to prevent session errors
+            await client.sendPresenceUpdate('available', participant).catch(() => {});
+
+            // Send the Reaction
+            await client.sendMessage(
+                "status@broadcast", 
+                { react: { text: randomEmoji, key: mek.key } }, 
+                { statusJidList: [participant] } 
+            );
+
+            console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
+        }
+    } catch (err) {
+        // ❌ ERROR LOGGING ENABLED
+        console.error('❌ Auto-React Failed:', err.message);
+    }
+}
+// ==========================================================================
 }
 // ==============================================================================
 // ==============================================================================
