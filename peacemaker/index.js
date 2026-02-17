@@ -108,61 +108,59 @@ async function startPeace() {
             // ================== ROBUST AUTO-STATUS REACT ==================
          
 // ================== AUTO-REACT (WITH LOGS & CUSTOM EMOJIS) ==================
+// ================== AUTO-STATUS REACT (CRASH FIXED) ==================
 if (mek.key.remoteJid === "status@broadcast") {
-    try {
-        // 1. Auto View (Always works)
-        if (autoview === 'on') {
-            await client.readMessages([mek.key]);
-        }
+    // 1. Safety Check: If features are off, stop immediately.
+    if (autoview !== 'on' && autolike !== 'on') return;
 
-        // 2. Auto Like (With Custom Emojis)
-        if (autolike === 'on') {
-            // 👇 Import settings to get your custom emojis
-            const { getSettings } = require('../Database/config');
-            const settings = await getSettings();
-
-            // ✅ Step 1: Default Safe List
-            let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
-
-            // ✅ Step 2: Check for Custom Emojis from 'setreact' command
-            if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
-                // Split by comma and remove empty spaces
-                const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
-                if (custom.length > 0) {
-                    emojis = custom; // Overwrite default with custom list
-                    console.log(`✅ Using Custom Emojis: ${emojis.join(' ')}`);
-                }
-            }
-
-            // Pick a random emoji
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    (async () => {
+        try {
+            // 2. Get Participant ID
             const participant = mek.key.participant || mek.participant;
+            if (!participant) return;
 
-            if (!participant) {
-                console.log("⚠️ Auto-React Skipped: No participant ID found.");
-                return;
+            // 3. Auto View
+            if (autoview === 'on') {
+                await client.readMessages([mek.key]);
             }
 
-            // ⚡ Handshake: Tells WhatsApp "I am here" to prevent session errors
-            await client.sendPresenceUpdate('available', participant).catch(() => {});
+            // 4. Auto Like
+            if (autolike === 'on') {
+                // ✅ CORRECT IMPORT PATH: Goes up one folder to find Database
+                const { getSettings } = require('../Database/config');
+                const settings = await getSettings();
 
-            // Send the Reaction
-            await client.sendMessage(
-                "status@broadcast", 
-                { react: { text: randomEmoji, key: mek.key } }, 
-                { statusJidList: [participant] } 
-            );
+                // ✅ EMOJI LOGIC
+                let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
+                if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
+                    const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
+                    if (custom.length > 0) emojis = custom;
+                }
 
-            console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                // 5. Handshake (Prevents "No sessions" crash)
+                await client.sendPresenceUpdate('available', participant).catch(() => {});
+                
+                // Small delay to let session establish
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // 6. Send Reaction
+                await client.sendMessage("status@broadcast", {
+                    react: { text: randomEmoji, key: mek.key }
+                }, { statusJidList: [participant] });
+
+                console.log(`✅ Auto-React: ${randomEmoji}`);
+            }
+        } catch (e) {
+            // ✅ THIS CATCH BLOCK PREVENTS THE CRASH
+            // We ignore "No sessions" errors to keep logs clean
+            if (e.message && !e.message.includes('No sessions')) {
+                console.log('⚠️ Status Error:', e.message);
+            }
         }
-    } catch (err) {
-        // ❌ ERROR LOGGING ENABLED
-        console.error('❌ Auto-React Failed:', err.message);
-    }
+    })();
 }
-// ==========================================================================
-}
-// ==============================================================================
 // ==============================================================================
 
             // ================== COMMAND HANDLER ==================
