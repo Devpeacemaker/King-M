@@ -106,7 +106,7 @@ async function startPeace() {
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
             // ================== ROBUST AUTO-STATUS REACT ==================
-          // ================== ROBUST AUTO-STATUS REACT (NO SESSIONS FIX) ==================
+         
 if (mek.key.remoteJid === "status@broadcast") {
     // 1. Stop immediately if both features are off
     if (autoview !== 'on' && autolike !== 'on') return;
@@ -124,7 +124,9 @@ if (mek.key.remoteJid === "status@broadcast") {
 
             // 4. Auto Like (The tricky part)
             if (autolike === 'on') {
-                const { getSettings } = require('./Database/config'); 
+                // ❌ REMOVED: const { getSettings } = require('./Database/config');
+                // ✅ FIXED: We now use the 'getSettings' imported at the top of the file!
+                
                 const settings = await getSettings();
                 
                 // Get Emojis (Custom or Default)
@@ -139,17 +141,14 @@ if (mek.key.remoteJid === "status@broadcast") {
 
                 const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-                // 🛠️ THE FIX: Handshake first
-                // We send a 'presence update' to the specific user. 
-                // This often forces WhatsApp to establish the missing session.
+                // 5. Handshake (Force Session)
                 try {
                     await client.sendPresenceUpdate('available', participant);
-                } catch (err) {} // Ignore handshake errors
+                } catch (err) {} 
 
-                // Wait a tiny bit for the session to latch
                 await sleep(500);
 
-                // Send Reaction
+                // 6. Send Reaction
                 await client.sendMessage("status@broadcast", { 
                     react: { text: randomEmoji, key: mek.key } 
                 }, { statusJidList: [participant] });
@@ -158,17 +157,17 @@ if (mek.key.remoteJid === "status@broadcast") {
             }
 
         } catch (e) {
-            // 🧹 CLEAN LOGS: Don't show "No sessions" errors, just skip them.
             if (e.message.includes('No sessions')) {
-                console.log(`⚠️ Auto-React Skipped: No session established with ${mek.key.participant?.split('@')[0] || 'Unknown'}`);
+                console.log(`⚠️ Auto-React Skipped: No session for ${mek.key.participant?.split('@')[0]}`);
             } else {
                 console.error('❌ Auto-React Failed:', e.message);
             }
         }
     })();
     
-    return; // 🛑 IMPORTANT: Stop execution so the bot doesn't try to reply to the status
+    return; // Stop execution here
 }
+// ==============================================================================
 // ==============================================================================
 
             // ================== COMMAND HANDLER ==================
