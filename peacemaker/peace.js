@@ -1352,6 +1352,7 @@ break;
 // ================== GROUP STATUS (GS) - REBUILT ==================
 // ================== GROUP STATUS (GS) - UPDATED ==================
 case 'togroupstatus':
+			case 'gstatus':
 case 'groupstatus':
 case 'togcstatus':
 case 'gs': {
