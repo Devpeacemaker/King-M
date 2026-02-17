@@ -106,49 +106,70 @@ async function startPeace() {
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
             // ================== ROBUST AUTO-STATUS REACT ==================
-            if (mek.key.remoteJid === "status@broadcast") {
-                // 🛠️ FIX 2: Added return to stop status from being processed as command
-                if (!autoview && !autolike) return; 
+          // ================== ROBUST AUTO-STATUS REACT (NO SESSIONS FIX) ==================
+if (mek.key.remoteJid === "status@broadcast") {
+    // 1. Stop immediately if both features are off
+    if (autoview !== 'on' && autolike !== 'on') return;
 
-                (async () => {
-                    try {
-                        const participant = mek.key.participant || mek.participant;
-                        if (!participant) return;
+    (async () => {
+        try {
+            // 2. Get the Sender ID Safely
+            const participant = mek.key.participant || mek.participant;
+            if (!participant) return;
 
-                        if (autoview === 'on') {
-                            await client.readMessages([mek.key]);
-                        }
-
-                        if (autolike === 'on') {
-                            const { getSettings } = require('../Database/config'); // Ensure this path is correct: ./Database/config
-                            const settings = await getSettings();
-                            
-                            let emojis = [];
-                            const customList = settings.autolike_emojis;
-
-                            if (customList && customList !== 'default') {
-                                emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
-                            } 
-                            
-                            if (!emojis.length) {
-                                emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
-                            }
-
-                            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-                            await client.sendMessage("status@broadcast", { 
-                                react: { text: randomEmoji, key: mek.key } 
-                            }, { statusJidList: [participant] });
-
-                            console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
-                        }
-                    } catch (e) {
-                        console.error('❌ Auto-React Failed:', e.message);
-                    }
-                })();
-                
-                return; // 🛑 IMPORTANT: Stop execution here for Status Updates
+            // 3. Auto View (Always works, no session needed)
+            if (autoview === 'on') {
+                await client.readMessages([mek.key]);
             }
+
+            // 4. Auto Like (The tricky part)
+            if (autolike === 'on') {
+                const { getSettings } = require('./Database/config'); 
+                const settings = await getSettings();
+                
+                // Get Emojis (Custom or Default)
+                let emojis = [];
+                const customList = settings.autolike_emojis;
+                if (customList && customList !== 'default') {
+                    emojis = customList.split(',').map(e => e.trim()).filter(Boolean);
+                } 
+                if (!emojis.length) {
+                    emojis = ['🔥', '💯', '😍', '🤩', '✨', '⚡', '👍', '💜', '💚', '💥'];
+                }
+
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                // 🛠️ THE FIX: Handshake first
+                // We send a 'presence update' to the specific user. 
+                // This often forces WhatsApp to establish the missing session.
+                try {
+                    await client.sendPresenceUpdate('available', participant);
+                } catch (err) {} // Ignore handshake errors
+
+                // Wait a tiny bit for the session to latch
+                await sleep(500);
+
+                // Send Reaction
+                await client.sendMessage("status@broadcast", { 
+                    react: { text: randomEmoji, key: mek.key } 
+                }, { statusJidList: [participant] });
+
+                console.log(`✅ Auto-React: Sent ${randomEmoji} to ${participant.split('@')[0]}`);
+            }
+
+        } catch (e) {
+            // 🧹 CLEAN LOGS: Don't show "No sessions" errors, just skip them.
+            if (e.message.includes('No sessions')) {
+                console.log(`⚠️ Auto-React Skipped: No session established with ${mek.key.participant?.split('@')[0] || 'Unknown'}`);
+            } else {
+                console.error('❌ Auto-React Failed:', e.message);
+            }
+        }
+    })();
+    
+    return; // 🛑 IMPORTANT: Stop execution so the bot doesn't try to reply to the status
+}
+// ==============================================================================
 
             // ================== COMMAND HANDLER ==================
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
