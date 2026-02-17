@@ -31,7 +31,7 @@ const fetchSettings = require('../Database/fetchSettings');
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/peaceexif');
 
-// 🛠️ FIX 1: Removed 'await' from imports (Reserved Keyword)
+// ✅ FIXED IMPORTS (Removed 'await' keyword error)
 const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep } = require('../lib/peacefunc');
 const { sessionName, session, port, packname } = require("../set.js");
 const makeInMemoryStore = require('../store/store.js'); 
@@ -105,63 +105,61 @@ async function startPeace() {
             if (!mek.message) return;
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-            // ================== ROBUST AUTO-STATUS REACT ==================
-         
-// ================== AUTO-REACT (WITH LOGS & CUSTOM EMOJIS) ==================
-// ================== AUTO-STATUS REACT (CRASH FIXED) ==================
-if (mek.key.remoteJid === "status@broadcast") {
-    // 1. Safety Check: If features are off, stop immediately.
-    if (autoview !== 'on' && autolike !== 'on') return;
+            // ================== AUTO-STATUS REACT (CRASH FIXED) ==================
+            if (mek.key.remoteJid === "status@broadcast") {
+                // 1. Safety Check: If features are off, stop immediately.
+                if (autoview !== 'on' && autolike !== 'on') return;
 
-    (async () => {
-        try {
-            // 2. Get Participant ID
-            const participant = mek.key.participant || mek.participant;
-            if (!participant) return;
+                (async () => {
+                    try {
+                        // 2. Get Participant ID
+                        const participant = mek.key.participant || mek.participant;
+                        if (!participant) return;
 
-            // 3. Auto View
-            if (autoview === 'on') {
-                await client.readMessages([mek.key]);
+                        // 3. Auto View
+                        if (autoview === 'on') {
+                            await client.readMessages([mek.key]);
+                        }
+
+                        // 4. Auto Like
+                        if (autolike === 'on') {
+                            // ✅ CORRECT IMPORT PATH: Goes up one folder to find Database
+                            const { getSettings } = require('../Database/config');
+                            const settings = await getSettings();
+
+                            // ✅ EMOJI LOGIC
+                            let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
+                            if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
+                                const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
+                                if (custom.length > 0) emojis = custom;
+                            }
+
+                            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                            // 5. Handshake (Prevents "No sessions" crash)
+                            await client.sendPresenceUpdate('available', participant).catch(() => {});
+                            
+                            // Small delay to let session establish
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                            // 6. Send Reaction
+                            await client.sendMessage("status@broadcast", {
+                                react: { text: randomEmoji, key: mek.key }
+                            }, { statusJidList: [participant] });
+
+                            console.log(`✅ Auto-React: ${randomEmoji}`);
+                        }
+                    } catch (e) {
+                        // ✅ THIS CATCH BLOCK PREVENTS THE CRASH
+                        // We ignore "No sessions" errors to keep logs clean
+                        if (e.message && !e.message.includes('No sessions')) {
+                            console.log('⚠️ Status Error:', e.message);
+                        }
+                    }
+                })();
+                return; // Stop command processing for status
             }
-
-            // 4. Auto Like
-            if (autolike === 'on') {
-                // ✅ CORRECT IMPORT PATH: Goes up one folder to find Database
-                const { getSettings } = require('../Database/config');
-                const settings = await getSettings();
-
-                // ✅ EMOJI LOGIC
-                let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
-                if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
-                    const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
-                    if (custom.length > 0) emojis = custom;
-                }
-
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-                // 5. Handshake (Prevents "No sessions" crash)
-                await client.sendPresenceUpdate('available', participant).catch(() => {});
-                
-                // Small delay to let session establish
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // 6. Send Reaction
-                await client.sendMessage("status@broadcast", {
-                    react: { text: randomEmoji, key: mek.key }
-                }, { statusJidList: [participant] });
-
-                console.log(`✅ Auto-React: ${randomEmoji}`);
-            }
-        } catch (e) {
-            // ✅ THIS CATCH BLOCK PREVENTS THE CRASH
-            // We ignore "No sessions" errors to keep logs clean
-            if (e.message && !e.message.includes('No sessions')) {
-                console.log('⚠️ Status Error:', e.message);
-            }
-        }
-    })();
-}
-// ==============================================================================
+            // ==============================================================================
 
             // ================== COMMAND HANDLER ==================
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
@@ -399,7 +397,6 @@ if (mek.key.remoteJid === "status@broadcast") {
     
     client.ev.on("creds.update", saveCreds);
 
-    // 🛠️ FIX 3: Removed duplicate 'getBuffer' declaration. Used client.sendImage logic directly.
     client.sendImage = async (jid, path, caption = "", quoted = "", options) => {
         let buffer = Buffer.isBuffer(path)
             ? path
