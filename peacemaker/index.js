@@ -106,55 +106,46 @@ async function startPeace() {
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
             // ================== AUTO-STATUS REACT (CRASH FIXED) ==================
-            // ================== AUTO-STATUS REACT (HUMAN SPEED) ==================
-if (mek.key.remoteJid === "status@broadcast") {
-    if (autoview !== 'on' && autolike !== 'on') return;
-
-    (async () => {
-        try {
-            const participant = mek.key.participant || mek.participant;
-            if (!participant) return;
-
-            // 1. Auto View (Read the status)
-            if (autoview === 'on') {
+           // ================== AUTO VIEW STATUS ==================
+            if (autoview === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
                 await client.readMessages([mek.key]);
             }
 
-            // 2. Auto Like (With Delay)
-            if (autolike === 'on') {
-                const { getSettings } = require('../Database/config');
-                const settings = await getSettings();
+            // ================== AUTO LIKE STATUS (CUSTOMIZABLE) ==================
+            if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
+                try {
+                    // 1. Load Custom Emojis from Database (Correct Path)
+                    const { getSettings } = require('../Database/config');
+                    const settings = await getSettings();
 
-                let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
-                if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
-                    const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
-                    if (custom.length > 0) emojis = custom;
+                    const nickk = await client.decodeJid(client.user.id);
+                    
+                    // 2. Define Default List (Your Original List)
+                    let emojis = ['🔥', '❤️', '✨', '😍', '👍'];
+
+                    // 3. Overwrite with Custom Emojis if set
+                    if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
+                        const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
+                        if (custom.length > 0) emojis = custom;
+                    }
+
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                    // 4. Send Reaction (Added split(':')[0] to fix 'not-acceptable' error in your logs)
+                    await client.sendMessage(
+                        mek.key.remoteJid, 
+                        { react: { text: randomEmoji, key: mek.key } }, 
+                        { statusJidList: [mek.key.participant.split(':')[0] + '@s.whatsapp.net', nickk] }
+                    );
+
+                    await sleep(messageDelay);
+                    console.log(`Reaction sent successfully✅️: ${randomEmoji}`);
+
+                } catch (e) {
+                    console.log('⚠️ Status Error:', e.message);
                 }
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-                // 🛑 SLOW DOWN: Random delay between 1 and 3 seconds
-                const minDelay = 1000;
-                const maxDelay = 3000;
-                const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                await new Promise(res => setTimeout(res, delay));
-
-                // 3. Handshake & React
-                await client.sendPresenceUpdate('available', participant).catch(() => {});
-                
-                await client.sendMessage("status@broadcast", {
-                    react: { text: randomEmoji, key: mek.key }
-                }, { statusJidList: [participant] });
-
-                console.log(`✅ Auto-React: ${randomEmoji} (to ${participant.split('@')[0]})`);
             }
-        } catch (e) {
-            if (e.message && !e.message.includes('No sessions')) {
-                console.log('⚠️ Status Error:', e.message);
-            }
-        }
-    })();
-    return;
-}
+            // ====================================================================
             // ==============================================================================
 
             // ================== COMMAND HANDLER ==================
