@@ -106,50 +106,19 @@ async function startPeace() {
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
             // ================== AUTO-STATUS REACT (CRASH FIXED) ==================
-        // ================== AUTO VIEW STATUS ==================
-            if (autoview === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
-                await client.readMessages([mek.key]);
-            }
+   if (autoview === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
+        client.readMessages([mek.key]);
+      }
+            
+ if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
+        const nickk = await client.decodeJid(client.user.id);
+        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
+        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
+        await sleep(messageDelay);
+   console.log('Reaction sent successfully✅️');
+          }
 
-            // ================== AUTO LIKE STATUS (YOUR CODE + CUSTOM EMOJIS) ==================
-            if (autoview === 'on' && autolike === 'on' && mek.key && mek.key.remoteJid === "status@broadcast") {
-                try {
-                    // 1. Load Custom Emojis (Added this part only)
-                    const { getSettings } = require('../Database/config');
-                    const settings = await getSettings();
-
-                    const nickk = await client.decodeJid(client.user.id);
-                    
-                    // 2. Your Original Emoji List
-                    let emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
-
-                    // 3. Overwrite with Custom Emojis (If set via command)
-                    if (settings.autolike_emojis && settings.autolike_emojis !== 'default') {
-                        const custom = settings.autolike_emojis.split(',').map(e => e.trim()).filter(Boolean);
-                        if (custom.length > 0) emojis = custom;
-                    }
-
-                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-                    // 4. Your Exact Send Logic
-                    // Added a safety check for participant to prevent crashes
-                    let participant = mek.key.participant || mek.participant;
-                    
-                    if (participant) {
-                        await client.sendMessage(
-                            mek.key.remoteJid, 
-                            { react: { text: randomEmoji, key: mek.key } }, 
-                            { statusJidList: [participant, nickk] }
-                        );
-                        
-                        await sleep(messageDelay);
-                        console.log(`Reaction sent successfully✅️: ${randomEmoji}`);
-                    }
-
-                } catch (e) {
-                    console.log('⚠️ Status Error:', e.message);
-                }
-            }
             // ====================================================================
            
             // ==============================================================================
