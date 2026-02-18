@@ -1375,7 +1375,7 @@ case 'gs': {
 
     try {
         let payload = { groupStatusMessage: {} };
-        const successMessage = `✅ *Status Posted Successfully!*\n\n👑 *By:* KING M\n📢 *Follow Channel:* https://whatsapp.com/channel/0029Vb5wVbsEQIanKXKYrq1c`;
+        const successMessage = `✅ *Status Posted Successfully!*`;
 
         if (m.quoted) {
             const mime = (m.quoted.msg || m.quoted).mimetype || "";
