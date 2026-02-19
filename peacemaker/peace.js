@@ -244,8 +244,7 @@ const deletedMsgId = mek.message.protocolMessage.key.id;
     } else if (antideleteMode === "chat") {  
         targetJid = remoteJid;  
     } else return;  
-
-    const deletedByTag = @${deletedBy.split('@')[0]};  
+const deletedByTag = `@${deletedBy.split('@')[0]}`; 
     const sentByTag = @${sentBy.split('@')[0]};  
 
     const now = new Date();  
