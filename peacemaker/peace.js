@@ -235,17 +235,17 @@ const deletedMsgId = mek.message.protocolMessage.key.id;
     const sentBy = originalMessage.key.participant || originalMessage.key.remoteJid;  
 
     
-    if (deletedBy === botJid || sentBy === botJid) return;  
+   if (deletedBy === botJid || sentBy === botJid) return;  
 
-    
     let targetJid;  
     if (antideleteMode === "private") {  
         targetJid = owner[0].replace(/[^0-9]/g, '') + "@s.whatsapp.net";  
     } else if (antideleteMode === "chat") {  
         targetJid = remoteJid;  
     } else return;  
-const deletedByTag = `@${deletedBy.split('@')[0]}`; 
-    const sentByTag = @${sentBy.split('@')[0]};  
+
+    const deletedByTag = `@${deletedBy.split('@')[0]}`; 
+    const sentByTag = `@${sentBy.split('@')[0]}`; // Added backticks here
 
     const now = new Date();  
     const deletedTime = now.toLocaleTimeString();  
