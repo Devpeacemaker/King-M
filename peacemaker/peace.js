@@ -282,7 +282,7 @@ async function handleDeletedMessage(client, mek, antideleteMode) {
         const sentByTag = `@${sentBy.split('@')[0]}`;
 
         const header =
-`🚨 *PEACE CORE ANTIDELETE*
+`🚨 *KING ANTIDELETE*
 
 👤 Deleted By: ${deletedByTag}
 ✉️ Sent By: ${sentByTag}
@@ -419,7 +419,8 @@ if (wapresence === 'online') {
              client.sendPresenceUpdate('unavailable', Grace);
     }
 //========================================================================================================================//    
-if (cmd && mode === 'private' && !itsMe && !isPrivileged && m.sender !== dev) {
+// Block commands if mode is private and sender is NOT you/sudo (Even in Groups)
+if (cmd && mode === 'private' && !isPrivileged && m.sender !== dev) {
     return;
 }
 //========================================================================================================================//	  
@@ -492,9 +493,8 @@ if (antisticker && antisticker !== 'off' && isSticker) {
 
         // 2. Check if it is a Status Mention
         // (WhatsApp sends a special message type or text context when a group is tagged in a status)
-        const isStatusMention = m.message?.groupStatusMentionMessage || 
-            (m.message?.extendedTextMessage?.contextInfo?.isForwarded === false && 
-             m.message?.extendedTextMessage?.text?.includes(m.chat.split('@')[0]));
+       const isStatusMention = m.message?.groupStatusMentionMessage || 
+    (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(m.chat));
 
         if (isStatusMention) {
             // 3. Check Database for this specific group
@@ -749,19 +749,16 @@ if (antilinkall === 'on' && body.includes('https://') && !Owner && isBotAdmin &&
 }
   //========================================================================================================================//
   //========================================================================================================================//
-    if (cmd && !m.isGroup) {
-      console.log(chalk.black(chalk.bgWhite("[ PEACE-HUB ]")), color(argsLog, "turquoise"), chalk.magenta("From"), chalk.green(pushname), chalk.yellow(`[ ${m.sender.replace("@s.whatsapp.net", "")} ]`));
-    } else if (cmd && m.isGroup) {
-      console.log(
-        chalk.black(chalk.bgWhite("[ LOGS ]")),
-        color(argsLog, "turquoise"),
-        chalk.magenta("From"),
-        chalk.green(pushname),
-        chalk.yellow(`[ ${m.sender.replace("@s.whatsapp.net", "")} ]`),
-        chalk.blueBright("IN"),
-        chalk.green(groupName)
-      );
-    }
+   if (cmd) {
+    const logColor = m.isGroup ? chalk.bgBlue.black : chalk.bgMagenta.black;
+    const type = m.isGroup ? " GROUP " : " PRIVATE ";
+    console.log(
+        logColor(type) + 
+        chalk.green(` ${pushname} `) + 
+        chalk.white(`> ${command}`) + 
+        (m.isGroup ? chalk.cyan(` in ${groupName}`) : "")
+    );
+}
 
 //========================================================================================================================//
 //========================================================================================================================//	  
