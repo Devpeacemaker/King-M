@@ -13,7 +13,7 @@
    "author": "Peacemaker", 
    "license": "MIT", 
    "dependencies": { 
-     "@whiskeysockets/baileys": "github:Davex-254/davebaileys#main",
+     "@whiskeysockets/baileys": "npm : gifted-baileys@2.0.6",
      "@adiwajshing/keyed-db": "^0.2.4", 
      "@hapi/boom": "^10.0.0",
      "@google/generative-ai":"^0.1.3",
