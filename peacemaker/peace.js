@@ -380,7 +380,7 @@ if (autoread === 'on' && !m.isGroup) {
     }
       if (itsMe && mek.key.id.startsWith("BAE5") && mek.key.id.length === 16 && !m.isGroup) return;
 
-/
+
 // =================================================================================================================//
 	  // ================== ANTI-STICKER MONITOR ==================
 // ================== ANTI-STICKER LOGIC ==================
