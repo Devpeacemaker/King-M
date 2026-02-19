@@ -1420,43 +1420,42 @@ case 'gs': {
 break;
 // ================== ANTIDELETE COMMAND ==================
 case 'antidelete': {
-try {
-const validModes = ['off', 'private', 'chat'];
-const newMode = args[0]?.toLowerCase().trim();
+    try {
+        const validModes = ['off', 'private', 'chat'];
+        const newMode = args[0]?.toLowerCase().trim();
 
+        if (!client.settings) client.settings = {};  
 
-if (!client.settings) client.settings = {};  
+        if (!newMode || !validModes.includes(newMode)) {  
+            const currentMode = client.settings.antidelete || 'off';  
 
- 
-if (!newMode || !validModes.includes(newMode)) {  
-  const currentMode = client.settings.antidelete || 'off';  
+            // FIXED: Wrapped the text below in backticks
+            return m.reply(  
+                `🛡️ *KING M ANTIDELETE*\n\n` +  
+                `Current Mode: *${currentMode}*\n\n` +  
+                `Usage:\n` +  
+                `• ${prefix}antidelete off\n` +  
+                `• ${prefix}antidelete private\n` +  
+                `• ${prefix}antidelete chat`  
+            );  
+        }  
 
-  return m.reply(  
-    🛡️ *KING M ANTIDELETE*\n\n +  
-    Current Mode: *${currentMode}*\n\n +  
-    Usage:\n +  
-    • ${prefix}antidelete off\n +  
-    • ${prefix}antidelete private\n +  
-    • ${prefix}antidelete chat  
-  );  
-}  
+        client.settings.antidelete = newMode;  
 
+        let response =  
+            newMode === 'off'  
+                ? '❌ AntiDelete Disabled'  
+                : newMode === 'private'  
+                ? '🔒 AntiDelete set to PRIVATE (Owner only)'  
+                : '💬 AntiDelete set to CHAT (Same chat)';  
 
-client.settings.antidelete = newMode;  
+        // FIXED: Added backticks around the success message
+        return m.reply(`✅ ${response}`);
 
-let response =  
-  newMode === 'off'  
-    ? '❌ AntiDelete Disabled'  
-    : newMode === 'private'  
-    ? '🔒 AntiDelete set to PRIVATE (Owner only)'  
-    : '💬 AntiDelete set to CHAT (Same chat)';  
-
-return m.reply(✅ ${response});
-
-} catch (err) {
-console.error("Antidelete Command Error:", err);
-return m.reply("❌ Failed to update AntiDelete setting.");
-}
+    } catch (err) {
+        console.error("Antidelete Command Error:", err);
+        return m.reply("❌ Failed to update AntiDelete setting.");
+    }
 }
 break;
 
