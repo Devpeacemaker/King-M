@@ -202,58 +202,51 @@ function handleIncomingMessage(message) {
 	  
           // ================== ANTIDELETE FUNCTION ==================
 	  // ================== SIMPLE ANTIDELETE SYSTEM ==================
-
 const messageStore = new Map();
 
-
 function storeIncomingMessage(mek) {
-if (!mek?.key?.id) return;
+    if (!mek?.key?.id) return;
 
-messageStore.set(mek.key.id, mek);  
+    messageStore.set(mek.key.id, mek);  
 
-
-if (messageStore.size > 3000) {  
-    const firstKey = messageStore.keys().next().value;  
-    messageStore.delete(firstKey);  
+    if (messageStore.size > 3000) {  
+        const firstKey = messageStore.keys().next().value;  
+        messageStore.delete(firstKey);  
+    }
 }
-
-}
-
 
 async function handleDeletedMessage(client, mek, antideleteMode) {
-try {
-if (!mek?.message?.protocolMessage?.key?.id) return;
+    try {
+        if (!mek?.message?.protocolMessage?.key?.id) return;
 
-const deletedMsgId = mek.message.protocolMessage.key.id;  
-    const originalMessage = messageStore.get(deletedMsgId);  
-    if (!originalMessage) return;  
+        const deletedMsgId = mek.message.protocolMessage.key.id;  
+        const originalMessage = messageStore.get(deletedMsgId);  
+        if (!originalMessage) return;  
 
-    const remoteJid = mek.key.remoteJid;  
-    const botJid = client.user.id.split(":")[0] + "@s.whatsapp.net";  
+        const remoteJid = mek.key.remoteJid;  
+        const botJid = client.user.id.split(":")[0] + "@s.whatsapp.net";  
 
-    const deletedBy = mek.participant || remoteJid;  
-    const sentBy = originalMessage.key.participant || originalMessage.key.remoteJid;  
+        const deletedBy = mek.participant || remoteJid;  
+        const sentBy = originalMessage.key.participant || originalMessage.key.remoteJid;  
 
-    
-   if (deletedBy === botJid || sentBy === botJid) return;  
+        if (deletedBy === botJid || sentBy === botJid) return;  
 
-    let targetJid;  
-    if (antideleteMode === "private") {  
-        targetJid = owner[0].replace(/[^0-9]/g, '') + "@s.whatsapp.net";  
-    } else if (antideleteMode === "chat") {  
-        targetJid = remoteJid;  
-    } else return;  
+        let targetJid;  
+        // Note: Ensure 'owner' is defined in your global scope/settings
+        if (antideleteMode === "private") {  
+            targetJid = owner[0].replace(/[^0-9]/g, '') + "@s.whatsapp.net";  
+        } else if (antideleteMode === "chat") {  
+            targetJid = remoteJid;  
+        } else return;  
 
-    const deletedByTag = `@${deletedBy.split('@')[0]}`; 
-    const sentByTag = `@${sentBy.split('@')[0]}`; // Added backticks here
+        const deletedByTag = `@${deletedBy.split('@')[0]}`; 
+        const sentByTag = `@${sentBy.split('@')[0]}`; 
 
-    const now = new Date();  
-    const deletedTime = now.toLocaleTimeString();  
-    const deletedDate = now.toLocaleDateString();  
+        const now = new Date();  
+        const deletedTime = now.toLocaleTimeString();  
+        const deletedDate = now.toLocaleDateString();  
 
-    let header =
-
-`🚨 KING M ANTIDELETE 🚨
+        let header = `🚨 KING M ANTIDELETE 🚨
 
 👤 Deleted By: ${deletedByTag}
 ✉️ Sent By: ${sentByTag}
@@ -262,115 +255,100 @@ const deletedMsgId = mek.message.protocolMessage.key.id;
 
 `;
 
-const msg = originalMessage.message;  
+        const msg = originalMessage.message;  
 
-    
-    if (msg?.conversation) {  
-        await client.sendMessage(targetJid, {  
-            text: header + "📝 Deleted Message:\n" + msg.conversation,  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
+        if (msg?.conversation) {  
+            await client.sendMessage(targetJid, {  
+                text: header + "📝 Deleted Message:\n" + msg.conversation,  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.extendedTextMessage?.text) {  
+            await client.sendMessage(targetJid, {  
+                text: header + "📝 Deleted Message:\n" + msg.extendedTextMessage.text,  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.imageMessage) {  
+            const buffer = await client.downloadMediaMessage(originalMessage);  
+            await client.sendMessage(targetJid, {  
+                image: buffer,  
+                caption: header + "🖼️ Deleted Image\n" + (msg.imageMessage.caption || ""),  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.videoMessage) {  
+            const buffer = await client.downloadMediaMessage(originalMessage);  
+            await client.sendMessage(targetJid, {  
+                video: buffer,  
+                caption: header + "🎥 Deleted Video\n" + (msg.videoMessage.caption || ""),  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.audioMessage) {  
+            const buffer = await client.downloadMediaMessage(originalMessage);  
+            await client.sendMessage(targetJid, {  
+                audio: buffer,  
+                mimetype: "audio/mpeg",  
+                ptt: msg.audioMessage.ptt || false  
+            });  
 
-    else if (msg?.extendedTextMessage?.text) {  
-        await client.sendMessage(targetJid, {  
-            text: header + "📝 Deleted Message:\n" + msg.extendedTextMessage.text,  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
+            await client.sendMessage(targetJid, {  
+                text: header + "🎧 Deleted Audio",  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.stickerMessage) {  
+            const buffer = await client.downloadMediaMessage(originalMessage);  
+            await client.sendMessage(targetJid, { sticker: buffer });  
 
-    
-    else if (msg?.imageMessage) {  
-        const buffer = await client.downloadMediaMessage(originalMessage);  
-        await client.sendMessage(targetJid, {  
-            image: buffer,  
-            caption: header + "🖼️ Deleted Image\n" + (msg.imageMessage.caption || ""),  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
+            await client.sendMessage(targetJid, {  
+                text: header + "🔖 Deleted Sticker",  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
+        else if (msg?.documentMessage) {  
+            const buffer = await client.downloadMediaMessage(originalMessage);  
+            const doc = msg.documentMessage;  
 
-    
-    else if (msg?.videoMessage) {  
-        const buffer = await client.downloadMediaMessage(originalMessage);  
-        await client.sendMessage(targetJid, {  
-            video: buffer,  
-            caption: header + "🎥 Deleted Video\n" + (msg.videoMessage.caption || ""),  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
+            await client.sendMessage(targetJid, {  
+                document: buffer,  
+                fileName: doc.fileName,  
+                mimetype: doc.mimetype,  
+                caption: header + `📄 *Deleted Document:* ${doc.fileName}`,  
+                mentions: [deletedBy, sentBy]  
+            });  
+        }  
 
-    
-    else if (msg?.audioMessage) {  
-        const buffer = await client.downloadMediaMessage(originalMessage);  
-        await client.sendMessage(targetJid, {  
-            audio: buffer,  
-            mimetype: "audio/mpeg",  
-            ptt: msg.audioMessage.ptt || false  
-        });  
+        messageStore.delete(deletedMsgId);  
 
-        await client.sendMessage(targetJid, {  
-            text: header + "🎧 Deleted Audio",  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
-
-    
-    else if (msg?.stickerMessage) {  
-        const buffer = await client.downloadMediaMessage(originalMessage);  
-        await client.sendMessage(targetJid, { sticker: buffer });  
-
-        await client.sendMessage(targetJid, {  
-            text: header + "🔖 Deleted Sticker",  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
-
-    else if (msg?.documentMessage) {  
-        const buffer = await client.downloadMediaMessage(originalMessage);  
-        const doc = msg.documentMessage;  
-
-        await client.sendMessage(targetJid, {  
-            document: buffer,  
-            fileName: doc.fileName,  
-            mimetype: doc.mimetype,  
-            caption: header + 📄 *Deleted Document:* ${doc.fileName},  
-            mentions: [deletedBy, sentBy]  
-        });  
-    }  
-
-    
-    messageStore.delete(deletedMsgId);  
-
-} catch (err) {  
-    console.error("❌ AntiDelete Error:", err);  
+    } catch (err) {  
+        console.error("❌ AntiDelete Error:", err);  
+    }
 }
 
-}
 client.ev.on('messages.upsert', async ({ messages }) => {
-try {
-const mek = messages[0];
-if (!mek.message) return;
+    try {
+        const mek = messages[0];
+        if (!mek.message) return;
 
-const antidelete = client.settings?.antidelete || "off";  
+        const antidelete = client.settings?.antidelete || "off";  
 
-    if (antidelete !== "off") {  
-
-        if (  
-            mek.message?.protocolMessage &&  
-            mek.message.protocolMessage.type === 0  
-        ) {  
-            await handleDeletedMessage(client, mek, antidelete);  
+        if (antidelete !== "off") {  
+            if (  
+                mek.message?.protocolMessage &&  
+                mek.message.protocolMessage.type === 0  
+            ) {  
+                await handleDeletedMessage(client, mek, antidelete);  
+            }  
+            else {  
+                storeIncomingMessage(mek);  
+            }  
         }  
 
-        else {  
-            storeIncomingMessage(mek);  
-        }  
-    }  
-
-} catch (err) {  
-    console.error("Listener error:", err);  
-}
-
+    } catch (err) {  
+        console.error("Listener error:", err);  
+    }
 });
 //========================================================================================================================//
 //========================================================================================================================//	  
