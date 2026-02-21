@@ -11,7 +11,7 @@ try {
 
 // ================= DEFAULT BOT SETTINGS =================
 const defaultSettings = {
-  antilink: 'on',
+  antilink: 'off',
   antilinkall: 'off',
   autobioText: 'KING M 𝚁𝙴𝙿𝚁𝙴𝚂𝙴𝙽𝚃𝚂 SHARP📌',
   autobio: 'on',
